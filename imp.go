@@ -9,21 +9,21 @@ import "os"
 const printDebug = false
 const upto = Int64Label(1000000)
 
-var label_hole KLabel = StringLabel(0)
-var label_semi KLabel = StringLabel(100)
-var label_var KLabel = StringLabel(101)
-var label_skip KLabel = StringLabel(102)
-var label_plus KLabel = StringLabel(103)
-var label_neg KLabel = StringLabel(104)
-var label_true KLabel = StringLabel(105)
-var label_false KLabel = StringLabel(106)
-var label_assign KLabel = StringLabel(107)
-var label_while KLabel = StringLabel(108)
-var label_if KLabel = StringLabel(109)
-var label_not KLabel = StringLabel(110)
-var label_lte KLabel = StringLabel(111)
-var label_n KLabel = StringLabel(1000)
-var label_s KLabel = StringLabel(1001)
+var label_hole StringLabel = StringLabel(0)
+var label_semi StringLabel = StringLabel(100)
+var label_var StringLabel = StringLabel(101)
+var label_skip StringLabel = StringLabel(102)
+var label_plus StringLabel = StringLabel(103)
+var label_neg StringLabel = StringLabel(104)
+var label_true StringLabel = StringLabel(105)
+var label_false StringLabel = StringLabel(106)
+var label_assign StringLabel = StringLabel(107)
+var label_while StringLabel = StringLabel(108)
+var label_if StringLabel = StringLabel(109)
+var label_not StringLabel = StringLabel(110)
+var label_lte StringLabel = StringLabel(111)
+var label_n StringLabel = StringLabel(1000)
+var label_s StringLabel = StringLabel(1001)
 
 var names map[StringLabel]string = map[StringLabel]string{
 	0: "hole",
@@ -74,16 +74,11 @@ func (k *K) Copy() *K {
 	}
 	newArgs := make(ListK, len(k.args))
 	for i, arg := range k.args {
-		// newArgs = append(newArgs, arg.Copy())
 		newArgs[i] = arg.Copy()
 	}
 	copy := &K{k.label, newArgs, k.value, k.variable}
 	return copy
 }
-
-// func (kl KLabel) String() string {
-// 	return string(kl)
-// }
 
 type ListK []*K
 func (lk ListK) String() string {
@@ -133,7 +128,7 @@ func main() {
 	pprof.StopCPUProfile()
 	delta := time.Since(t0)
 	fmt.Printf("Took %v\n", delta)
-	result := stateCell[label_s]
+	result := stateCell[label_s].label.(Int64Label)
 	fmt.Printf("Result: %d\n", result)
 }
 
@@ -197,8 +192,9 @@ func repl() {
 					if printDebug { fmt.Printf("Applying 'cooling' rule\n") }
 					change = true
 					kCell = kCell[:topSpot]
-					kCell[topSpot-1] = next
-					kCell[topSpot-1].args[i] = top
+					newTop := next
+					newTop.args[i] = top
+					kCell[topSpot-1] = newTop
 					break
 				}
 			}
@@ -209,161 +205,165 @@ func repl() {
 				change = true
 				kCell[topSpot] = value
 			}
-		} else if top.label == label_semi {
-			if printDebug { fmt.Printf("Applying ';' rule\n") }
-			change = true
-			kCell = append(kCell, top.args[0])
-			kCell[topSpot] = top.args[1]
-		} else if top.label == label_var {
-			if len(top.args) == 0 {
-				if printDebug { fmt.Printf("Applying 'var-empty' rule\n") }
+		} else {
+			var topLabel StringLabel = top.label.(StringLabel)
+			if topLabel == label_semi {
+				if printDebug { fmt.Printf("Applying ';' rule\n") }
 				change = true
-				kCell = kCell[:topSpot]
-			} else {
-				if printDebug { fmt.Printf("Applying 'var-something' rule\n") }
-				change = true
-				stateCell[top.args[0].label] = &K{Int64Label(0), nil, true, false}
-				newTop := top
-				newTop.args = newTop.args[1:]
-				kCell[topSpot] = newTop
-			}
-		} else if top.label == label_assign {
-			right := top.args[1]
-			if !right.value {
-				if printDebug { fmt.Printf("Applying ':=-heat' rule\n") }
-				change = true
-				kCell = append(kCell, right)
-				newTop := top
-				newTop.args[1] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if printDebug { fmt.Printf("Applying 'assign' rule\n") }
-				change = true
-				variable := top.args[0].label
-				stateCell[variable] = right
-				kCell = kCell[:topSpot]
-			}
-		} else if top.label == label_while {
-			if printDebug { fmt.Printf("Applying 'while' rule\n") }
-			change = true
-			skip := &K{label_skip, nil, false, false}
-			guard := top.args[0]
-			body := top.args[1]
-			then := &K{label_semi, []*K{body, top.Copy()}, false, false}
-			theIf := &K{label_if, []*K{guard, then, skip}, false, false}
-			kCell[topSpot] = theIf
-		} else if top.label == label_if {
-			guard := top.args[0]
-			if !guard.value {
-				if printDebug { fmt.Printf("Applying 'if-heat' rule\n") }
-				change = true
-				kCell = append(kCell, guard)
-				newTop := top
-				newTop.args[0] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if guard.label == label_true {
-					if printDebug { fmt.Printf("Applying 'if-true' rule\n") }
+				kCell = append(kCell, top.args[0])
+				kCell[topSpot] = top.args[1]
+			} else if topLabel == label_var {
+				if len(top.args) == 0 {
+					if printDebug { fmt.Printf("Applying 'var-empty' rule\n") }
 					change = true
-					kCell[topSpot] = top.args[1]
-				} else if guard.label == label_false {
-					if printDebug { fmt.Printf("Applying 'if-false' rule\n") }
-					change = true
-					kCell[topSpot] = top.args[2]
-				}
-			}
-		} else if top.label == label_not {
-			body := top.args[0]
-			if !body.value {
-				if printDebug { fmt.Printf("Applying 'not-heat' rule\n") }
-				change = true
-				kCell = append(kCell, body)
-				newTop := top
-				newTop.args[0] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if top.args[0].label == label_false {
-					if printDebug { fmt.Printf("Applying 'not-false' rule\n") }
-					change = true
-					kCell[topSpot] = &K{label_true, nil, true, false}
-				} else if top.args[0].label == label_true {
-					if printDebug { fmt.Printf("Applying 'not-true' rule\n") }
-					change = true
-					kCell[topSpot] = &K{label_false, nil, true, false}
-				}
-			}
-		} else if top.label == label_lte {
-			left := top.args[0]
-			right := top.args[1]
-			if !left.value {
-				if printDebug { fmt.Printf("Applying '<=-heat-left' rule\n") }
-				change = true
-				kCell = append(kCell, left)
-				newTop := top
-				newTop.args[0] = hole
-				kCell[topSpot] = newTop
-			} else if !right.value {
-				if printDebug { fmt.Printf("Applying '<=-heat-right' rule\n") }
-				change = true
-				kCell = append(kCell, right)
-				newTop := top
-				newTop.args[1] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if printDebug { fmt.Printf("Applying '<=' rule\n") }
-				change = true
-				leftv := left.label.(Int64Label)
-				rightv := right.label.(Int64Label)
-				if leftv <= rightv {
-					kCell[topSpot] = &K{label_true, nil, true, false}
+					kCell = kCell[:topSpot]
 				} else {
-					kCell[topSpot] = &K{label_false, nil, true, false}
+					if printDebug { fmt.Printf("Applying 'var-something' rule\n") }
+					change = true
+					stateCell[top.args[0].label] = &K{Int64Label(0), nil, true, false}
+					newTop := top
+					newTop.args = newTop.args[1:]
+					kCell[topSpot] = newTop
 				}
+			} else if topLabel == label_assign {
+				right := top.args[1]
+				if !right.value {
+					if printDebug { fmt.Printf("Applying ':=-heat' rule\n") }
+					change = true
+					kCell = append(kCell, right)
+					newTop := top
+					newTop.args[1] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if printDebug { fmt.Printf("Applying 'assign' rule\n") }
+					change = true
+					variable := top.args[0].label
+					stateCell[variable] = right
+					kCell = kCell[:topSpot]
+				}
+			} else if topLabel == label_while {
+				if printDebug { fmt.Printf("Applying 'while' rule\n") }
+				change = true
+				skip := &K{label_skip, nil, false, false}
+				guard := top.args[0].Copy()
+				body := top.args[1].Copy()
+				then := &K{label_semi, []*K{body, top}, false, false}
+				// then := &K{label_semi, []*K{body, top}, false, false}
+				theIf := &K{label_if, []*K{guard, then, skip}, false, false}
+				kCell[topSpot] = theIf
+			} else if topLabel == label_if {
+				guard := top.args[0]
+				if !guard.value {
+					if printDebug { fmt.Printf("Applying 'if-heat' rule\n") }
+					change = true
+					kCell = append(kCell, guard)
+					newTop := top
+					newTop.args[0] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if guard.label == label_true {
+						if printDebug { fmt.Printf("Applying 'if-true' rule\n") }
+						change = true
+						kCell[topSpot] = top.args[1]
+					} else if guard.label == label_false {
+						if printDebug { fmt.Printf("Applying 'if-false' rule\n") }
+						change = true
+						kCell[topSpot] = top.args[2]
+					}
+				}
+			} else if topLabel == label_not {
+				body := top.args[0]
+				if !body.value {
+					if printDebug { fmt.Printf("Applying 'not-heat' rule\n") }
+					change = true
+					kCell = append(kCell, body)
+					newTop := top
+					newTop.args[0] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if top.args[0].label == label_false {
+						if printDebug { fmt.Printf("Applying 'not-false' rule\n") }
+						change = true
+						kCell[topSpot] = &K{label_true, nil, true, false}
+					} else if top.args[0].label == label_true {
+						if printDebug { fmt.Printf("Applying 'not-true' rule\n") }
+						change = true
+						kCell[topSpot] = &K{label_false, nil, true, false}
+					}
+				}
+			} else if topLabel == label_lte {
+				left := top.args[0]
+				right := top.args[1]
+				if !left.value {
+					if printDebug { fmt.Printf("Applying '<=-heat-left' rule\n") }
+					change = true
+					kCell = append(kCell, left)
+					newTop := top
+					newTop.args[0] = hole
+					kCell[topSpot] = newTop
+				} else if !right.value {
+					if printDebug { fmt.Printf("Applying '<=-heat-right' rule\n") }
+					change = true
+					kCell = append(kCell, right)
+					newTop := top
+					newTop.args[1] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if printDebug { fmt.Printf("Applying '<=' rule\n") }
+					change = true
+					leftv := left.label.(Int64Label)
+					rightv := right.label.(Int64Label)
+					if leftv <= rightv {
+						kCell[topSpot] = &K{label_true, nil, true, false}
+					} else {
+						kCell[topSpot] = &K{label_false, nil, true, false}
+					}
+				}
+			} else if topLabel == label_plus {
+				left := top.args[0]
+				right := top.args[1]
+				if !left.value {
+					if printDebug { fmt.Printf("Applying '+-heat-left' rule\n") }
+					change = true
+					kCell = append(kCell, left)
+					newTop := top
+					newTop.args[0] = hole
+					kCell[topSpot] = newTop
+				} else if !right.value {
+					if printDebug { fmt.Printf("Applying '+-heat-right' rule\n") }
+					change = true
+					kCell = append(kCell, right)
+					newTop := top
+					newTop.args[1] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if printDebug { fmt.Printf("Applying '+' rule\n") }
+					change = true
+					leftv := left.label.(Int64Label)
+					rightv := right.label.(Int64Label)
+					kCell[topSpot] = &K{Int64Label(leftv + rightv), nil, true, false}
+				}
+			} else if topLabel == label_neg {
+				body := top.args[0]
+				if !body.value {
+					if printDebug { fmt.Printf("Applying 'neg-heat' rule\n") }
+					change = true
+					kCell = append(kCell, body)
+					newTop := top
+					newTop.args[0] = hole
+					kCell[topSpot] = newTop
+				} else {
+					if printDebug { fmt.Printf("Applying 'minus' rule\n") }
+					change = true
+					value := body.label.(Int64Label)
+					newValue := -value
+					kCell[topSpot] = &K{Int64Label(newValue), nil, true, false}
+				}
+			} else if topLabel == label_skip {
+				if printDebug { fmt.Printf("Applying 'skip' rule\n") }
+				change = true
+				kCell = kCell[:topSpot]
 			}
-		} else if top.label == label_plus {
-			left := top.args[0]
-			right := top.args[1]
-			if !left.value {
-				if printDebug { fmt.Printf("Applying '+-heat-left' rule\n") }
-				change = true
-				kCell = append(kCell, left)
-				newTop := top
-				newTop.args[0] = hole
-				kCell[topSpot] = newTop
-			} else if !right.value {
-				if printDebug { fmt.Printf("Applying '+-heat-right' rule\n") }
-				change = true
-				kCell = append(kCell, right)
-				newTop := top
-				newTop.args[1] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if printDebug { fmt.Printf("Applying '+' rule\n") }
-				change = true
-				leftv := left.label.(Int64Label)
-				rightv := right.label.(Int64Label)
-				kCell[topSpot] = &K{Int64Label(leftv + rightv), nil, true, false}
-			}
-		} else if top.label == label_neg {
-			body := top.args[0]
-			if !body.value {
-				if printDebug { fmt.Printf("Applying 'neg-heat' rule\n") }
-				change = true
-				kCell = append(kCell, body)
-				newTop := top
-				newTop.args[0] = hole
-				kCell[topSpot] = newTop
-			} else {
-				if printDebug { fmt.Printf("Applying 'minus' rule\n") }
-				change = true
-				value := body.label.(Int64Label)
-				newValue := -value
-				kCell[topSpot] = &K{Int64Label(newValue), nil, true, false}
-			}
-		} else if top.label == label_skip {
-			if printDebug { fmt.Printf("Applying 'skip' rule\n") }
-			change = true
-			kCell = kCell[:topSpot]
 		}
 	}
 }
