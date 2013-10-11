@@ -14,6 +14,10 @@ const printDebug = false
 const shouldCheck = false
 const upto = 5000000
 
+const MAX_GARBAGE_ARG_LEN = 5
+const MAX_GARBAGE_KEPT = 100
+
+
 var label_hole KLabel   = StringLabel(0)
 var label_fake KLabel   = StringLabel(1)
 var label_semi KLabel 	= StringLabel(100)	
@@ -61,6 +65,7 @@ var names map[int64]string = map[int64]string{
 }
 
 var deadK []*K
+var deadLists [][]ListK
 
 func NewKSpecial(label KLabel, args ListK, value bool, variable bool) *K {
 	for _, arg := range args {
@@ -134,21 +139,37 @@ func (k *K) Inc() {
 }
 func (k *K) Dec() {
 	k.refs--
-	if k.refs < 0 {
+	newRefs := k.refs
+	if newRefs < 0 {
 		panic(fmt.Sprintf("Term %s has fewer than 0 refs :(", k))
 	}
-	if (k.refs == 0) {
-		if printDebug { fmt.Printf("Dead term {%s}\n", k) }
-		for _, arg := range k.args {
-			arg.Dec()
-		}
-		if len(deadK) < 100 {
-			if k != hole && k != k_true && k != k_false && k != k_zero && k != k_one && k != k_skip {
-				deadK = append(deadK, k)
-			}
-		}
+	if newRefs == 0 {
+		collectDeadTerm(k)
 	}
 }
+
+func collectDeadTerm(k *K) {
+	if printDebug { fmt.Printf("Dead term {%s}\n", k) }
+	for _, arg := range k.args {
+		arg.Dec()
+	}
+	lenkargs := len(k.args)
+	// don't garbage collect the "builtins"
+	if (lenkargs == 0 && (k == hole || k == k_true || k == k_false || k == k_zero || k == k_one || k == k_skip)) {
+		return
+	}
+		
+	if lenkargs < MAX_GARBAGE_ARG_LEN && lenkargs > 0 {
+		if len(deadLists[lenkargs-1]) < MAX_GARBAGE_KEPT {
+			deadLists[lenkargs-1] = append(deadLists[lenkargs-1], k.args)
+		}
+	}
+	if len(deadK) < MAX_GARBAGE_KEPT {
+		k.args = nil // not technically needed, just a bit safer
+		deadK = append(deadK, k)
+	}
+}
+
 func (k K) String() string {
 	// return k.label.String() + "(" + k.args.String() + ")"
 	return fmt.Sprintf("%s[%d](%s)", k.label.String(), k.refs, k.args.String())
@@ -203,6 +224,10 @@ func main() {
 	fmt.Printf("foo\n")
 
 	deadK = make([]*K, 0)
+	deadLists = make([][]ListK, 5)
+	for i := 0; i < MAX_GARBAGE_ARG_LEN; i++ {
+		deadLists[i] = make([]ListK, 0)
+	}
 
 	f, err := os.Create("profiling.dat")
     if err != nil { panic(err) }
@@ -308,6 +333,33 @@ func (c Continuation) check() {
 	if bad { panic("Bad check()!") }
 }
 
+func getDeadList(reqLength int) ListK {
+	if reqLength > MAX_GARBAGE_ARG_LEN { return nil }
+	deadList := deadLists[reqLength-1]
+	if len(deadList) == 0 { return nil }
+
+	ret := deadList[len(deadList)-1]
+	deadLists[reqLength-1] = deadList[:len(deadList)-1]
+
+	if len(ret) != reqLength { panic(fmt.Sprintf("Expected list to be of length %d, but it was %d instead", reqLength, len(ret))) }
+
+	// for i := 0; i < len(ret); i++ {
+	// 	ret[i] = nil
+	// }
+	if ret == nil { panic("Didn't expect ret to be nil") }
+	if printDebug { fmt.Printf("Returning dead list of length %d: %s\n", reqLength, ret) }
+	return ret
+	// return nil
+}
+
+func NewListK(reqLength int) ListK {
+	newArgs := getDeadList(reqLength)
+	if newArgs == nil {
+		newArgs = make(ListK, reqLength)
+	}
+	return newArgs
+}
+
 func updateArg(k *K, arg int, newVal *K) *K {
 	if printDebug {
 		fmt.Printf("Updating %s's %d argument to %s\n", k, arg, newVal)
@@ -316,10 +368,9 @@ func updateArg(k *K, arg int, newVal *K) *K {
 		if printDebug { fmt.Printf("   Term is shared, need to copy\n") }
 		// k.Dec()
 
-		newArgs := make(ListK, len(k.args))
+		newArgs := NewListK(len(k.args))
 		for i, arg := range k.args {
 			newArgs[i] = arg
-			// arg.Inc()
 		}
 		oldK := k
 		k = NewKSpecial(k.label, newArgs, k.value, k.variable)
