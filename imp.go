@@ -6,24 +6,29 @@ import "time"
 import "runtime/pprof"
 import "os"
 
+// need to deal with terms inside the store
+
+
+const profile = true
 const printDebug = false
 const shouldCheck = false
 const upto = 5000000
 
-var label_hole KLabel   = StringLabel(0)	
+var label_hole KLabel   = StringLabel(0)
+var label_fake KLabel   = StringLabel(1)
 var label_semi KLabel 	= StringLabel(100)	
 var label_var KLabel 	= StringLabel(101)
-var label_skip KLabel 	= StringLabel(102)	
-var label_plus KLabel 	= StringLabel(103)	
+var label_skip KLabel 	= StringLabel(102)
+var label_plus KLabel 	= StringLabel(103)
 var label_neg KLabel 	= StringLabel(104)
-var label_true KLabel 	= StringLabel(105)	
-var label_false KLabel 	= StringLabel(106) 	
-var label_assign KLabel = StringLabel(107)  
-var label_while KLabel 	= StringLabel(108) 	
+var label_true KLabel 	= StringLabel(105)
+var label_false KLabel 	= StringLabel(106)
+var label_assign KLabel = StringLabel(107)
+var label_while KLabel 	= StringLabel(108)
 var label_if KLabel 	= StringLabel(109)
 var label_not KLabel 	= StringLabel(110)
 var label_lte KLabel 	= StringLabel(111)
-var label_n KLabel 		= StringLabel(1000)	
+var label_n KLabel 		= StringLabel(1000)
 var label_s KLabel 		= StringLabel(1001)
 var label_zero KLabel 	= Int64Label(0)
 var label_one KLabel 	= Int64Label(1)
@@ -38,6 +43,7 @@ var k_skip = NewK(label_skip, nil)
 
 var names map[int64]string = map[int64]string{
 	0: "hole",
+	1: "fake",
 	100: ";",
 	101: "var",
 	102: "skip",
@@ -54,17 +60,41 @@ var names map[int64]string = map[int64]string{
 	1001: "s",
 }
 
+var deadK []*K
+
 func NewKSpecial(label KLabel, args ListK, value bool, variable bool) *K {
 	for _, arg := range args {
 		arg.Inc()
 	}
-	return &K{label, args, value, variable, 0}
+	var newK *K
+	if len(deadK) > 0 {
+		newK = deadK[len(deadK)-1]
+		newK.label = label
+		newK.args = args
+		newK.value = value
+		newK.variable = variable
+		deadK = deadK[:len(deadK)-1]
+	} else {
+		newK = &K{label, args, value, variable, 0}
+	}
+	return newK
 }
 func NewK(label KLabel, args ListK) *K {
 	for _, arg := range args {
 		arg.Inc()
 	}
-	return &K{label, args, false, false, 0}
+	var newK *K
+	if len(deadK) > 0 {
+		newK = deadK[len(deadK)-1]
+		newK.label = label
+		newK.args = args
+		newK.value = false
+		newK.variable = false
+		deadK = deadK[:len(deadK)-1]
+	} else {
+		newK = &K{label, args, false, false, 0}
+	}
+	return newK
 }
 
 func Int64Label(i64 int64) KLabel {
@@ -111,6 +141,11 @@ func (k *K) Dec() {
 		if printDebug { fmt.Printf("Dead term {%s}\n", k) }
 		for _, arg := range k.args {
 			arg.Dec()
+		}
+		if len(deadK) < 100 {
+			if k != hole && k != k_true && k != k_false && k != k_zero && k != k_one && k != k_skip {
+				deadK = append(deadK, k)
+			}
 		}
 	}
 }
@@ -167,15 +202,21 @@ func stateString() string {
 func main() {
 	fmt.Printf("foo\n")
 
+	deadK = make([]*K, 0)
+
 	f, err := os.Create("profiling.dat")
     if err != nil { panic(err) }
 
 	appendK(prog1())
 	t0 := time.Now()
 
-    pprof.StartCPUProfile(f)
+	if profile {
+    	pprof.StartCPUProfile(f)
+    }
 	repl()
-	pprof.StopCPUProfile()
+	if profile {
+		pprof.StopCPUProfile()
+	}
 	delta := time.Since(t0)
 	fmt.Printf("Took %v\n", delta)
 	result := stateCell[label_s.data].label
@@ -234,7 +275,7 @@ func (k *K) counts_aux(counts map[*K]int, seen map[*K]bool) {
 	if _, ok := counts[k]; !ok { counts[k] = 0 }
 	counts[k]++
 	if _, ok := seen[k]; ok { return }
-	seen[k] = true	
+	seen[k] = true
 	for _, arg := range k.args {
 		arg.counts_aux(counts, seen)
 	}
@@ -247,10 +288,16 @@ func (k *K) counts() map[*K]int {
 	return counts
 }
 func (c Continuation) check() {
-	specialk := &K{label_hole, ListK(c), false, false, 1}
+	allValues := make([]*K, len(c)) // 0, len(stateCell) + len(c)
+	copy(allValues, ListK(c))
+	for _, val := range stateCell {
+		allValues = append(allValues, val)
+	}
+	
+	specialk := &K{label_fake, allValues, false, false, 1}
 	counts := specialk.counts()
 
-	// fmt.Printf("%+v\n", counts)
+	fmt.Printf("%+v\n", counts)
 	bad := false
 	for k, count := range counts {
 		if k.refs != count {
@@ -379,6 +426,16 @@ func handleSemi() bool {
 	return change
 }
 
+func updateStore(keyK *K, value *K) {
+	key := keyK.label.data
+	oldK := stateCell[key]
+	stateCell[key] = value
+	value.Inc()
+	if oldK != nil {
+		oldK.Dec()
+	}
+} 
+
 func handleVar() bool {
 	change := false
 	topSpot := len(kCell) - 1
@@ -391,7 +448,7 @@ func handleVar() bool {
 	} else {
 		if printDebug { fmt.Printf("Applying 'var-something' rule\n") }
 		change = true
-		stateCell[top.args[0].label.data] = k_zero
+		updateStore(top.args[0], k_zero)
 		newTop := updateTrimArgs(top, 1, len(top.args))
 		setHead(newTop)
 	}
@@ -415,8 +472,7 @@ func handleAssign() bool {
 	} else {
 		if printDebug { fmt.Printf("Applying 'assign' rule\n") }
 		change = true
-		variable := top.args[0].label
-		stateCell[variable.data] = right
+		updateStore(top.args[0], right)
 		trimK()
 	}
 	return change
