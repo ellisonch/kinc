@@ -19,7 +19,8 @@ statements returns [String s] locals [String temp = ""]
 	: 
 		{ $s = "Skip()"; }
 	| a=statement (';' b=statement {$temp += "," + $b.s;})*
-		{ $s = $a.s + $temp; }
+		// { $s = "Statements([" + $a.s + $temp + "])"; }
+		{ $s = "Statements(" + $a.s + $temp + ")"; }
 	;
 statement returns [String s]
 	: assign
@@ -46,7 +47,7 @@ while_ returns [String s]
 	;
 if_ returns [String s]
 	: 'if' a=bool_expression '{' b=statements '}' 'else' '{' c=statements '}'
-		{ $s = "While(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
+		{ $s = "If(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
 	;
 
 id_list returns [String s] locals [String temp = ""]
