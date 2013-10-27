@@ -1,0 +1,1 @@
+Program(Statements(Var(Id("n"),Id("s"),Id("r")),Assign(Id("n"), Int(1000000)),Assign(Id("s"), Int(0)),While(Not(Paren(LTE(Id("n"), Int(0)))), Statements(Assign(Id("s"), Plus(Id("s"), Id("n"))),Assign(Id("n"), Plus(Id("n"), Neg(Int(1))))))))
