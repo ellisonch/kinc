@@ -8,6 +8,10 @@ import "os"
 import . "github.com/ellisonch/k"
 import "github.com/ellisonch/aterm"
 
+// TODO/Notes
+// need to add static pass
+// for most rules, we know what the next rule to take place will be
+
 // need to deal with terms inside the store
 
 const profile = true
