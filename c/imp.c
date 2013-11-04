@@ -5,10 +5,9 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include "uthash.h"
 #include "k.h"
 
-#define UPTO (100000)
+#define UPTO (1000000)
 
 #define panic(...) (_panic(__func__, __FILE__, __LINE__, __VA_ARGS__))
 
@@ -41,28 +40,28 @@ char* givenLabels[] = {
 	"While",
 	"True",
 	"False",
+	"_fake",
 };
 
-int label_hole = 0;
-int label_assign = 1;
-int label_bool = 2;
-int label_div = 3;
-int label_id = 4;
-int label_if = 5;
-int label_int = 6;
-int label_lte = 7;
-int label_neg = 8;
-int label_not = 9;
-int label_plus = 10;
-int label_program = 11;
-int label_skip = 12;
-int label_statements = 13;
-int label_var = 14;
-int label_while = 15;
-int label_true = 16;
-int label_false = 17;
-
-
+int symbol_hole = 0;
+int symbol_assign = 1;
+int symbol_bool = 2;
+int symbol_div = 3;
+int symbol_id = 4;
+int symbol_if = 5;
+int symbol_int = 6;
+int symbol_lte = 7;
+int symbol_neg = 8;
+int symbol_not = 9;
+int symbol_plus = 10;
+int symbol_program = 11;
+int symbol_skip = 12;
+int symbol_statements = 13;
+int symbol_var = 14;
+int symbol_while = 15;
+int symbol_true = 16;
+int symbol_false = 17;
+int symbol_fake = 18;
 
 
 // typedef struct K K;
@@ -99,34 +98,44 @@ typedef struct ListK ListK;
 const char* KToString(K* k);
 void Dec(K* k);
 void Inc(K* k);
-
+const char* ListKToString(ListK* args);
 
 
 K* deadK[MAX_GARBAGE_KEPT];
 int deadlen = 0;
 
-ListK* deadLists[MAX_GARBAGE_ARG_LEN][MAX_GARBAGE_KEPT];
-int deadListsLen[MAX_GARBAGE_ARG_LEN];
+ListK* deadLists[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
+int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
 
 
 // KLabel Int64Label(int64 i64) {
 // 	return (KLabel){type = e_i64, {i64_val = i64}};
 // 	// return KLabel{kind: e_i64, data: i64}
 // }
+
+KLabel* mallocKLabel() {
+	return (KLabel*)malloc(sizeof(KLabel));
+}
 KLabel* StringLabel(const char* s) {
-	KLabel* newL = (KLabel*)malloc(sizeof(KLabel));
+	KLabel* newL = mallocKLabel();
 	newL->type = e_string;
 	newL->string_val = s;
 	return newL;
 }
+KLabel* symbolLabels[50];
 KLabel* SymbolLabel(int s) {
-	KLabel* newL = (KLabel*)malloc(sizeof(KLabel));
+	if (symbolLabels[s] != NULL) {
+		return symbolLabels[s];
+	}
+	KLabel* newL = mallocKLabel();
 	newL->type = e_symbol;
 	newL->symbol_val = s;
+	symbolLabels[s] = newL;
+
 	return newL;
 }
 KLabel* Int64Label(int64_t i64) {
-	KLabel* newL = (KLabel*)malloc(sizeof(KLabel));
+	KLabel* newL = mallocKLabel();
 	newL->type = e_i64;
 	newL->i64_val = i64;
 	return newL;
@@ -141,26 +150,57 @@ _Noreturn void _panic(const char* func, const char* file, int line, const char* 
     exit(1);
 }
 
-// func getDeadList(reqLength int) ListK {
-// 	if reqLength > MAX_GARBAGE_ARG_LEN { return nil }
-// 	deadList := deadLists[reqLength-1]
-// 	if len(deadList) == 0 { return nil }
+ListK* getDeadList(int reqLength) {
+	// return NULL;
+	if (reqLength > MAX_GARBAGE_ARG_LEN) {
+		return NULL;
+	}
+	ListK** deadList = deadLists[reqLength];
+	if (deadListsLen[reqLength] == 0) {
+		if (printDebug) { printf("No dead stuff of length %d\n", reqLength); }
+		return NULL;
+	}
 
-// 	ret := deadList[len(deadList)-1]
-// 	deadLists[reqLength-1] = deadList[:len(deadList)-1]
+	ListK* ret = deadList[deadListsLen[reqLength] - 1];
+	deadListsLen[reqLength]--;
 
-// 	if len(ret) != reqLength { panic(fmt.Sprintf("Expected list to be of length %d, but it was %d instead", reqLength, len(ret))) }
+	if (ret == NULL) {
+		panic("Didn't expect ret to be nil");
+	}
+	if (ret->cap < reqLength) {
+		panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
+	}
+	ret->len = reqLength;
 
-// 	if ret == nil { panic("Didn't expect ret to be nil") }
-// 	if printDebug { fmt.Printf("Returning dead list of length %d: %s\n", reqLength, ret) }
-// 	return ret
-// }
+ 	if (printDebug) {
+ 		printf("Returning dead list of length %d\n", reqLength);
+ 	}
+ 	return ret;
+}
+
+int mallocedArgs;
+ListK* mallocArgs() {
+	mallocedArgs++;
+	return malloc(sizeof(ListK));
+}
+int malloced[10];
+K** mallocArgsA(int count) {
+	malloced[count]++;
+	return malloc(sizeof(K*) * count);
+}
 
 ListK* newArgs(int count, ...) {
-	ListK* args = malloc(sizeof(ListK));
-	args->cap = count;
-	args->len = count;
-	args->a = malloc(sizeof(K*) * count);
+	ListK* args = getDeadList(count);
+	if (args == NULL) {
+		args = mallocArgs();
+		args->a = mallocArgsA(count);
+		args->cap = count;
+		args->len = count;
+	} else {
+		if (count != args->len) {
+			panic("Expected %d == %d\n", count, args->len);
+		}
+	}
 
     va_list ap;
     va_start(ap, count);
@@ -183,12 +223,18 @@ void Inc(K* k) {
 	k->refs++;
 }
 
+K* mallocK() {
+	return malloc(sizeof(K));
+}
+
 K* NewK(KLabel* label, ListK* args) {
 	if (args == NULL) {
-		args = malloc(sizeof(ListK));
-		args->cap = 0;
-		args->len = 0;
-		args->a = malloc(1); // todo: unecessary
+		args = getDeadList(0);
+		if (args == NULL) {
+			args = mallocArgs();
+			args->cap = 0;
+			args->len = 0;
+		}
 	} else {
 		for (int i = 0; i < args->len; i++) {
 	 		K* arg = args->a[i];
@@ -204,7 +250,7 @@ K* NewK(KLabel* label, ListK* args) {
 		newK = deadK[deadlen - 1];
 		deadlen--;
 	} else {
-		newK = (K*)malloc(sizeof(K));
+		newK = mallocK();
 	}
 	newK->label = label;
 	newK->args = args;
@@ -242,7 +288,7 @@ const char* LabelToString(KLabel* label) {
 	} else if (label->type == e_symbol) {
 		return givenLabels[label->symbol_val];
 	} else {
-		panic("Some unknown label type found");
+		panic("Some unknown label type %d found", label->type);
 	}
 	// return NULL;
 }
@@ -258,8 +304,6 @@ const char* ListKToString(ListK* args) {
 
 	// size_t len = strlen(s);
 	for (int i = 0; i < args->len; i++) {
-		// printf("len: %zu\n", len);
-		// printf("%d\n", args->len);
 		K* arg = args->a[i];
 		strcat(s, KToString(arg));
 		if (i < args->len - 1) {
@@ -282,42 +326,33 @@ const char* KToString(K* k) {
 	return s;
 }
 
-K* k_true() { return NewK(SymbolLabel(label_bool), newArgs(1, NewK(SymbolLabel(label_true), NULL))); }
-K* k_false() { return NewK(SymbolLabel(label_bool), newArgs(1, NewK(SymbolLabel(label_false), NULL))); }
-K* k_zero() { return NewK(SymbolLabel(label_int), newArgs(1, NewK(Int64Label(0), NULL))); }
-K* k_one() { return NewK(SymbolLabel(label_int), newArgs(1, NewK(Int64Label(1), NULL))); }
-K* k_skip() { return NewK(SymbolLabel(label_skip), NULL); }
-
-// Program(
-// 	Statements(
-// 		Var(Id("n"),Id("s"),Id("r"))
-// 		,Assign(Id("n"), Int(1000000))
-// 		,Assign(Id("s"), Int(0))
-// 		,While(Not(Paren(LTE(Id("n"), Int(0)))), Statements(Assign(Id("s"), Plus(Id("s"), Id("n"))),Assign(Id("n"), Plus(Id("n"), Neg(Int(1))))))
-// 	)
-// )
+K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
+K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
+K* k_zero() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(0), NULL))); }
+K* k_one() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(1), NULL))); }
+K* k_skip() { return NewK(SymbolLabel(symbol_skip), NULL); }
 
 K* prog1() {
-	K* n = NewK(SymbolLabel(label_id), newArgs(1, NewK(StringLabel("n"), NULL)));
-	K* s = NewK(SymbolLabel(label_id), newArgs(1, NewK(StringLabel("s"), NULL)));
-	K* hundred = NewK(SymbolLabel(label_int), newArgs(1, NewK(Int64Label(UPTO), NULL)));
+	K* n = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("n"), NULL)));
+	K* s = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("s"), NULL)));
+	K* hundred = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(UPTO), NULL)));
 
-	K* l1 = NewK(SymbolLabel(label_var), newArgs(2, n, s));
-	K* l2 = NewK(SymbolLabel(label_assign), newArgs(2, n, hundred));
-	K* l3 = NewK(SymbolLabel(label_assign), newArgs(2, s, k_zero()));
+	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
+	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
+	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, k_zero()));
 
-	K* sPn = NewK(SymbolLabel(label_plus), newArgs(2, s, n));
-	K* l5 = NewK(SymbolLabel(label_assign), newArgs(2, s, sPn));
-	K* negOne = NewK(SymbolLabel(label_neg), newArgs(1, k_one()));
-	K* nPno = NewK(SymbolLabel(label_plus), newArgs(2, n, negOne));
-	K* l6 = NewK(SymbolLabel(label_assign), newArgs(2, n, nPno));
-	K* body = NewK(SymbolLabel(label_statements), newArgs(2, l5, l6));
+	K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
+	K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
+	K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, k_one()));
+	K* nPno = NewK(SymbolLabel(symbol_plus), newArgs(2, n, negOne));
+	K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
+	K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
 
-	K* nLTzero = NewK(SymbolLabel(label_lte), newArgs(2, n, k_zero()));
-	K* guard = NewK(SymbolLabel(label_not), newArgs(1, nLTzero));
-	K* l4 = NewK(SymbolLabel(label_while), newArgs(2, guard, body));
+	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, k_zero()));
+	K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
+	K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
 
-	K* pgm = NewK(SymbolLabel(label_statements), newArgs(4, l1, l2, l3, l4));
+	K* pgm = NewK(SymbolLabel(symbol_statements), newArgs(4, l1, l2, l3, l4));
 	return pgm;
 	// return l1;
 }
@@ -326,7 +361,7 @@ int isValue(K* k) {
 	if (k->label->type != e_symbol) {
 		panic("Expected calling isValue on symbol labels");
 	}
-	if (k->label->symbol_val == label_int || k->label->symbol_val == label_bool) {
+	if (k->label->symbol_val == symbol_int || k->label->symbol_val == symbol_bool) {
 		return 1;
 	} else {
 		return 0;
@@ -340,7 +375,7 @@ K *kCell[MAX_K];
 int next = 0;
 
 K* Hole() {
-	return NewK(SymbolLabel(label_hole), NULL);
+	return NewK(SymbolLabel(symbol_hole), NULL);
 }
 
 // FIXME: leaks memory, sucks
@@ -384,9 +419,6 @@ void collectDeadTerm(K* k) {
 		K* arg = k->args->a[i];
 		Dec(arg);
 	}
-	// free(k->args->a);
-	// free(k->args);
-
 
 	// lenkargs := len(k.args)
 	// // don't garbage collect the "builtins"
@@ -394,12 +426,22 @@ void collectDeadTerm(K* k) {
 	// 	return
 	// }
 
-	int lenkargs = k->args->len;
+	int lenkargs = k->args->cap;
+	if (lenkargs >= MAX_GARBAGE_ARG_LEN) {
+		panic("MAX_GARBAGE_ARG_LEN is not enough");
+	}
+	// if (deadListsLen[lenkargs] >= MAX_GARBAGE_KEPT) {
+	// 	panic("garbage overflow");
+	// }
 	if (lenkargs < MAX_GARBAGE_ARG_LEN && deadListsLen[lenkargs] < MAX_GARBAGE_KEPT) {
 		deadLists[lenkargs][deadListsLen[lenkargs]] = k->args;
 		deadListsLen[lenkargs]++;
 	} else {
-		free(k->args->a);
+		mallocedArgs--;
+		if (k->args->cap > 0) {
+			malloced[k->args->cap]--;
+			free(k->args->a);
+		}
 		free(k->args);
 	}
 	// if lenkargs < MAX_GARBAGE_ARG_LEN && lenkargs > 0 {
@@ -408,8 +450,9 @@ void collectDeadTerm(K* k) {
 	// 	}
 	// }
 
-	
-	free(k->label);
+	if (k->label->type != e_symbol) {
+		free(k->label);	
+	}
 	if (deadlen < MAX_GARBAGE_KEPT) {
 		deadK[deadlen] = k;
 		deadlen++;
@@ -469,10 +512,13 @@ void appendK(K* k) {
 
 
 ListK* copyArgs(ListK* oldArgs) {
-	ListK* args = malloc(sizeof(ListK));
-	args->cap = oldArgs->cap;
-	args->len = oldArgs->len;
-	args->a = malloc(sizeof(K*) * oldArgs->cap);
+	ListK* args = getDeadList(oldArgs->cap);
+	if (args == NULL) {
+		args = mallocArgs();
+		args->cap = oldArgs->cap;
+		args->len = oldArgs->len;
+		args->a = mallocArgsA(oldArgs->cap);
+	}
 
     for (int i = 0; i < oldArgs->len; i++) {
         args->a[i] = oldArgs->a[i];
@@ -482,7 +528,7 @@ ListK* copyArgs(ListK* oldArgs) {
 }
 
 KLabel* copyLabel(KLabel* l) {
-	KLabel* newL = (KLabel*)malloc(sizeof(KLabel));
+	KLabel* newL = mallocKLabel();
 	memcpy(newL, l, sizeof(KLabel));
 	return newL;
 }
@@ -531,7 +577,7 @@ int handleValue() {
 		if (arg->label->type != e_symbol) {
 			panic("Expected string type");
 		}
-		if (arg->label->symbol_val == label_hole){
+		if (arg->label->symbol_val == symbol_hole){
 			if (printDebug) {
 				printf("Applying 'cooling' rule\n");
 			}
@@ -697,8 +743,8 @@ int handleWhile() {
 	change = 1;
 	K* guard = top->args->a[0];
 	K* body = top->args->a[1];
-	K* then = NewK(SymbolLabel(label_statements), newArgs(2, body, top));
-	K* theIf = NewK(SymbolLabel(label_if), newArgs(3, guard, then, k_skip()));
+	K* then = NewK(SymbolLabel(symbol_statements), newArgs(2, body, top));
+	K* theIf = NewK(SymbolLabel(symbol_if), newArgs(3, guard, then, k_skip()));
 	setHead(theIf);
 
 	return change;
@@ -722,13 +768,13 @@ int handleIf() {
 		if (Inner(guard)->label->type != e_symbol) {
 			panic("Expected key to be symbol label");
 		}
-		if (Inner(guard)->label->symbol_val == label_true) {
+		if (Inner(guard)->label->symbol_val == symbol_true) {
 			if (printDebug) {
 				printf("Applying 'if-true' rule\n");
 			}
 			change = 1;
 			setHead(top->args->a[1]);
-		} else if (Inner(guard)->label->symbol_val == label_false) {
+		} else if (Inner(guard)->label->symbol_val == symbol_false) {
 			if (printDebug) {
 				printf("Applying 'if-false' rule\n");
 			}
@@ -758,13 +804,13 @@ int handleNot() {
 		if (Inner(Inner(top))->label->type != e_symbol) {
 			panic("Expected key to be symbol label");
 		}
-		if (Inner(Inner(top))->label->symbol_val == label_false) {
+		if (Inner(Inner(top))->label->symbol_val == symbol_false) {
 			if (printDebug) { 
 				printf("Applying 'not-false' rule\n");
 			}
 			change = 1;
 			setHead(k_true());
-		} else if (Inner(Inner(top))->label->symbol_val == label_true) {
+		} else if (Inner(Inner(top))->label->symbol_val == symbol_true) {
 			if (printDebug) {
 				printf("Applying 'not-true' rule\n");
 			}
@@ -835,7 +881,7 @@ int handlePlus() {
 		change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
-		K* newTop = NewK(SymbolLabel(label_int), newArgs(1, NewK(Int64Label(leftv + rightv), NULL)));
+		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(leftv + rightv), NULL)));
 		setHead(newTop);
 	}
 
@@ -859,7 +905,7 @@ int handleNeg() {
 		change = 1;
 		int64_t value = Inner(body)->label->i64_val;
 		int64_t newValue = -value;
-		K* newTop = NewK(SymbolLabel(label_int), newArgs(1, NewK(Int64Label(newValue), NULL)));
+		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(newValue), NULL)));
 		setHead(newTop);
 	}
 
@@ -874,6 +920,74 @@ int handleSkip() {
 	trimK();
 
 	return change;
+}
+
+typedef struct countentry {
+	K* entry;
+	int count;
+} countentry;
+
+void counts_aux(K* k, countentry counts[]) {
+	int o = ((unsigned int)k) % 1000000;
+	// printf("o = %d\n", o);
+	if (counts[o].entry == 0) {
+		counts[o].entry = k;
+		counts[o].count = 1;
+	} else if (counts[o].entry == k) {
+		counts[o].count++;
+		return;
+	} else {
+		panic("Collision!");
+	}
+	for (int i = 0; i < k->args->len; i++) {
+		K* arg = k->args->a[i];
+		counts_aux(arg, counts);
+	}
+}
+
+countentry* counts(K* k) {
+	countentry* counts = calloc(1000000, sizeof(countentry));
+	counts_aux(k, counts);
+	return counts;
+}
+
+void check(K *c[MAX_K], K *state[MAX_STATE]) {
+	ListK* allValues = malloc(sizeof(ListK));
+	allValues->cap = next + 26;
+	allValues->len = next;
+	allValues->a = malloc(sizeof(K*) * (next + 26));
+	for (int i = 0; i < next; i++) {
+		allValues->a[i] = c[i];
+	}
+	// memcpy(allValues, c, sizeof(K*) * next);
+	for (int i = 0; i < MAX_STATE; i++) {
+		K* val = state[i];
+		if (val == NULL) {
+			continue;
+		}
+		allValues->a[allValues->len++] = val;
+	}
+
+	K* specialk = NewK(SymbolLabel(symbol_fake), allValues);
+	for (int i = 0; i < specialk->args->len; i++) {
+ 		K* arg = specialk->args->a[i];
+ 		Dec(arg);
+ 	}
+	specialk->refs = 1;
+	countentry* cm = counts(specialk);
+
+	int bad = 0;
+	for (int i = 0; i < 1000000; i++) {
+		if (cm[i].entry != 0) {
+			K* k = cm[i].entry;
+			if (k->refs != cm[i].count) {
+				bad = 1;
+				printf("Count for %s should be %d!\n", KToString(k), cm[i].count);
+			}
+		}
+	}
+	if (bad) { panic("Bad check()!"); }
+	free(cm);
 }
 
 void repl() {
@@ -892,9 +1006,9 @@ void repl() {
 			printf("\n-----------------\n");
 			panic("Safety check!");
 		}
-		// if (shouldCheck) {
-		// 	check(kCell, stateCell);
-		// }
+		if (shouldCheck) {
+			check(kCell, stateCell);
+		}
 		int topSpot = next - 1;
 		K* top = kCell[topSpot];
 		if (top->label->type != e_symbol) {
@@ -905,38 +1019,38 @@ void repl() {
 
 		if (isValue(top)) {
 			change = handleValue();
-		} else if (topLabel == label_id) {
+		} else if (topLabel == symbol_id) {
 			change = handleVariable();
-		} else if (topLabel == label_statements) {
+		} else if (topLabel == symbol_statements) {
 			change = handleStatements();
-		} else if (topLabel == label_var) {
+		} else if (topLabel == symbol_var) {
 			change = handleVar();
-		} else if (topLabel == label_assign) {
+		} else if (topLabel == symbol_assign) {
 			change = handleAssign();
-		} else if (topLabel == label_while) {
+		} else if (topLabel == symbol_while) {
 			change = handleWhile();
-		} else if (topLabel == label_if) {
+		} else if (topLabel == symbol_if) {
 			change = handleIf();
-		} else if (topLabel == label_not) {
+		} else if (topLabel == symbol_not) {
 			change = handleNot();
-		} else if (topLabel == label_lte) {
+		} else if (topLabel == symbol_lte) {
 			change = handleLTE();
-		} else if (topLabel == label_plus) {
+		} else if (topLabel == symbol_plus) {
 			change = handlePlus();
-		} else if (topLabel == label_div) {
+		} else if (topLabel == symbol_div) {
 			panic("don't handle Div");
-		} else if (topLabel == label_neg) {
+		} else if (topLabel == symbol_neg) {
 			change = handleNeg();
-		} else if (topLabel == label_program) {
+		} else if (topLabel == symbol_program) {
 			panic("don't handle Program");
-		} else if (topLabel == label_skip) {
+		} else if (topLabel == symbol_skip) {
 			change = handleSkip();
 		} else {
 			panic("unrecognized label");
 		}
 
 		// switch {
-		// 	case topLabel.Equals(label_paren): change = handleParen()
+		// 	case topLabel.Equals(symbol_paren): change = handleParen()
 		// }
 	}
 }
@@ -959,6 +1073,28 @@ int main(void) {
 	} else {
 		printf("'s' was not set!\n");
 	}
+
+	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+	// 	for (int j = 0; j < deadListsLen[i]; j++) {
+	// 		ListK* args = deadLists[i][j];
+	// 		if (args->len > 0) {
+	// 			malloced[args->cap]--;
+	// 			free(args->a);
+	// 		}
+	// 		mallocedArgs--;
+	// 		free(args);
+	// 	}
+	// }
+	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+	// 	deadListsLen[i] = 0;
+	// }
+	for (int i = 0; i < 8; i++) {
+		printf("args %d: %d\n", i, malloced[i]);
+	}
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		printf("deadargs %d: %d\n", i, deadListsLen[i]);
+	}
+	printf("Mallocedargs: %d\n", mallocedArgs);
 
 	return 0;
 }
