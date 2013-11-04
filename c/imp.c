@@ -13,7 +13,7 @@
 
 #define MAX_STATE 26
 #define MAX_K 10
-#define MAX_GARBAGE_KEPT 1000
+#define MAX_GARBAGE_KEPT 10000
 #define MAX_GARBAGE_ARG_LEN 5
 
 #define printRefCounts 1
@@ -100,6 +100,8 @@ void Dec(K* k);
 void Inc(K* k);
 const char* ListKToString(ListK* args);
 
+KLabel* deadLabels[MAX_GARBAGE_KEPT];
+int deadLabelLen = 0;
 
 K* deadK[MAX_GARBAGE_KEPT];
 int deadlen = 0;
@@ -113,11 +115,22 @@ int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
 // 	// return KLabel{kind: e_i64, data: i64}
 // }
 
+int mallocedLabels = 0;
+
 KLabel* mallocKLabel() {
+	mallocedLabels++;
 	return (KLabel*)malloc(sizeof(KLabel));
 }
 KLabel* StringLabel(const char* s) {
-	KLabel* newL = mallocKLabel();
+	if (printDebug) { printf("Str DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Creating string label %s\n", s); }
+	KLabel* newL;
+	if (deadLabelLen > 0) {
+		newL = deadLabels[deadLabelLen - 1];
+		deadLabelLen--;
+	} else {
+		newL = mallocKLabel();
+	}
 	newL->type = e_string;
 	newL->string_val = s;
 	return newL;
@@ -127,15 +140,33 @@ KLabel* SymbolLabel(int s) {
 	if (symbolLabels[s] != NULL) {
 		return symbolLabels[s];
 	}
-	KLabel* newL = mallocKLabel();
+	if (printDebug) { printf("Sym DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Creating symbol label %s\n", givenLabels[s]); }
+	KLabel* newL;
+	if (deadLabelLen > 0) {
+		newL = deadLabels[deadLabelLen - 1];
+		deadLabelLen--;
+	} else {
+		newL = mallocKLabel();
+	}
 	newL->type = e_symbol;
 	newL->symbol_val = s;
 	symbolLabels[s] = newL;
 
 	return newL;
 }
+// int intcount = 0;
 KLabel* Int64Label(int64_t i64) {
-	KLabel* newL = mallocKLabel();
+	// intcount++;
+	if (printDebug) { printf("Int DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Creating int label %" PRId64 "\n", i64); }
+	KLabel* newL;
+	if (deadLabelLen > 0) {
+		newL = deadLabels[deadLabelLen - 1];
+		deadLabelLen--;
+	} else {
+		newL = mallocKLabel();
+	}
 	newL->type = e_i64;
 	newL->i64_val = i64;
 	return newL;
@@ -223,7 +254,9 @@ void Inc(K* k) {
 	k->refs++;
 }
 
+int mallocedK = 0;
 K* mallocK() {
+	mallocedK++;
 	return malloc(sizeof(K));
 }
 
@@ -436,12 +469,14 @@ void collectDeadTerm(K* k) {
 	if (lenkargs < MAX_GARBAGE_ARG_LEN && deadListsLen[lenkargs] < MAX_GARBAGE_KEPT) {
 		deadLists[lenkargs][deadListsLen[lenkargs]] = k->args;
 		deadListsLen[lenkargs]++;
+		if (printDebug) { printf("Saving args\n"); }
 	} else {
 		mallocedArgs--;
 		if (k->args->cap > 0) {
 			malloced[k->args->cap]--;
 			free(k->args->a);
 		}
+		if (printDebug) { printf("Freeing args\n"); }		
 		free(k->args);
 	}
 	// if lenkargs < MAX_GARBAGE_ARG_LEN && lenkargs > 0 {
@@ -451,12 +486,21 @@ void collectDeadTerm(K* k) {
 	// }
 
 	if (k->label->type != e_symbol) {
-		free(k->label);	
+		if (deadLabelLen < MAX_GARBAGE_KEPT) {
+			deadLabels[deadLabelLen++] = k->label;
+			if (printDebug) { printf("Saving label\n"); }
+		} else {
+			if (printDebug) { printf("Freeing label\n"); }
+			mallocedLabels--;
+			free(k->label);
+		}
 	}
 	if (deadlen < MAX_GARBAGE_KEPT) {
-		deadK[deadlen] = k;
-		deadlen++;
+		if (printDebug) { printf("Saving k\n"); }
+		deadK[deadlen++] = k;
 	} else {
+		if (printDebug) { printf("Freeing k\n"); }
+		mallocedK--;
 		free(k);
 	}
 
@@ -528,14 +572,23 @@ ListK* copyArgs(ListK* oldArgs) {
 }
 
 KLabel* copyLabel(KLabel* l) {
-	KLabel* newL = mallocKLabel();
+	if (printDebug) { printf("Cpy DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Creating copy label %s\n", LabelToString(l)); }
+	KLabel* newL;
+	if (deadLabelLen > 0) {
+		newL = deadLabels[deadLabelLen - 1];
+		deadLabelLen--;
+	} else {
+		newL = mallocKLabel();
+	}
 	memcpy(newL, l, sizeof(KLabel));
 	return newL;
 }
 
 K* copy(K* oldK) {
 	ListK* newArgs = copyArgs(oldK->args);
-	K* k = NewK(copyLabel(oldK->label), newArgs);
+	// K* k = NewK(copyLabel(oldK->label), newArgs);
+	K* k = NewK(oldK->label, newArgs);
 	if (printDebug) {
 		printf("   New Old: %s\n", KToString(oldK));
 		printf("   New Copy: %s\n", KToString(k));
@@ -551,6 +604,7 @@ K* UpdateArg(K* k, int arg, K* newVal) {
 		if (printDebug) {
 			printf("   Term is shared, need to copy\n");
 		}
+		// K* oldk = k;
 		k = copy(k);
 	}
 	Inc(newVal);
@@ -1073,28 +1127,34 @@ int main(void) {
 	} else {
 		printf("'s' was not set!\n");
 	}
+	
+	printf("\nMallocedK: %d\n", mallocedK);
+	printf("deadlen: %d\n\n", deadlen);
 
-	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-	// 	for (int j = 0; j < deadListsLen[i]; j++) {
-	// 		ListK* args = deadLists[i][j];
-	// 		if (args->len > 0) {
-	// 			malloced[args->cap]--;
-	// 			free(args->a);
-	// 		}
-	// 		mallocedArgs--;
-	// 		free(args);
-	// 	}
-	// }
-	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-	// 	deadListsLen[i] = 0;
-	// }
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		for (int j = 0; j < deadListsLen[i]; j++) {
+			ListK* args = deadLists[i][j];
+			if (args->len > 0) {
+				malloced[args->cap]--;
+				free(args->a);
+			}
+			mallocedArgs--;
+			free(args);
+		}
+	}
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		deadListsLen[i] = 0;
+	}
 	for (int i = 0; i < 8; i++) {
 		printf("args %d: %d\n", i, malloced[i]);
 	}
 	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
 		printf("deadargs %d: %d\n", i, deadListsLen[i]);
 	}
-	printf("Mallocedargs: %d\n", mallocedArgs);
+	printf("Mallocedargs: %d\n\n", mallocedArgs);
 
+	printf("MallocedLabels: %d\n", mallocedLabels);
+	printf("deadLabelLen: %d\n", deadLabelLen);
+	// printf("intcount: %d\n", intcount);
 	return 0;
 }
