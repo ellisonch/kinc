@@ -7,7 +7,7 @@
 
 #include "k.h"
 
-#define UPTO (1000000)
+#define UPTO (5000000)
 
 #define panic(...) (_panic(__func__, __FILE__, __LINE__, __VA_ARGS__))
 
@@ -16,10 +16,18 @@
 #define MAX_GARBAGE_KEPT 10000
 #define MAX_GARBAGE_ARG_LEN 5
 
+// when printing k terms, print the ref counts as well
 #define printRefCounts 1
 
 #define printDebug 0
 #define shouldCheck 0
+
+// technically not needed, but good to be safe
+#define checkTypeSafety 0
+#define checkRefCounting 0
+#define checkGC 0
+#define checkTermSize 0
+#define checkStackSize 0
 
 char* givenLabels[] = {
 	"_hole",
@@ -195,11 +203,13 @@ ListK* getDeadList(int reqLength) {
 	ListK* ret = deadList[deadListsLen[reqLength] - 1];
 	deadListsLen[reqLength]--;
 
-	if (ret == NULL) {
-		panic("Didn't expect ret to be nil");
-	}
-	if (ret->cap < reqLength) {
-		panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
+	if (checkGC) {
+		if (ret == NULL) {
+			panic("Didn't expect ret to be nil");
+		}
+		if (ret->cap < reqLength) {
+			panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
+		}
 	}
 	ret->len = reqLength;
 
@@ -227,7 +237,8 @@ ListK* newArgs(int count, ...) {
 		args->a = mallocArgsA(count);
 		args->cap = count;
 		args->len = count;
-	} else {
+	}
+	if (checkGC) {
 		if (count != args->len) {
 			panic("Expected %d == %d\n", count, args->len);
 		}
@@ -260,23 +271,27 @@ K* mallocK() {
 	return malloc(sizeof(K));
 }
 
+ListK* emptyArgs() {
+	ListK* args = getDeadList(0);
+	if (args == NULL) {
+		args = mallocArgs();
+		args->cap = 0;
+		args->len = 0;
+	}
+	return args;
+}
+
 K* NewK(KLabel* label, ListK* args) {
 	if (args == NULL) {
-		args = getDeadList(0);
-		if (args == NULL) {
-			args = mallocArgs();
-			args->cap = 0;
-			args->len = 0;
-		}
-	} else {
-		for (int i = 0; i < args->len; i++) {
-	 		K* arg = args->a[i];
-	 		if (arg == NULL) {
-	 			panic("Didn't expect nil arg in NewK()");
-	 		}
-	 		Inc(arg);
-	 	}
+		args = emptyArgs();
 	}
+	for (int i = 0; i < args->len; i++) {
+ 		K* arg = args->a[i];
+ 		if (arg == NULL) {
+ 			panic("Didn't expect nil arg in NewK()");
+ 		}
+ 		Inc(arg);
+ 	}
 	
 	K* newK = NULL;
 	if (deadlen > 0) {
@@ -290,25 +305,6 @@ K* NewK(KLabel* label, ListK* args) {
 	newK->refs = 0;
 	return newK;
 }
-
-// func NewK(label KLabel, args ListK) *K {
-// 	for _, arg := range args {
-// 		if arg == nil {
-// 			panic("Didn't expect nil arg in NewK()")
-// 		}
-// 		arg.Inc()
-// 	}
-// 	var newK *K
-// 	if len(deadK) > 0 {
-// 		newK = deadK[len(deadK)-1]
-// 		newK.label = label
-// 		newK.args = args
-// 		deadK = deadK[:len(deadK)-1]
-// 	} else {
-// 		newK = &K{label, args, 0}
-// 	}
-// 	return newK
-// }
 
 // TODO: leaks memory and is unsafe
 const char* LabelToString(KLabel* label) {
@@ -391,10 +387,13 @@ K* prog1() {
 }
 
 int isValue(K* k) {
-	if (k->label->type != e_symbol) {
-		panic("Expected calling isValue on symbol labels");
+	if (checkTypeSafety) {
+		if (k->label->type != e_symbol) {
+			panic("Expected calling isValue on symbol labels");
+		}
 	}
-	if (k->label->symbol_val == symbol_int || k->label->symbol_val == symbol_bool) {
+	int val = k->label->symbol_val;
+	if (val == symbol_int || val == symbol_bool) {
 		return 1;
 	} else {
 		return 0;
@@ -445,8 +444,10 @@ char* stateString() {
 void collectDeadTerm(K* k) {
 	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
 
-	if (k->args->len > 10) {
-		panic("Sanity check failed!");
+	if (checkTermSize) {
+		if (k->args->len > 10) {
+			panic("Sanity check failed!");
+		}
 	}
 	for (int i = 0; i < k->args->len; i++) {
 		K* arg = k->args->a[i];
@@ -514,8 +515,10 @@ void Dec(K* k) {
 	// panic("don't handle dec");
 	k->refs--;
 	int newRefs = k->refs;
-	if (newRefs < 0) {
-		panic("Term %s has fewer than 0 refs :(", KToString(k));
+	if (checkRefCounting) {
+		if (newRefs < 0) {
+			panic("Term %s has fewer than 0 refs :(", KToString(k));
+		}
 	}
 	if (newRefs == 0) {
 		// panic("Dead term found: %s", KToString(k));
@@ -546,8 +549,10 @@ void setPreHead(K* k) {
 
 
 void appendK(K* k) {
-	if (next >= MAX_K) {
-		panic("Trying to add too many elements to the K Cell!");
+	if (checkStackSize) {
+		if (next >= MAX_K) {
+			panic("Trying to add too many elements to the K Cell!");
+		}
 	}
 	Inc(k);
 	kCell[next] = k;
@@ -628,8 +633,10 @@ int handleValue() {
 	K* next = kCell[topSpot - 1];
 	for (int i = 0; i < next->args->len; i++) {
 		K* arg = next->args->a[i];
-		if (arg->label->type != e_symbol) {
-			panic("Expected string type");
+		if (checkTypeSafety) {
+			if (arg->label->type != e_symbol) {
+				panic("Expected string type");
+			}
 		}
 		if (arg->label->symbol_val == symbol_hole){
 			if (printDebug) {
@@ -672,8 +679,10 @@ K* updateTrimArgs(K* k, int left, int right) {
 
 
 void updateStore(K* keyK, K* value) {
-	if (keyK->label->type != e_string) {
-		panic("Expected key to be string label");
+	if (checkTypeSafety) {
+		if (keyK->label->type != e_string) {
+			panic("Expected key to be string label");
+		}
 	}
 	int key = keyK->label->string_val[0] - 'a';
 	K* oldK = stateCell[key];
@@ -690,8 +699,10 @@ int handleVariable() {
 	int topSpot = next - 1;
 	K* top = kCell[topSpot];
 
-	if (Inner(top)->label->type != e_string) {
-		panic("Expected key to be string label");
+	if (checkTypeSafety) {
+		if (Inner(top)->label->type != e_string) {
+			panic("Expected key to be string label");
+		}
 	}
 	int variable = Inner(top)->label->string_val[0] - 'a';
 	K* value = stateCell[variable];
@@ -819,8 +830,10 @@ int handleIf() {
 		K* newTop = UpdateArg(top, 0, Hole());
 		setPreHead(newTop);
 	} else {
-		if (Inner(guard)->label->type != e_symbol) {
-			panic("Expected key to be symbol label");
+		if (checkTypeSafety) {
+			if (Inner(guard)->label->type != e_symbol) {
+				panic("Expected key to be symbol label");
+			}
 		}
 		if (Inner(guard)->label->symbol_val == symbol_true) {
 			if (printDebug) {
@@ -855,8 +868,10 @@ int handleNot() {
 		K* newTop = UpdateArg(top, 0, Hole());
 		setPreHead(newTop);
 	} else {
-		if (Inner(Inner(top))->label->type != e_symbol) {
-			panic("Expected key to be symbol label");
+		if (checkTypeSafety) {
+			if (Inner(Inner(top))->label->type != e_symbol) {
+				panic("Expected key to be symbol label");
+			}
 		}
 		if (Inner(Inner(top))->label->symbol_val == symbol_false) {
 			if (printDebug) { 
@@ -982,7 +997,7 @@ typedef struct countentry {
 } countentry;
 
 void counts_aux(K* k, countentry counts[]) {
-	int o = ((unsigned int)k) % 1000000;
+	int o = ((uintptr_t)k) % 1000000;
 	// printf("o = %d\n", o);
 	if (counts[o].entry == 0) {
 		counts[o].entry = k;
@@ -1049,14 +1064,14 @@ void repl() {
 	while (change) {
 		change = 0;
 		if (printDebug) {
-			printf(stateString());
+			printf("%s", stateString());
 			printf("\n-----------------\n");
 		}
 		if (next == 0) {
 			break;
 		}
 		if (next > 10) {
-			printf(stateString());
+			printf("%s", stateString());
 			printf("\n-----------------\n");
 			panic("Safety check!");
 		}
@@ -1065,8 +1080,10 @@ void repl() {
 		}
 		int topSpot = next - 1;
 		K* top = kCell[topSpot];
-		if (top->label->type != e_symbol) {
-			panic("Expected a symbol label");
+		if (checkTypeSafety) {
+			if (top->label->type != e_symbol) {
+				panic("Expected a symbol label");
+			}
 		}
 		int topLabel = top->label->symbol_val;
 		// printf("label: %s\n", topLabel);
