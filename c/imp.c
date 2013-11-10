@@ -183,12 +183,12 @@ KLabel* Int64Label(int64_t i64) {
 }
 
 _Noreturn void _panic(const char* func, const char* file, int line, const char* format, ...) {
-    va_list va;
-    va_start(va, format);
-    fprintf(stderr, "PANIC! %s() (%s:%d): ", func, file, line);
-    vfprintf(stderr, format, va);
-    fprintf(stderr, "\n");
-    exit(1);
+	va_list va;
+	va_start(va, format);
+	fprintf(stderr, "PANIC! %s() (%s:%d): ", func, file, line);
+	vfprintf(stderr, format, va);
+	fprintf(stderr, "\n");
+	exit(1);
 }
 
 ListK* getDeadList(int reqLength) {
@@ -215,10 +215,10 @@ ListK* getDeadList(int reqLength) {
 	}
 	ret->len = reqLength;
 
- 	if (printDebug) {
- 		printf("Returning dead list of length %d\n", reqLength);
- 	}
- 	return ret;
+	if (printDebug) {
+		printf("Returning dead list of length %d\n", reqLength);
+	}
+	return ret;
 }
 
 int mallocedArgs;
@@ -571,11 +571,11 @@ ListK* copyArgs(ListK* oldArgs) {
 		args->a = mallocArgsA(oldArgs->cap);
 	}
 
-    for (int i = 0; i < oldArgs->len; i++) {
-        args->a[i] = oldArgs->a[i];
-    }
+	for (int i = 0; i < oldArgs->len; i++) {
+		args->a[i] = oldArgs->a[i];
+	}
 
-    return args;
+	return args;
 }
 
 KLabel* copyLabel(KLabel* l) {
