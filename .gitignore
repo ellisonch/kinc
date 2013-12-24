@@ -7,4 +7,17 @@ profiling.dat
 *.tokens
 /impParser/bak
 
+/c/libcfu-0.03
+/c/oprofile_data
+
 *.pdf
+
+*.stackdump
+
+*.s
+
+*.o
+
+*.gz
+
+*.zip
