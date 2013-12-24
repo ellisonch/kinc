@@ -530,6 +530,16 @@ func repl() {
 			case topLabel.Equals(label_paren): change = handleParen()
 			// case topLabel.Equals(label_neg): change = handleNeg()
 			case topLabel.Equals(label_skip): change = handleSkip()
+
+			/*
+rule
+	<k> spawn(S) => . ...</k> 
+	. => <k> S </k>
+
+
+
+			*/
+
 		}
 	}
 }

@@ -457,12 +457,15 @@ void collectDeadTerm(K* k) {
 	}
 
 	// lenkargs := len(k.args)
-	// // don't garbage collect the "builtins"
+	
+
+	int lenkargs = k->args->cap;
+
+	// don't garbage collect the "builtins"
 	// if (lenkargs == 0 && k == Hole) {
 	// 	return
 	// }
 
-	int lenkargs = k->args->cap;
 	if (lenkargs >= MAX_GARBAGE_ARG_LEN) {
 		panic("MAX_GARBAGE_ARG_LEN is not enough");
 	}

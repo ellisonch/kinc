@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
+
 int main(void) {
-	volatile unsigned long long n = 5000000;
-	volatile unsigned long long s = 0;
+	volatile uint64_t n = 50000000;
+	volatile uint64_t s = 0;
 
 	while (!(n <= 0)) {
 		s = s + n ;
 		n = n + -1 ;
 	}
-	printf("%lld\n", s);
+	printf("%" PRId64 "\n", s);
 }
