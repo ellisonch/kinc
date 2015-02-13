@@ -6,10 +6,9 @@
 #include <string.h>
 
 #include "k.h"
+#include "utils.h"
 
 #define UPTO (5000000)
-
-#define panic(...) (_panic(__func__, __FILE__, __LINE__, __VA_ARGS__))
 
 #define MAX_STATE 26
 #define MAX_K 10
@@ -180,15 +179,6 @@ KLabel* Int64Label(int64_t i64) {
 	newL->type = e_i64;
 	newL->i64_val = i64;
 	return newL;
-}
-
-_Noreturn void _panic(const char* func, const char* file, int line, const char* format, ...) {
-	va_list va;
-	va_start(va, format);
-	fprintf(stderr, "PANIC! %s() (%s:%d): ", func, file, line);
-	vfprintf(stderr, format, va);
-	fprintf(stderr, "\n");
-	exit(1);
 }
 
 ListK* getDeadList(int reqLength) {
