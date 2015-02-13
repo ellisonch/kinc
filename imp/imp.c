@@ -6,10 +6,11 @@
 #include <string.h>
 
 #include "k.h"
+#include "cells.h"
 #include "utils.h"
 #include "settings.h"
 
-#define UPTO (100000)
+#define UPTO (1000000)
 
 // TODO: get rid of these
 extern int mallocedLabels;
@@ -24,6 +25,12 @@ extern int deadlen;
 
 
 uint64_t rewrites;
+
+K *stateCell[MAX_STATE];
+
+K *kCell[MAX_K];
+int next = 0;
+
 
 
 char* givenLabels[] = {
@@ -119,78 +126,8 @@ int isValue(K* k) {
 	}
 }
 
-// var stateCell map[string]*K = make(map[string]*K)
-K *stateCell[MAX_STATE];
-
-K *kCell[MAX_K];
-int next = 0;
-
 K* Hole() {
 	return NewK(SymbolLabel(symbol_hole), NULL);
-}
-
-// FIXME: leaks memory, sucks
-char* kCellToString() {
-	char* s = malloc(10000);
-	strcpy(s, "k(\n");
-	for (int i = next - 1; i >= 0; i--) {
-		strcat(s, "  ~> ");
-		strcat(s, KToString(kCell[i]));
-		strcat(s, "\n");
-	}
-	strcat(s, ")\n");
-	return s;
-}
-
-// FIXME: leaks memory, sucks
-char* stateString() {
-	char* s = malloc(20000);
-	strcpy(s, "state(\n"); 
-	for (int i = 0; i < 26; i++) {
-		if (stateCell[i] != NULL) {
-			char var[] = "  x -> ";
- 			var[2] = i + 'a';
-			strcat(s, var);
-			strcat(s, KToString(stateCell[i]));
-			strcat(s, "\n");
-		}
-	}
-	strcat(s, ")\n");
-	strcat(s, kCellToString());
-	return s;
-}
-
-void trimK() {
-	int top = next - 1;
-	Dec(kCell[top]);
-	next--;
-	// kCell = kCell[:top]
-}
-
-void setHead(K* k) {
-	int top = next - 1;
-	Inc(k);
-	Dec(kCell[top]);
-	kCell[top] = k;
-}
-
-void setPreHead(K* k) {
-	int pre = next - 2;
-	Inc(k);
-	Dec(kCell[pre]);
-	kCell[pre] = k;
-}
-
-
-void appendK(K* k) {
-	if (checkStackSize) {
-		if (next >= MAX_K) {
-			panic("Trying to add too many elements to the K Cell!");
-		}
-	}
-	Inc(k);
-	kCell[next] = k;
-	next++;
 }
 
 
@@ -217,8 +154,8 @@ static void handleValue(int* change) {
 			}
 			*change = 1;
 			K* newTop = UpdateArg(next, i, top);
-			trimK();
-			setHead(newTop);
+			trimK(kCell);
+			setHead(kCell, newTop);
 			break;
 		}
 	}
@@ -258,7 +195,7 @@ void handleVariable(int* change) {
 
 	if (printDebug) { printf("Applying 'lookup' rule\n"); }
 	*change = 1;
-	setHead(value);
+	setHead(kCell, value);
 
 
 	// follows
@@ -274,22 +211,22 @@ void handleStatements(int* change) {
 			printf("Applying 'statements-empty' rule\n");
 		}
 		*change = 1;
-		trimK();
+		trimK(kCell);
 	} else if (top->args->len == 1) {
 		if (printDebug) {
 			printf("Applying 'statements-one' rule\n");
 		}
 		*change = 1;
 		K* newTop = top->args->a[0];
-		setHead(newTop);
+		setHead(kCell, newTop);
 	} else {
 		if (printDebug) {
 			printf("Applying 'statements-many' rule\n");
 		}
 		*change = 1;
-		appendK(top->args->a[0]);
+		appendK(kCell, top->args->a[0]);
 		K* newPreHead = updateTrimArgs(top, 1, top->args->len);
-		setPreHead(newPreHead);
+		setPreHead(kCell, newPreHead);
 	}
 }
 
@@ -302,7 +239,7 @@ void handleVar(int* change) {
 			printf("Applying 'var-empty' rule\n");
 		}
 		*change = 1;
-		trimK();
+		trimK(kCell);
 	} else {
 		if (printDebug) {
 			printf("Applying 'var-something' rule\n");
@@ -310,7 +247,7 @@ void handleVar(int* change) {
 		*change = 1;
 		updateStore(Inner(Inner(top)), k_zero());
 		K* newTop = updateTrimArgs(top, 1, top->args->len);
-		setHead(newTop);
+		setHead(kCell, newTop);
 	}
 }
 
@@ -325,16 +262,16 @@ void handleAssign(int* change) {
 			printf("Applying ':=-heat' rule\n");
 		}
 		*change = 1;
-		appendK(right);
+		appendK(kCell, right);
 		K* newTop = UpdateArg(top, 1, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (printDebug) { 
 			printf("Applying 'assign-rule' rule\n");
 		}
 		*change = 1;
 		updateStore(Inner(left), right);
-		trimK();
+		trimK(kCell);
 	}
 }
 
@@ -350,7 +287,7 @@ void handleWhile(int* change) {
 	K* body = top->args->a[1];
 	K* then = NewK(SymbolLabel(symbol_statements), newArgs(2, body, top));
 	K* theIf = NewK(SymbolLabel(symbol_if), newArgs(3, guard, then, k_skip()));
-	setHead(theIf);
+	setHead(kCell, theIf);
 
 	// follows
 	handleIf(change);
@@ -366,9 +303,9 @@ void handleIf(int* change) {
 			printf("Applying 'if-heat' rule\n");
 		}
 		*change = 1;
-		appendK(guard);
+		appendK(kCell, guard);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (checkTypeSafety) {
 			if (Inner(guard)->label->type != e_symbol) {
@@ -380,13 +317,13 @@ void handleIf(int* change) {
 				printf("Applying 'if-true' rule\n");
 			}
 			*change = 1;
-			setHead(top->args->a[1]);
+			setHead(kCell, top->args->a[1]);
 		} else if (Inner(guard)->label->symbol_val == symbol_false) {
 			if (printDebug) {
 				printf("Applying 'if-false' rule\n");
 			}
 			*change = 1;
-			setHead(top->args->a[2]);
+			setHead(kCell, top->args->a[2]);
 		}
 	}
 }
@@ -401,9 +338,9 @@ void handleNot(int* change) {
 			printf("Applying 'not-heat' rule\n");
 		}
 		*change = 1;
-		appendK(body);
+		appendK(kCell, body);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (checkTypeSafety) {
 			if (Inner(Inner(top))->label->type != e_symbol) {
@@ -415,7 +352,7 @@ void handleNot(int* change) {
 				printf("Applying 'not-false' rule\n");
 			}
 			*change = 1;
-			setHead(k_true());
+			setHead(kCell, k_true());
 
 			// follows
 			handleValue(change);
@@ -424,7 +361,7 @@ void handleNot(int* change) {
 				printf("Applying 'not-true' rule\n");
 			}
 			*change = 1;
-			setHead(k_false());
+			setHead(kCell, k_false());
 
 			// follows
 			handleValue(change);
@@ -442,24 +379,24 @@ void handleLTE(int* change) {
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '<=-heat-left' rule\n"); }
 		*change = 1;
-		appendK(left);
+		appendK(kCell, left);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '<=-heat-right' rule\n"); }
 		*change = 1;
-		appendK(right);
+		appendK(kCell, right);
 		K* newTop = UpdateArg(top, 1, Hole());	
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (printDebug) { printf("Applying '<=' rule\n"); }
 		*change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
 		if (leftv <= rightv) {
-			setHead(k_true());
+			setHead(kCell, k_true());
 		} else {
-			setHead(k_false());
+			setHead(kCell, k_false());
 		}
 
 		// follows
@@ -476,22 +413,22 @@ void handlePlus(int* change) {
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '+-heat-left' rule\n"); }
 		*change = 1;
-		appendK(left);
+		appendK(kCell, left);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '+-heat-right' rule\n"); }
 		*change = 1;
-		appendK(right);
+		appendK(kCell, right);
 		K* newTop = UpdateArg(top, 1, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (printDebug) { printf("Applying '+' rule\n"); }
 		*change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
 		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(leftv + rightv), NULL)));
-		setHead(newTop);
+		setHead(kCell, newTop);
 
 		// follows
 		handleValue(change);
@@ -506,16 +443,16 @@ void handleNeg(int* change) {
 	if (!isValue(body)) {
 		if (printDebug) { printf("Applying 'neg-heat' rule\n"); }
 		*change = 1;
-		appendK(body);
+		appendK(kCell, body);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(newTop);
+		setPreHead(kCell, newTop);
 	} else {
 		if (printDebug) { printf("Applying 'neg' rule\n"); }
 		*change = 1;
 		int64_t value = Inner(body)->label->i64_val;
 		int64_t newValue = -value;
 		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(newValue), NULL)));
-		setHead(newTop);
+		setHead(kCell, newTop);
 
 		// follows
 		handleValue(change);
@@ -525,7 +462,7 @@ void handleNeg(int* change) {
 void handleSkip(int* change) {
 	if (printDebug) { printf("Applying 'skip' rule\n"); }
 	*change = 1;
-	trimK();
+	trimK(kCell);
 }
 
 void check(K *c[MAX_K], K *state[MAX_STATE]) {
@@ -573,14 +510,14 @@ void repl() {
 		rewrites++;
 		change = 0;
 		if (printDebug) {
-			printf("%s", stateString());
+			printf("%s", stateString(kCell, stateCell));
 			printf("\n-----------------\n");
 		}
 		if (next == 0) {
 			break;
 		}
 		if (next > 10) {
-			printf("%s", stateString());
+			printf("%s", stateString(kCell, stateCell));
 			printf("\n-----------------\n");
 			panic("Safety check!");
 		}
@@ -660,7 +597,7 @@ int main(void) {
 	// stateCell['r' - 'a'] = k_one();
 	// printf("%s\n", stateString());
 	K* prog = prog1();
-	appendK(prog);
+	appendK(kCell, prog);
 	// printf("%s\n", KToString(prog));
 
 	repl();
