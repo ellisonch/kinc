@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c11 -O0 -g
+CFLAGS=-std=c11 -O3 -g
 build: imp.exe
 
 run: imp.exe

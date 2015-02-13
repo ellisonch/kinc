@@ -10,7 +10,8 @@
 #include "utils.h"
 #include "settings.h"
 
-#define UPTO (1000000)
+// #define UPTO (5000000)
+#define UPTO (100000)
 
 // TODO: get rid of these
 extern int mallocedLabels;
@@ -26,12 +27,12 @@ extern int deadlen;
 
 uint64_t rewrites;
 
-K *stateCell[MAX_STATE];
+StateCell* stateCell;
 
-K *kCell[MAX_K];
-int next = 0;
+// K *kCell[MAX_K];
+// int next = 0;
 
-
+ComputationCell* kCell;
 
 char* givenLabels[] = {
 	"_hole",
@@ -109,7 +110,6 @@ K* prog1() {
 
 	K* pgm = NewK(SymbolLabel(symbol_statements), newArgs(4, l1, l2, l3, l4));
 	return pgm;
-	// return l1;
 }
 
 int isValue(K* k) {
@@ -133,14 +133,13 @@ K* Hole() {
 
 
 static void handleValue(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
-
-	if (next == 1) {
+	if (k_length(kCell) == 1) {
 		return;
 	}
 
-	K* next = kCell[topSpot - 1];
+	K* top = k_get_item(kCell, 0);
+	K* next = k_get_item(kCell, 1);
+
 	for (int i = 0; i < next->args->len; i++) {
 		K* arg = next->args->a[i];
 		if (checkTypeSafety) {
@@ -162,33 +161,16 @@ static void handleValue(int* change) {
 }
 
 
-void updateStore(K* keyK, K* value) {
-	if (checkTypeSafety) {
-		if (keyK->label->type != e_string) {
-			panic("Expected key to be string label");
-		}
-	}
-	int key = keyK->label->string_val[0] - 'a';
-	K* oldK = stateCell[key];
-	stateCell[key] = value;
-	Inc(value);
-	if (oldK != NULL) {
-		Dec(oldK);
-	}
-}
-
 // TODO: unsafe
 void handleVariable(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	if (checkTypeSafety) {
 		if (Inner(top)->label->type != e_string) {
 			panic("Expected key to be string label");
 		}
 	}
-	int variable = Inner(top)->label->string_val[0] - 'a';
-	K* value = stateCell[variable];
+	K* value = state_get_item(stateCell, Inner(top));
 	if (value == NULL) {
 		panic("Trying to read unassigned variable");
 	}
@@ -203,8 +185,7 @@ void handleVariable(int* change) {
 }
 
 void handleStatements(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	if (top->args->len == 0) {
 		if (printDebug) {
@@ -231,8 +212,7 @@ void handleStatements(int* change) {
 }
 
 void handleVar(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	if ((top->args->len) == 0) {
 		if (printDebug) {
@@ -245,15 +225,14 @@ void handleVar(int* change) {
 			printf("Applying 'var-something' rule\n");
 		}
 		*change = 1;
-		updateStore(Inner(Inner(top)), k_zero());
+		updateStore(stateCell, Inner(Inner(top)), k_zero());
 		K* newTop = updateTrimArgs(top, 1, top->args->len);
 		setHead(kCell, newTop);
 	}
 }
 
 void handleAssign(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
@@ -270,14 +249,13 @@ void handleAssign(int* change) {
 			printf("Applying 'assign-rule' rule\n");
 		}
 		*change = 1;
-		updateStore(Inner(left), right);
+		updateStore(stateCell, Inner(left), right);
 		trimK(kCell);
 	}
 }
 
 void handleWhile(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	if (printDebug) { 
 		printf("Applying 'while' rule\n");
@@ -294,8 +272,7 @@ void handleWhile(int* change) {
 }
 
 void handleIf(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* guard = top->args->a[0];
 	if (!isValue(guard)) {
@@ -329,8 +306,7 @@ void handleIf(int* change) {
 }
 
 void handleNot(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* body = Inner(top);
 	if (!isValue(body)) {
@@ -371,8 +347,7 @@ void handleNot(int* change) {
 
 
 void handleLTE(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
@@ -405,8 +380,7 @@ void handleLTE(int* change) {
 }
 
 void handlePlus(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
@@ -436,8 +410,7 @@ void handlePlus(int* change) {
 }
 
 void handleNeg(int* change) {
-	int topSpot = next - 1;
-	K* top = kCell[topSpot];
+	K* top = k_get_item(kCell, 0);
 
 	K* body = Inner(top);
 	if (!isValue(body)) {
@@ -465,45 +438,6 @@ void handleSkip(int* change) {
 	trimK(kCell);
 }
 
-void check(K *c[MAX_K], K *state[MAX_STATE]) {
-	ListK* allValues = malloc(sizeof(ListK));
-	allValues->cap = next + 26;
-	allValues->len = next;
-	allValues->a = malloc(sizeof(K*) * (next + 26));
-	for (int i = 0; i < next; i++) {
-		allValues->a[i] = c[i];
-	}
-	// memcpy(allValues, c, sizeof(K*) * next);
-	for (int i = 0; i < MAX_STATE; i++) {
-		K* val = state[i];
-		if (val == NULL) {
-			continue;
-		}
-		allValues->a[allValues->len++] = val;
-	}
-
-	K* specialk = NewK(SymbolLabel(symbol_fake), allValues);
-	for (int i = 0; i < specialk->args->len; i++) {
- 		K* arg = specialk->args->a[i];
- 		Dec(arg);
- 	}
-	specialk->refs = 1;
-	countentry* cm = counts(specialk);
-
-	int bad = 0;
-	for (int i = 0; i < 1000000; i++) {
-		if (cm[i].entry != 0) {
-			K* k = cm[i].entry;
-			if (k->refs != cm[i].count) {
-				bad = 1;
-				printf("Count for %s should be %d!\n", KToString(k), cm[i].count);
-			}
-		}
-	}
-	if (bad) { panic("Bad check()!"); }
-	free(cm);
-}
-
 void repl() {
 	int change = 1;
 	while (change) {
@@ -513,10 +447,10 @@ void repl() {
 			printf("%s", stateString(kCell, stateCell));
 			printf("\n-----------------\n");
 		}
-		if (next == 0) {
+		if (k_length(kCell) == 0) {
 			break;
 		}
-		if (next > 10) {
+		if (k_length(kCell) > 10) {
 			printf("%s", stateString(kCell, stateCell));
 			printf("\n-----------------\n");
 			panic("Safety check!");
@@ -524,8 +458,7 @@ void repl() {
 		if (shouldCheck) {
 			check(kCell, stateCell);
 		}
-		int topSpot = next - 1;
-		K* top = kCell[topSpot];
+		K* top = k_get_item(kCell, 0);
 		if (checkTypeSafety) {
 			if (top->label->type != e_symbol) {
 				panic("Expected a symbol label");
@@ -590,9 +523,9 @@ void repl() {
 }
 
 int main(void) {
-	for (int i = 0; i < 26; i++) {
-		stateCell[i] = NULL;
-	}
+	stateCell = newStateCell();
+	kCell = newComputationCell();
+
 	// printf("%s\n", stateString());
 	// stateCell['r' - 'a'] = k_one();
 	// printf("%s\n", stateString());
@@ -601,8 +534,8 @@ int main(void) {
 	// printf("%s\n", KToString(prog));
 
 	repl();
-	if (stateCell['s' - 'a'] != NULL) {
-		int64_t result = Inner(stateCell['s' - 'a'])->label->i64_val;
+	if (state_get_item_from_name(stateCell, 's') != NULL) {
+		int64_t result = Inner(state_get_item_from_name(stateCell, 's'))->label->i64_val;
 		printf("Result: %" PRId64 "\n", result);
 	} else {
 		printf("'s' was not set!\n");
