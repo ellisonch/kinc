@@ -29,12 +29,19 @@ typedef struct K {
 
 typedef struct ListK ListK;
 
+
+typedef struct countentry {
+	K* entry;
+	int count;
+} countentry;
+
 // TODO: possibly can get rid of some of these:
 
 const char* KToString(K* k);
 void Dec(K* k);
 void Inc(K* k);
 const char* ListKToString(ListK* args);
+
 
 KLabel* mallocKLabel();
 KLabel* SymbolLabel(int s);
@@ -45,5 +52,6 @@ ListK* newArgs(int count, ...);
 K* UpdateArg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
+countentry* counts(K* k);
 
 #endif

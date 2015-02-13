@@ -440,3 +440,29 @@ K* updateTrimArgs(K* k, int left, int right) {
 	// k.args = k.args[left:right];
 	return k;
 }
+
+
+
+void counts_aux(K* k, countentry counts[]) {
+	int o = ((uintptr_t)k) % 1000000;
+	// printf("o = %d\n", o);
+	if (counts[o].entry == 0) {
+		counts[o].entry = k;
+		counts[o].count = 1;
+	} else if (counts[o].entry == k) {
+		counts[o].count++;
+		return;
+	} else {
+		panic("Collision!");
+	}
+	for (int i = 0; i < k->args->len; i++) {
+		K* arg = k->args->a[i];
+		counts_aux(arg, counts);
+	}
+}
+
+countentry* counts(K* k) {
+	countentry* counts = calloc(1000000, sizeof(countentry));
+	counts_aux(k, counts);
+	return counts;
+}
