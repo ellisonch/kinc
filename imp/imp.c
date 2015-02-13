@@ -7,26 +7,20 @@
 
 #include "k.h"
 #include "utils.h"
+#include "settings.h"
 
-#define UPTO (5000000)
+#define UPTO (100000)
 
-#define MAX_STATE 26
-#define MAX_K 10
-#define MAX_GARBAGE_KEPT 10000
-#define MAX_GARBAGE_ARG_LEN 5
-
-// when printing k terms, print the ref counts as well
-#define printRefCounts 1
-
-#define printDebug 0
-#define shouldCheck 0
-
-// technically not needed, but good to be safe
-#define checkTypeSafety 0
-#define checkRefCounting 0
-#define checkGC 0
-#define checkTermSize 0
-#define checkStackSize 0
+// TODO: get rid of these
+extern int mallocedLabels;
+extern int deadLabelLen;
+extern KLabel* deadLabels[MAX_GARBAGE_KEPT];
+extern int malloced[];
+extern int mallocedArgs;
+extern ListK* deadLists[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
+extern int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
+extern int mallocedK;
+extern int deadlen;
 
 char* givenLabels[] = {
 	"_hole",
@@ -70,282 +64,11 @@ char* givenLabels[] = {
 #define symbol_false 17
 #define symbol_fake 18
 
-
-// typedef struct K K;
-// typedef struct ListK ListK;
-
-typedef enum {
-	e_symbol,
-	e_string,
-	e_i64,
-} KLabelType;
-
-// typedef struct K *ListK[];
-typedef struct {
-	KLabelType type;
-	union {
-		int64_t i64_val;
-		int symbol_val;
-		const char* string_val;
-	};
-} KLabel;
-
-typedef struct K {
-	KLabel* label;
-	struct ListK {
-		int cap;
-		int len;
-		struct K** a;
-	}* args;
-	int refs;
-} K;
-
-typedef struct ListK ListK;
-
-const char* KToString(K* k);
-void Dec(K* k);
-void Inc(K* k);
-const char* ListKToString(ListK* args);
-
 void handleIf(int* change);
 
-KLabel* deadLabels[MAX_GARBAGE_KEPT];
-int deadLabelLen = 0;
-
-K* deadK[MAX_GARBAGE_KEPT];
-int deadlen = 0;
-
-ListK* deadLists[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
-int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
-
-
-// KLabel Int64Label(int64 i64) {
-// 	return (KLabel){type = e_i64, {i64_val = i64}};
-// 	// return KLabel{kind: e_i64, data: i64}
-// }
-
-int mallocedLabels = 0;
-
-KLabel* mallocKLabel() {
-	mallocedLabels++;
-	return (KLabel*)malloc(sizeof(KLabel));
-}
-KLabel* StringLabel(const char* s) {
-	if (printDebug) { printf("Str DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating string label %s\n", s); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
-	newL->type = e_string;
-	newL->string_val = s;
-	return newL;
-}
-KLabel* symbolLabels[50];
-KLabel* SymbolLabel(int s) {
-	if (symbolLabels[s] != NULL) {
-		return symbolLabels[s];
-	}
-	if (printDebug) { printf("Sym DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating symbol label %s\n", givenLabels[s]); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
-	newL->type = e_symbol;
-	newL->symbol_val = s;
-	symbolLabels[s] = newL;
-
-	return newL;
-}
-// int intcount = 0;
-KLabel* Int64Label(int64_t i64) {
-	// intcount++;
-	if (printDebug) { printf("Int DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating int label %" PRId64 "\n", i64); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
-	newL->type = e_i64;
-	newL->i64_val = i64;
-	return newL;
-}
-
-ListK* getDeadList(int reqLength) {
-	// return NULL;
-	if (reqLength > MAX_GARBAGE_ARG_LEN) {
-		return NULL;
-	}
-	ListK** deadList = deadLists[reqLength];
-	if (deadListsLen[reqLength] == 0) {
-		if (printDebug) { printf("No dead stuff of length %d\n", reqLength); }
-		return NULL;
-	}
-
-	ListK* ret = deadList[deadListsLen[reqLength] - 1];
-	deadListsLen[reqLength]--;
-
-	if (checkGC) {
-		if (ret == NULL) {
-			panic("Didn't expect ret to be nil");
-		}
-		if (ret->cap < reqLength) {
-			panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
-		}
-	}
-	ret->len = reqLength;
-
-	if (printDebug) {
-		printf("Returning dead list of length %d\n", reqLength);
-	}
-	return ret;
-}
-
-int mallocedArgs;
-ListK* mallocArgs() {
-	mallocedArgs++;
-	return malloc(sizeof(ListK));
-}
-int malloced[10];
-K** mallocArgsA(int count) {
-	malloced[count]++;
-	return malloc(sizeof(K*) * count);
-}
-
-ListK* newArgs(int count, ...) {
-	ListK* args = getDeadList(count);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->a = mallocArgsA(count);
-		args->cap = count;
-		args->len = count;
-	}
-	if (checkGC) {
-		if (count != args->len) {
-			panic("Expected %d == %d\n", count, args->len);
-		}
-	}
-
-    va_list ap;
-    va_start(ap, count);
-    for (int i = 0; i < count; i++) {
-        args->a[i] = va_arg(ap, K*);
-    }
-    va_end(ap);
-
-    return args;
-}
-
-// TODO unsafe
-K* Inner(K* k) {
-	return k->args->a[0];
-}
 
 
 
-void Inc(K* k) {
-	k->refs++;
-}
-
-int mallocedK = 0;
-K* mallocK() {
-	mallocedK++;
-	return malloc(sizeof(K));
-}
-
-ListK* emptyArgs() {
-	ListK* args = getDeadList(0);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->cap = 0;
-		args->len = 0;
-	}
-	return args;
-}
-
-K* NewK(KLabel* label, ListK* args) {
-	if (args == NULL) {
-		args = emptyArgs();
-	}
-	for (int i = 0; i < args->len; i++) {
- 		K* arg = args->a[i];
- 		if (arg == NULL) {
- 			panic("Didn't expect nil arg in NewK()");
- 		}
- 		Inc(arg);
- 	}
-	
-	K* newK = NULL;
-	if (deadlen > 0) {
-		newK = deadK[deadlen - 1];
-		deadlen--;
-	} else {
-		newK = mallocK();
-	}
-	newK->label = label;
-	newK->args = args;
-	newK->refs = 0;
-	return newK;
-}
-
-// TODO: leaks memory and is unsafe
-const char* LabelToString(KLabel* label) {
-	if (label->type == e_string) {
-		return label->string_val;
-	} else if (label->type == e_i64) {
-		char* s = malloc(50);
-		snprintf(s, 50, "%" PRId64, label->i64_val);
-		return s;
-	} else if (label->type == e_symbol) {
-		return givenLabels[label->symbol_val];
-	} else {
-		panic("Some unknown label type %d found", label->type);
-	}
-	// return NULL;
-}
-
-
-// TODO: leaks memory and is unsafe
-const char* ListKToString(ListK* args) {
-	if (args == NULL) {
-		return "";
-	}
-	char* s = malloc(3000);
-	s[0] = '\0';
-
-	// size_t len = strlen(s);
-	for (int i = 0; i < args->len; i++) {
-		K* arg = args->a[i];
-		strcat(s, KToString(arg));
-		if (i < args->len - 1) {
-			strcat(s, ", ");
-		}
-	}
-	
-	return s;
-}
-
-
-// TODO: leaks memory and is unsafe
-const char* KToString(K* k) {
-	char* s = malloc(300);
-	if (printRefCounts) {
-		snprintf(s, 300, "%s[%d](%s)", LabelToString(k->label), k->refs, ListKToString(k->args));
-	} else {
-		snprintf(s, 300, "%s(%s)", LabelToString(k->label), ListKToString(k->args));
-	}
-	return s;
-}
 
 K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
 K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
@@ -433,94 +156,6 @@ char* stateString() {
 	return s;
 }
 
-void collectDeadTerm(K* k) {
-	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
-
-	if (checkTermSize) {
-		if (k->args->len > 10) {
-			panic("Sanity check failed!");
-		}
-	}
-	for (int i = 0; i < k->args->len; i++) {
-		K* arg = k->args->a[i];
-		Dec(arg);
-	}
-
-	// lenkargs := len(k.args)
-	
-
-	int lenkargs = k->args->cap;
-
-	// don't garbage collect the "builtins"
-	// if (lenkargs == 0 && k == Hole) {
-	// 	return
-	// }
-
-	if (lenkargs >= MAX_GARBAGE_ARG_LEN) {
-		panic("MAX_GARBAGE_ARG_LEN is not enough");
-	}
-	// if (deadListsLen[lenkargs] >= MAX_GARBAGE_KEPT) {
-	// 	panic("garbage overflow");
-	// }
-	if (lenkargs < MAX_GARBAGE_ARG_LEN && deadListsLen[lenkargs] < MAX_GARBAGE_KEPT) {
-		deadLists[lenkargs][deadListsLen[lenkargs]] = k->args;
-		deadListsLen[lenkargs]++;
-		if (printDebug) { printf("Saving args\n"); }
-	} else {
-		mallocedArgs--;
-		if (k->args->cap > 0) {
-			malloced[k->args->cap]--;
-			free(k->args->a);
-		}
-		if (printDebug) { printf("Freeing args\n"); }		
-		free(k->args);
-	}
-	// if lenkargs < MAX_GARBAGE_ARG_LEN && lenkargs > 0 {
-	// 	if len(deadLists[lenkargs-1]) < MAX_GARBAGE_KEPT {
-	// 		deadLists[lenkargs-1] = append(deadLists[lenkargs-1], k.args)
-	// 	}
-	// }
-
-	if (k->label->type != e_symbol) {
-		if (deadLabelLen < MAX_GARBAGE_KEPT) {
-			deadLabels[deadLabelLen++] = k->label;
-			if (printDebug) { printf("Saving label\n"); }
-		} else {
-			if (printDebug) { printf("Freeing label\n"); }
-			mallocedLabels--;
-			free(k->label);
-		}
-	}
-	if (deadlen < MAX_GARBAGE_KEPT) {
-		if (printDebug) { printf("Saving k\n"); }
-		deadK[deadlen++] = k;
-	} else {
-		if (printDebug) { printf("Freeing k\n"); }
-		mallocedK--;
-		free(k);
-	}
-
-	// if len(deadK) < MAX_GARBAGE_KEPT {
-	// 	k.args = nil // not technically needed, just a bit safer
-	// 	deadK = append(deadK, k)
-	// }
-}
-
-void Dec(K* k) {
-	// panic("don't handle dec");
-	k->refs--;
-	int newRefs = k->refs;
-	if (checkRefCounting) {
-		if (newRefs < 0) {
-			panic("Term %s has fewer than 0 refs :(", KToString(k));
-		}
-	}
-	if (newRefs == 0) {
-		// panic("Dead term found: %s", KToString(k));
-		collectDeadTerm(k);
-	}
-}
-
 void trimK() {
 	int top = next - 1;
 	Dec(kCell[top]);
@@ -555,66 +190,6 @@ void appendK(K* k) {
 }
 
 
-ListK* copyArgs(ListK* oldArgs) {
-	ListK* args = getDeadList(oldArgs->cap);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->cap = oldArgs->cap;
-		args->len = oldArgs->len;
-		args->a = mallocArgsA(oldArgs->cap);
-	}
-
-	for (int i = 0; i < oldArgs->len; i++) {
-		args->a[i] = oldArgs->a[i];
-	}
-
-	return args;
-}
-
-KLabel* copyLabel(KLabel* l) {
-	if (printDebug) { printf("Cpy DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating copy label %s\n", LabelToString(l)); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
-	memcpy(newL, l, sizeof(KLabel));
-	return newL;
-}
-
-K* copy(K* oldK) {
-	ListK* newArgs = copyArgs(oldK->args);
-	// K* k = NewK(copyLabel(oldK->label), newArgs);
-	K* k = NewK(oldK->label, newArgs);
-	if (printDebug) {
-		printf("   New Old: %s\n", KToString(oldK));
-		printf("   New Copy: %s\n", KToString(k));
-	}
-	return k;
-}
-
-K* UpdateArg(K* k, int arg, K* newVal) {
-	if (printDebug) {
-		printf("Updating %s's %d argument to %s\n", KToString(k), arg, KToString(newVal));
-	}
-	if (k->refs > 1) {
-		if (printDebug) {
-			printf("   Term is shared, need to copy\n");
-		}
-		// K* oldk = k;
-		k = copy(k);
-	}
-	Inc(newVal);
-	Dec(k->args->a[arg]);
-	k->args->a[arg] = newVal;
-	if (printDebug) {
-		printf("   After updating: %s\n", KToString(k));
-	}
-	return k;
-}
 
 static void handleValue(int* change) {
 	int topSpot = next - 1;
@@ -643,30 +218,6 @@ static void handleValue(int* change) {
 			break;
 		}
 	}
-}
-
-K* updateTrimArgs(K* k, int left, int right) {
-	if (k->refs > 1) {
-		if (printDebug) { 
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(k);
-	}
-	for (int i = 0; i < left; i++) {
-		Dec(k->args->a[i]);
-	}
-	for (int i = right; i < k->args->len; i++) {
-		Dec(k->args->a[i]);
-	}
-	// TODO: inefficient
-	int newi = 0;
-	for (int i = left; i < right; i++) {
-		k->args->a[newi] = k->args->a[i];
-		newi++;
-	}
-	k->args->len = right - left;
-	// k.args = k.args[left:right];
-	return k;
 }
 
 
