@@ -4,3 +4,5 @@
 *.o
 *.gz
 *.zip
+gen_antlr/
+gen_java/
