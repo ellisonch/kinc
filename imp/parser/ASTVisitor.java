@@ -50,8 +50,8 @@ public class ASTVisitor extends AbstractParseTreeVisitor<String> {
 		return aggregate + " " + nextResult;
 	}
     public static void main(String[] args) throws Exception {
-        ImpLexer lexer = new ImpLexer(new ANTLRFileStream("prog1.imp"));
-        ImpParser parser = new ImpParser(new CommonTokenStream(lexer));
+        ImpUglyLexer lexer = new ImpUglyLexer(new ANTLRFileStream("prog1.imp"));
+        ImpUglyParser parser = new ImpUglyParser(new CommonTokenStream(lexer));
         parser.setBuildParseTree(true);
         ParserRuleContext prc = parser.program();
         ParseTree t = prc.getChild(0);
