@@ -1,5 +1,8 @@
 CC=gcc
-CFLAGS=-std=c11 -O3 -Wall -g -gdwarf-2 -fno-omit-frame-pointer
+CFLAGS=-std=c11 -O3 -Wall -flto -fno-omit-frame-pointer
+# -gdwarf-2 
+# -g 
+# 
 # -pedantic
 build: imp.exe
 
@@ -18,4 +21,4 @@ imp.exe: Makefile imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_lab
 	$(CC) $(CFLAGS) imp.c utils.c k.c cells.c k_labels.c k_builtins.c -o imp.exe
 
 profile: imp.exe
-	cmd /C "sleepy /r:imp.exe 2000000"
+	cmd /C "sleepy /r:\"imp.exe 2000000\""

@@ -8,7 +8,7 @@
 #define BUILTINS_MAX 1024
 
 char* symbol_names[BUILTINS_MAX] = {
-	[BUILTINS_MAX - 6] = 
+	[BUILTINS_MAX - 6] =
 	"_hole",
 	"Bool",
 	"Int",
@@ -60,27 +60,27 @@ K* new_builtin_int(int64_t i) {
 	return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(i), NULL)));
 }
 
-inline int is_int(K* k) {
+int is_int(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_int;
 }
 
-inline int is_bool(K* k) {
+int is_bool(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_bool;
 }
 
-inline int is_hole(K* k) {
+int is_hole(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_hole;
 }
 
-inline int is_true(K* k) {
+int is_true(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_true;
 }
 
-inline int is_false(K* k) {
+int is_false(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_false;
 }
