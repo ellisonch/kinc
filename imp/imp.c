@@ -20,13 +20,10 @@ uint64_t rewrites;
 
 
 char* givenLabels[] = {
-	"_hole",
 	"Assign",
-	"Bool",
 	"Div",
 	"Id",
 	"If",
-	"Int",
 	"LTE",
 	"Neg",
 	"Not",
@@ -36,43 +33,30 @@ char* givenLabels[] = {
 	"Statements",
 	"Var",
 	"While",
-	"True",
-	"False",
-	"_fake",
 };
 
-#define symbol_hole 0
-#define symbol_assign 1
-#define symbol_bool 2
-#define symbol_div 3
-#define symbol_id 4
-#define symbol_if 5
-#define symbol_int 6
-#define symbol_lte 7
-#define symbol_neg 8
-#define symbol_not 9
-#define symbol_plus 10
-#define symbol_program 11
-#define symbol_skip 12
-#define symbol_statements 13
-#define symbol_var 14
-#define symbol_while 15
-#define symbol_true 16
-#define symbol_false 17
-#define symbol_fake 18
+#define symbol_assign 0
+#define symbol_div 1
+#define symbol_id 2
+#define symbol_if 3
+#define symbol_lte 4
+#define symbol_neg 5
+#define symbol_not 6
+#define symbol_plus 7
+#define symbol_program 8
+#define symbol_skip 9
+#define symbol_statements 10
+#define symbol_var 11
+#define symbol_while 12
 
 void handleIf(Configuration* config, int* change);
 
-K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
-K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
-K* k_zero() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(0), NULL))); }
-K* k_one() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(1), NULL))); }
 K* k_skip() { return NewK(SymbolLabel(symbol_skip), NULL); }
 
 K* prog1(uint64_t upto) {
 	K* n = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("n"), NULL)));
 	K* s = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("s"), NULL)));
-	K* hundred = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(upto), NULL)));
+	K* hundred = new_builtin_int(upto);
 
 	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
 	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
@@ -99,19 +83,13 @@ int isValue(K* k) {
 			panic("Expected calling isValue on symbol labels");
 		}
 	}
-	int val = k->label->symbol_val;
-	if (val == symbol_int || val == symbol_bool) {
+
+	if (is_int(k) || is_bool(k)) {
 		return 1;
 	} else {
 		return 0;
 	}
 }
-
-K* Hole() {
-	return NewK(SymbolLabel(symbol_hole), NULL);
-}
-
-
 
 static void handleValue(Configuration* config, int* change) {
 	if (k_length(config->k) == 1) {
@@ -128,7 +106,7 @@ static void handleValue(Configuration* config, int* change) {
 				panic("Expected string type");
 			}
 		}
-		if (arg->label->symbol_val == symbol_hole){
+		if (is_hole(arg)){
 			if (printDebug) {
 				printf("Applying 'cooling' rule\n");
 			}
@@ -270,13 +248,13 @@ void handleIf(Configuration* config, int* change) {
 				panic("Expected key to be symbol label");
 			}
 		}
-		if (Inner(guard)->label->symbol_val == symbol_true) {
+		if (is_true(Inner(guard))) {
 			if (printDebug) {
 				printf("Applying 'if-true' rule\n");
 			}
 			*change = 1;
 			setHead(config->k, top->args->a[1]);
-		} else if (Inner(guard)->label->symbol_val == symbol_false) {
+		} else if (is_false(Inner(guard))) {
 			if (printDebug) {
 				printf("Applying 'if-false' rule\n");
 			}
@@ -304,7 +282,7 @@ void handleNot(Configuration* config, int* change) {
 				panic("Expected key to be symbol label");
 			}
 		}
-		if (Inner(Inner(top))->label->symbol_val == symbol_false) {
+		if (is_false(Inner(Inner(top)))) {
 			if (printDebug) { 
 				printf("Applying 'not-false' rule\n");
 			}
@@ -313,7 +291,7 @@ void handleNot(Configuration* config, int* change) {
 
 			// follows
 			handleValue(config, change);
-		} else if (Inner(Inner(top))->label->symbol_val == symbol_true) {
+		} else if (is_true(Inner(Inner(top)))) {
 			if (printDebug) {
 				printf("Applying 'not-true' rule\n");
 			}
@@ -382,7 +360,7 @@ void handlePlus(Configuration* config, int* change) {
 		*change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
-		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(leftv + rightv), NULL)));
+		K* newTop = new_builtin_int(leftv + rightv);
 		setHead(config->k, newTop);
 
 		// follows
@@ -405,7 +383,7 @@ void handleNeg(Configuration* config, int* change) {
 		*change = 1;
 		int64_t value = Inner(body)->label->i64_val;
 		int64_t newValue = -value;
-		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(newValue), NULL)));
+		K* newTop = new_builtin_int(newValue);
 		setHead(config->k, newTop);
 
 		// follows
@@ -523,7 +501,10 @@ int main(int argv, char** argc) {
 			panic("Argument passed on command line needs to be bigger than 1");
 		}
 	}
+	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
+
 	K* prog = prog1(upto);
+	
 
 	Configuration* config = reduce(prog);
 
@@ -541,7 +522,7 @@ int main(int argv, char** argc) {
 	
 	dump_garbage_info();
 
-	printf("\nrewrites: %" PRId64 "\n", rewrites);
+	printf("\nrewrites: %" PRIu64 "\n", rewrites);
 
 	return 0;
 }

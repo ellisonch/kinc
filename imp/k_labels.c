@@ -10,7 +10,7 @@
 #include "utils.h"
 
 // TODO: fix this
-extern char* givenLabels[];
+extern char* symbol_names[];
 
 int deadLabelLen = 0;
 
@@ -66,7 +66,7 @@ KLabel* SymbolLabel(int s) {
 		return symbolLabels[s];
 	}
 	if (printDebug) { printf("Sym DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating symbol label %s\n", givenLabels[s]); }
+	if (printDebug) { printf("Creating symbol label %s\n", symbol_names[s]); }
 	KLabel* newL = _new_label();
 	newL->type = e_symbol;
 	newL->symbol_val = s;
@@ -95,7 +95,7 @@ const char* LabelToString(KLabel* label) {
 		snprintf(s, 50, "%" PRId64, label->i64_val);
 		return s;
 	} else if (label->type == e_symbol) {
-		return givenLabels[label->symbol_val];
+		return symbol_names[label->symbol_val];
 	} else {
 		panic("Some unknown label type %d found", label->type);
 	}

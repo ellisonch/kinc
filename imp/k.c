@@ -180,7 +180,7 @@ const char* KToString(K* k) {
 
 
 
-void collectDeadTerm(K* k) {
+void dispose_k(K* k) {
 	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
 
 	if (checkTermSize) {
@@ -257,7 +257,7 @@ void Dec(K* k) {
 	}
 	if (newRefs == 0) {
 		// panic("Dead term found: %s", KToString(k));
-		collectDeadTerm(k);
+		dispose_k(k);
 	}
 }
 
@@ -386,7 +386,7 @@ void dump_garbage_info() {
 	printf("Mallocedargs: %d\n\n", mallocedArgs);
 
 	dump_label_garbage_info();
-	
+
 	printf("----------------------\n");
 	// printf("intcount: %d\n", intcount);
 

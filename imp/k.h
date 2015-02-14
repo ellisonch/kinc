@@ -3,6 +3,7 @@
 
 #include "k_types.h"
 #include "k_labels.h"
+#include "k_builtins.h"
 
 typedef struct countentry {
 	K* entry;
