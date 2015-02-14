@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-std=c11 -O3 -Wall -flto -fno-omit-frame-pointer
-# -gdwarf-2 
+CFLAGS=-std=c11 -O3 -m64 -Wall -fno-omit-frame-pointer -gdwarf-2 
+# -flto 
 # -g 
 # 
 # -pedantic
@@ -10,7 +10,7 @@ build: imp.exe
 # OBJS=$(SRCS:.c=.o)
 
 run: imp.exe
-	time ./imp.exe
+	time ./imp.exe 500000
 
 run-big: imp.exe
 	time ./imp.exe 5000000

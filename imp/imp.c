@@ -60,16 +60,16 @@ K* prog1(uint64_t upto) {
 
 	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
 	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
-	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, k_zero()));
+	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, new_builtin_int(0)));
 
 	K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
 	K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
-	K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, k_one()));
+	K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, new_builtin_int(1)));
 	K* nPno = NewK(SymbolLabel(symbol_plus), newArgs(2, n, negOne));
 	K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
 	K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
 
-	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, k_zero()));
+	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, new_builtin_int(0)));
 	K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
 	K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
 
@@ -184,7 +184,7 @@ void handleVar(Configuration* config, int* change) {
 			printf("Applying 'var-something' rule\n");
 		}
 		*change = 1;
-		updateStore(config->state, Inner(Inner(top)), k_zero());
+		updateStore(config->state, Inner(Inner(top)), new_builtin_int(0));
 		K* newTop = updateTrimArgs(top, 1, top->args->len);
 		setHead(config->k, newTop);
 	}
@@ -399,7 +399,7 @@ void handleSkip(Configuration* config, int* change) {
 
 void repl(Configuration* config) {
 	int change = 1;
-	while (change) {
+	do {
 		rewrites++;
 		change = 0;
 		if (printDebug) {
@@ -473,12 +473,7 @@ void repl(Configuration* config) {
 					panic("unrecognized label");
 			}
 		}
-
-
-		// switch {
-		// 	case topLabel.Equals(symbol_paren): change = handleParen()
-		// }
-	}
+	} while (change);
 }
 
 Configuration* reduce(K* k) {

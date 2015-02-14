@@ -53,8 +53,6 @@ K* Hole() {
 
 K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
 K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
-K* k_zero() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(0), NULL))); }
-K* k_one() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(1), NULL))); }
 
 K* new_builtin_int(int64_t i) {
 	return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(i), NULL)));
