@@ -466,3 +466,39 @@ countentry* counts(K* k) {
 	counts_aux(k, counts);
 	return counts;
 }
+
+
+
+void dump_garbage_info() {
+	printf("-----Garbage Dump-----\n");
+	printf("\nMallocedK: %d\n", mallocedK);
+	printf("deadlen: %d\n\n", deadlen);
+
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		for (int j = 0; j < deadListsLen[i]; j++) {
+			ListK* args = deadLists[i][j];
+			if (args->len > 0) {
+				malloced[args->cap]--;
+				free(args->a);
+			}
+			mallocedArgs--;
+			free(args);
+		}
+	}
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		deadListsLen[i] = 0;
+	}
+	for (int i = 0; i < 8; i++) {
+		printf("args %d: %d\n", i, malloced[i]);
+	}
+	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+		printf("deadargs %d: %d\n", i, deadListsLen[i]);
+	}
+	printf("Mallocedargs: %d\n\n", mallocedArgs);
+
+	printf("MallocedLabels: %d\n", mallocedLabels);
+	printf("deadLabelLen: %d\n", deadLabelLen);
+	printf("----------------------\n");
+	// printf("intcount: %d\n", intcount);
+
+}

@@ -54,4 +54,6 @@ K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
 countentry* counts(K* k);
 
+void dump_garbage_info();
+
 #endif

@@ -13,26 +13,14 @@
 // #define UPTO (5000000)
 #define UPTO (100000)
 
-// TODO: get rid of these
-extern int mallocedLabels;
-extern int deadLabelLen;
-extern KLabel* deadLabels[MAX_GARBAGE_KEPT];
-extern int malloced[];
-extern int mallocedArgs;
-extern ListK* deadLists[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
-extern int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
-extern int mallocedK;
-extern int deadlen;
+typedef struct {
+	StateCell* state;
+	ComputationCell* k;
+} Configuration;
 
 
 uint64_t rewrites;
 
-StateCell* stateCell;
-
-// K *kCell[MAX_K];
-// int next = 0;
-
-ComputationCell* kCell;
 
 char* givenLabels[] = {
 	"_hole",
@@ -76,11 +64,7 @@ char* givenLabels[] = {
 #define symbol_false 17
 #define symbol_fake 18
 
-void handleIf(int* change);
-
-
-
-
+void handleIf(Configuration* config, int* change);
 
 K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
 K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
@@ -132,13 +116,13 @@ K* Hole() {
 
 
 
-static void handleValue(int* change) {
-	if (k_length(kCell) == 1) {
+static void handleValue(Configuration* config, int* change) {
+	if (k_length(config->k) == 1) {
 		return;
 	}
 
-	K* top = k_get_item(kCell, 0);
-	K* next = k_get_item(kCell, 1);
+	K* top = k_get_item(config->k, 0);
+	K* next = k_get_item(config->k, 1);
 
 	for (int i = 0; i < next->args->len; i++) {
 		K* arg = next->args->a[i];
@@ -153,8 +137,8 @@ static void handleValue(int* change) {
 			}
 			*change = 1;
 			K* newTop = UpdateArg(next, i, top);
-			trimK(kCell);
-			setHead(kCell, newTop);
+			trimK(config->k);
+			setHead(config->k, newTop);
 			break;
 		}
 	}
@@ -162,77 +146,77 @@ static void handleValue(int* change) {
 
 
 // TODO: unsafe
-void handleVariable(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleVariable(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	if (checkTypeSafety) {
 		if (Inner(top)->label->type != e_string) {
 			panic("Expected key to be string label");
 		}
 	}
-	K* value = state_get_item(stateCell, Inner(top));
+	K* value = state_get_item(config->state, Inner(top));
 	if (value == NULL) {
 		panic("Trying to read unassigned variable");
 	}
 
 	if (printDebug) { printf("Applying 'lookup' rule\n"); }
 	*change = 1;
-	setHead(kCell, value);
+	setHead(config->k, value);
 
 
 	// follows
-	handleValue(change);
+	handleValue(config, change);
 }
 
-void handleStatements(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleStatements(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	if (top->args->len == 0) {
 		if (printDebug) {
 			printf("Applying 'statements-empty' rule\n");
 		}
 		*change = 1;
-		trimK(kCell);
+		trimK(config->k);
 	} else if (top->args->len == 1) {
 		if (printDebug) {
 			printf("Applying 'statements-one' rule\n");
 		}
 		*change = 1;
 		K* newTop = top->args->a[0];
-		setHead(kCell, newTop);
+		setHead(config->k, newTop);
 	} else {
 		if (printDebug) {
 			printf("Applying 'statements-many' rule\n");
 		}
 		*change = 1;
-		appendK(kCell, top->args->a[0]);
+		appendK(config->k, top->args->a[0]);
 		K* newPreHead = updateTrimArgs(top, 1, top->args->len);
-		setPreHead(kCell, newPreHead);
+		setPreHead(config->k, newPreHead);
 	}
 }
 
-void handleVar(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleVar(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	if ((top->args->len) == 0) {
 		if (printDebug) {
 			printf("Applying 'var-empty' rule\n");
 		}
 		*change = 1;
-		trimK(kCell);
+		trimK(config->k);
 	} else {
 		if (printDebug) {
 			printf("Applying 'var-something' rule\n");
 		}
 		*change = 1;
-		updateStore(stateCell, Inner(Inner(top)), k_zero());
+		updateStore(config->state, Inner(Inner(top)), k_zero());
 		K* newTop = updateTrimArgs(top, 1, top->args->len);
-		setHead(kCell, newTop);
+		setHead(config->k, newTop);
 	}
 }
 
-void handleAssign(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleAssign(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
@@ -241,21 +225,21 @@ void handleAssign(int* change) {
 			printf("Applying ':=-heat' rule\n");
 		}
 		*change = 1;
-		appendK(kCell, right);
+		appendK(config->k, right);
 		K* newTop = UpdateArg(top, 1, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (printDebug) { 
 			printf("Applying 'assign-rule' rule\n");
 		}
 		*change = 1;
-		updateStore(stateCell, Inner(left), right);
-		trimK(kCell);
+		updateStore(config->state, Inner(left), right);
+		trimK(config->k);
 	}
 }
 
-void handleWhile(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleWhile(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	if (printDebug) { 
 		printf("Applying 'while' rule\n");
@@ -265,14 +249,14 @@ void handleWhile(int* change) {
 	K* body = top->args->a[1];
 	K* then = NewK(SymbolLabel(symbol_statements), newArgs(2, body, top));
 	K* theIf = NewK(SymbolLabel(symbol_if), newArgs(3, guard, then, k_skip()));
-	setHead(kCell, theIf);
+	setHead(config->k, theIf);
 
 	// follows
-	handleIf(change);
+	handleIf(config, change);
 }
 
-void handleIf(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleIf(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* guard = top->args->a[0];
 	if (!isValue(guard)) {
@@ -280,9 +264,9 @@ void handleIf(int* change) {
 			printf("Applying 'if-heat' rule\n");
 		}
 		*change = 1;
-		appendK(kCell, guard);
+		appendK(config->k, guard);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (checkTypeSafety) {
 			if (Inner(guard)->label->type != e_symbol) {
@@ -294,19 +278,19 @@ void handleIf(int* change) {
 				printf("Applying 'if-true' rule\n");
 			}
 			*change = 1;
-			setHead(kCell, top->args->a[1]);
+			setHead(config->k, top->args->a[1]);
 		} else if (Inner(guard)->label->symbol_val == symbol_false) {
 			if (printDebug) {
 				printf("Applying 'if-false' rule\n");
 			}
 			*change = 1;
-			setHead(kCell, top->args->a[2]);
+			setHead(config->k, top->args->a[2]);
 		}
 	}
 }
 
-void handleNot(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleNot(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* body = Inner(top);
 	if (!isValue(body)) {
@@ -314,9 +298,9 @@ void handleNot(int* change) {
 			printf("Applying 'not-heat' rule\n");
 		}
 		*change = 1;
-		appendK(kCell, body);
+		appendK(config->k, body);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (checkTypeSafety) {
 			if (Inner(Inner(top))->label->type != e_symbol) {
@@ -328,137 +312,137 @@ void handleNot(int* change) {
 				printf("Applying 'not-false' rule\n");
 			}
 			*change = 1;
-			setHead(kCell, k_true());
+			setHead(config->k, k_true());
 
 			// follows
-			handleValue(change);
+			handleValue(config, change);
 		} else if (Inner(Inner(top))->label->symbol_val == symbol_true) {
 			if (printDebug) {
 				printf("Applying 'not-true' rule\n");
 			}
 			*change = 1;
-			setHead(kCell, k_false());
+			setHead(config->k, k_false());
 
 			// follows
-			handleValue(change);
+			handleValue(config, change);
 		}
 	}
 }
 
 
-void handleLTE(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleLTE(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '<=-heat-left' rule\n"); }
 		*change = 1;
-		appendK(kCell, left);
+		appendK(config->k, left);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '<=-heat-right' rule\n"); }
 		*change = 1;
-		appendK(kCell, right);
+		appendK(config->k, right);
 		K* newTop = UpdateArg(top, 1, Hole());	
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (printDebug) { printf("Applying '<=' rule\n"); }
 		*change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
 		if (leftv <= rightv) {
-			setHead(kCell, k_true());
+			setHead(config->k, k_true());
 		} else {
-			setHead(kCell, k_false());
+			setHead(config->k, k_false());
 		}
 
 		// follows
-		handleValue(change);
+		handleValue(config, change);
 	}
 }
 
-void handlePlus(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handlePlus(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* left = top->args->a[0];
 	K* right = top->args->a[1];
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '+-heat-left' rule\n"); }
 		*change = 1;
-		appendK(kCell, left);
+		appendK(config->k, left);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '+-heat-right' rule\n"); }
 		*change = 1;
-		appendK(kCell, right);
+		appendK(config->k, right);
 		K* newTop = UpdateArg(top, 1, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (printDebug) { printf("Applying '+' rule\n"); }
 		*change = 1;
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
 		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(leftv + rightv), NULL)));
-		setHead(kCell, newTop);
+		setHead(config->k, newTop);
 
 		// follows
-		handleValue(change);
+		handleValue(config, change);
 	}
 }
 
-void handleNeg(int* change) {
-	K* top = k_get_item(kCell, 0);
+void handleNeg(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
 
 	K* body = Inner(top);
 	if (!isValue(body)) {
 		if (printDebug) { printf("Applying 'neg-heat' rule\n"); }
 		*change = 1;
-		appendK(kCell, body);
+		appendK(config->k, body);
 		K* newTop = UpdateArg(top, 0, Hole());
-		setPreHead(kCell, newTop);
+		setPreHead(config->k, newTop);
 	} else {
 		if (printDebug) { printf("Applying 'neg' rule\n"); }
 		*change = 1;
 		int64_t value = Inner(body)->label->i64_val;
 		int64_t newValue = -value;
 		K* newTop = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(newValue), NULL)));
-		setHead(kCell, newTop);
+		setHead(config->k, newTop);
 
 		// follows
-		handleValue(change);
+		handleValue(config, change);
 	}
 }
 
-void handleSkip(int* change) {
+void handleSkip(Configuration* config, int* change) {
 	if (printDebug) { printf("Applying 'skip' rule\n"); }
 	*change = 1;
-	trimK(kCell);
+	trimK(config->k);
 }
 
-void repl() {
+void repl(Configuration* config) {
 	int change = 1;
 	while (change) {
 		rewrites++;
 		change = 0;
 		if (printDebug) {
-			printf("%s", stateString(kCell, stateCell));
+			printf("%s", stateString(config->k, config->state));
 			printf("\n-----------------\n");
 		}
-		if (k_length(kCell) == 0) {
+		if (k_length(config->k) == 0) {
 			break;
 		}
-		if (k_length(kCell) > 10) {
-			printf("%s", stateString(kCell, stateCell));
+		if (k_length(config->k) > 10) {
+			printf("%s", stateString(config->k, config->state));
 			printf("\n-----------------\n");
 			panic("Safety check!");
 		}
 		if (shouldCheck) {
-			check(kCell, stateCell);
+			check(config->k, config->state);
 		}
-		K* top = k_get_item(kCell, 0);
+		K* top = k_get_item(config->k, 0);
 		if (checkTypeSafety) {
 			if (top->label->type != e_symbol) {
 				panic("Expected a symbol label");
@@ -468,41 +452,41 @@ void repl() {
 		// printf("label: %s\n", topLabel);
 
 		if (isValue(top)) {
-			handleValue(&change);
+			handleValue(config, &change);
 		} else {
 			switch (topLabel) {
 				case symbol_id:
-					handleVariable(&change);
+					handleVariable(config, &change);
 					break;
 				case symbol_statements:
-					handleStatements(&change);
+					handleStatements(config, &change);
 					break;
 				case symbol_var:
-					handleVar(&change);
+					handleVar(config, &change);
 					break;
 				case symbol_assign:
-					handleAssign(&change);
+					handleAssign(config, &change);
 					break;
 				case symbol_while:
-					handleWhile(&change);
+					handleWhile(config, &change);
 					break;
 				case symbol_if:
-					handleIf(&change);
+					handleIf(config, &change);
 					break;
 				case symbol_not:
-					handleNot(&change);
+					handleNot(config, &change);
 					break;
 				case symbol_lte:
-					handleLTE(&change);
+					handleLTE(config, &change);
 					break;
 				case symbol_plus:
-					handlePlus(&change);
+					handlePlus(config, &change);
 					break;
 				case symbol_neg:
-					handleNeg(&change);
+					handleNeg(config, &change);
 					break;
 				case symbol_skip:
-					handleSkip(&change);
+					handleSkip(config, &change);
 					break;
 				case symbol_div:
 					panic("don't handle Div");
@@ -522,54 +506,37 @@ void repl() {
 	}
 }
 
+Configuration* reduce(K* k) {
+	Configuration* config = malloc(sizeof(Configuration));
+	config->state = newStateCell();
+	config->k = newComputationCell();
+
+	appendK(config->k, k);
+
+	repl(config);
+	return config;
+}
+
+
 int main(void) {
-	stateCell = newStateCell();
-	kCell = newComputationCell();
+	K* prog = prog1();
+
+	Configuration* config = reduce(prog);
 
 	// printf("%s\n", stateString());
 	// stateCell['r' - 'a'] = k_one();
 	// printf("%s\n", stateString());
-	K* prog = prog1();
-	appendK(kCell, prog);
-	// printf("%s\n", KToString(prog));
-
-	repl();
-	if (state_get_item_from_name(stateCell, 's') != NULL) {
-		int64_t result = Inner(state_get_item_from_name(stateCell, 's'))->label->i64_val;
+	
+	if (state_get_item_from_name(config->state, 's') != NULL) {
+		int64_t result = Inner(state_get_item_from_name(config->state, 's'))->label->i64_val;
 		printf("Result: %" PRId64 "\n", result);
 	} else {
 		printf("'s' was not set!\n");
 	}
 	
-	printf("\nMallocedK: %d\n", mallocedK);
-	printf("deadlen: %d\n\n", deadlen);
-
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		for (int j = 0; j < deadListsLen[i]; j++) {
-			ListK* args = deadLists[i][j];
-			if (args->len > 0) {
-				malloced[args->cap]--;
-				free(args->a);
-			}
-			mallocedArgs--;
-			free(args);
-		}
-	}
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		deadListsLen[i] = 0;
-	}
-	for (int i = 0; i < 8; i++) {
-		printf("args %d: %d\n", i, malloced[i]);
-	}
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		printf("deadargs %d: %d\n", i, deadListsLen[i]);
-	}
-	printf("Mallocedargs: %d\n\n", mallocedArgs);
-
-	printf("MallocedLabels: %d\n", mallocedLabels);
-	printf("deadLabelLen: %d\n", deadLabelLen);
-	// printf("intcount: %d\n", intcount);
+	dump_garbage_info();
 
 	printf("\nrewrites: %" PRId64 "\n", rewrites);
+
 	return 0;
 }
