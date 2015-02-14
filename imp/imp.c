@@ -10,9 +10,6 @@
 #include "utils.h"
 #include "settings.h"
 
-// #define UPTO (5000000)
-#define UPTO (100000)
-
 typedef struct {
 	StateCell* state;
 	ComputationCell* k;
@@ -72,10 +69,10 @@ K* k_zero() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(0)
 K* k_one() { return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(1), NULL))); }
 K* k_skip() { return NewK(SymbolLabel(symbol_skip), NULL); }
 
-K* prog1() {
+K* prog1(uint64_t upto) {
 	K* n = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("n"), NULL)));
 	K* s = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("s"), NULL)));
-	K* hundred = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(UPTO), NULL)));
+	K* hundred = NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(upto), NULL)));
 
 	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
 	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
@@ -518,10 +515,18 @@ Configuration* reduce(K* k) {
 }
 
 
-int main(void) {
-	K* prog = prog1();
+int main(int argv, char** argc) {
+	uint64_t upto = 100000;
+	if (argv > 1) {
+		upto = strtoll(argc[1], NULL, 10); // FIXME: fishy
+		if (upto <= 0) {
+			panic("Argument passed on command line needs to be bigger than 1");
+		}
+	}
+	K* prog = prog1(upto);
 
 	Configuration* config = reduce(prog);
+
 
 	// printf("%s\n", stateString());
 	// stateCell['r' - 'a'] = k_one();

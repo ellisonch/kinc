@@ -5,5 +5,8 @@ build: imp.exe
 run: imp.exe
 	time ./imp.exe
 
+run-big: imp.exe
+	time ./imp.exe 5000000
+
 imp.exe: Makefile imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c
 	$(CC) $(CFLAGS) imp.c utils.c k.c cells.c -o imp.exe
