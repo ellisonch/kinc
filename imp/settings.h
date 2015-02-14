@@ -12,10 +12,10 @@
 #define shouldCheck 0
 
 // technically not needed, but good to be safe
-#define checkTypeSafety 0
-#define checkRefCounting 0
-#define checkGC 0
-#define checkTermSize 0
-#define checkStackSize 0
+#define checkTypeSafety 1
+#define checkRefCounting 1
+#define checkGC 1
+#define checkTermSize 1
+#define checkStackSize 1
 
 #endif
