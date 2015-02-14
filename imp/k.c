@@ -44,9 +44,7 @@ KLabel* mallocKLabel() {
 	return (KLabel*)malloc(sizeof(KLabel));
 }
 
-KLabel* StringLabel(const char* s) {
-	if (printDebug) { printf("Str DeadLabelLen: %d\n", deadLabelLen); }
-	if (printDebug) { printf("Creating string label %s\n", s); }
+KLabel* _new_label() {
 	KLabel* newL;
 	if (deadLabelLen > 0) {
 		newL = deadLabels[deadLabelLen - 1];
@@ -54,6 +52,13 @@ KLabel* StringLabel(const char* s) {
 	} else {
 		newL = mallocKLabel();
 	}
+	return newL;
+}
+
+KLabel* StringLabel(const char* s) {
+	if (printDebug) { printf("Str DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Creating string label %s\n", s); }
+	KLabel* newL = _new_label();
 	newL->type = e_string;
 	newL->string_val = s;
 	return newL;
@@ -65,13 +70,7 @@ KLabel* SymbolLabel(int s) {
 	}
 	if (printDebug) { printf("Sym DeadLabelLen: %d\n", deadLabelLen); }
 	if (printDebug) { printf("Creating symbol label %s\n", givenLabels[s]); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
+	KLabel* newL = _new_label();
 	newL->type = e_symbol;
 	newL->symbol_val = s;
 	symbolLabels[s] = newL;
@@ -83,13 +82,7 @@ KLabel* Int64Label(int64_t i64) {
 	// intcount++;
 	if (printDebug) { printf("Int DeadLabelLen: %d\n", deadLabelLen); }
 	if (printDebug) { printf("Creating int label %" PRId64 "\n", i64); }
-	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
-	} else {
-		newL = mallocKLabel();
-	}
+	KLabel* newL = _new_label();
 	newL->type = e_i64;
 	newL->i64_val = i64;
 	return newL;

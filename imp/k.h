@@ -42,8 +42,6 @@ void Dec(K* k);
 void Inc(K* k);
 const char* ListKToString(ListK* args);
 
-
-KLabel* mallocKLabel();
 KLabel* SymbolLabel(int s);
 KLabel* Int64Label(int64_t i64);
 KLabel* StringLabel(const char* s);
