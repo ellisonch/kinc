@@ -1,4 +1,4 @@
-CC=gcc
+CC=clang
 CFLAGS=-std=c11 -Wall -g -gdwarf-2 -m64 -fno-omit-frame-pointer -O3
 # -flto
 # -pedantic

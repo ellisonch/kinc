@@ -8,7 +8,8 @@
 #define BUILTINS_MAX 1024
 
 char* symbol_names[BUILTINS_MAX] = {
-	[BUILTINS_MAX - 6] =
+	[BUILTINS_MAX - 7] =
+	"String",
 	"_hole",
 	"Bool",
 	"Int",
@@ -17,6 +18,7 @@ char* symbol_names[BUILTINS_MAX] = {
 	"_fake",
 };
 
+#define symbol_string (BUILTINS_MAX - 7)
 #define symbol_hole (BUILTINS_MAX - 6)
 #define symbol_bool (BUILTINS_MAX - 5)
 #define symbol_int (BUILTINS_MAX - 4)
@@ -25,7 +27,7 @@ char* symbol_names[BUILTINS_MAX] = {
 #define symbol_fake (BUILTINS_MAX - 1)
 
 // FIXME: can do better than this
-int num_labels = 6;
+int num_labels = 7;
 
 // int get_symbol(char* name) {
 // 	for (int i = 0; i < num_labels; i++) {
@@ -56,6 +58,9 @@ K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel
 
 K* new_builtin_int(int64_t i) {
 	return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(i), NULL)));
+}
+K* new_builtin_string(char* i) {
+	return NewK(SymbolLabel(symbol_string), newArgs(1, NewK(StringLabel(i), NULL)));
 }
 
 int is_int(K* k) {

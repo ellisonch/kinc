@@ -1,0 +1,89 @@
+package aterm
+
+import "testing"
+import "strings"
+import "fmt"
+
+func go_sucks_parser_test() {
+	_ = fmt.Printf
+}
+
+var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
+// var simpleProg4 string = `Plus(Int(4), Call("f", [Mul(Int(5), Var("x"))]))`
+var simpleProg4 string = `Assign(Id("n"), Plus(Id("n"), Int("-1")))`
+
+var prog0 string = `Program(Assign(Id("n"), Int(100)))`;
+
+var prog1 string = `Program(Var(Id("n"),Id("s"),Id("r")),Assign(Id("n"), Int(100)),Assign(Id("s"), Int(0)),While(Not(Paren(LTE(Id("n"), Int(0)))), Assign(Id("s"), Plus(Id("s"), Id("n"))),Assign(Id("n"), Plus(Id("n"), Neg(Int(1))))))`
+var prog2 string = `Program(Var(Id("m"),Id("n"),Id("q"),Id("r"),Id("s")),Assign(Id("m"), Int(10)),While(Paren(Not(Paren(LTE(Id("m"), Int(2))))), Assign(Id("n"), Id("m")),Assign(Id("m"), Plus(Id("m"), Neg(Int(1)))),While(Paren(Not(Paren(LTE(Id("n"), Int(1))))), Assign(Id("s"), Plus(Id("s"), Int(1))),Assign(Id("q"), Div(Id("n"), Int(2))),Assign(Id("r"), Plus(Plus(Id("q"), Id("q")), Int(1))),While(Paren(LTE(Id("r"), Id("n"))), Assign(Id("n"), Plus(Plus(Plus(Id("n"), Id("n")), Id("n")), Int(1))), Assign(Id("n"), Id("q"))))))`
+var prog3 string = `Program(Var(Id("i"),Id("m"),Id("n"),Id("q"),Id("r"),Id("s"),Id("t"),Id("x"),Id("y"),Id("z")),Assign(Id("m"), Int(10)),Assign(Id("n"), Int(2)),While(Paren(LTE(Id("n"), Id("m"))), Assign(Id("i"), Int(2)),Assign(Id("q"), Div(Id("n"), Id("i"))),Assign(Id("t"), Int(1)),While(Paren(And(LTE(Id("i"), Id("q")), LTE(Int(1), Id("t")))), Assign(Id("x"), Id("i")),Assign(Id("y"), Id("q")),Assign(Id("z"), Int(0)),While(Paren(Not(Paren(LTE(Id("x"), Int(0))))), Assign(Id("q"), Div(Id("x"), Int(2))),Assign(Id("r"), Plus(Plus(Id("q"), Id("q")), Int(1))),While(Paren(LTE(Id("r"), Id("x"))), Assign(Id("z"), Plus(Id("z"), Id("y"))), Skip()),Assign(Id("x"), Id("q")),Assign(Id("y"), Plus(Id("y"), Id("y")))),While(Paren(LTE(Id("n"), Id("z"))), Assign(Id("t"), Int(0)), Assign(Id("i"), Plus(Id("i"), Int(1))),Assign(Id("q"), Div(Id("n"), Id("i"))))),While(Paren(LTE(Int(1), Id("t"))), Assign(Id("s"), Plus(Id("s"), Int(1))), Skip()),Assign(Id("n"), Plus(Id("n"), Int(1)))))`
+
+
+func TestParser1(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(simpleProg3))
+	ret := ATermParse(l)
+
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+func TestParser2(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(simpleProg4))
+	ret := ATermParse(l)
+
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+func TestProg0(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(prog0))
+	ret := ATermParse(l)
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+func TestProg1(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(prog1))
+	ret := ATermParse(l)
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+func TestProg2(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(prog2))
+	ret := ATermParse(l)
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+func TestProg3(t *testing.T) {
+	ATermDebug = 1
+	l := NewATermLexer(strings.NewReader(prog3))
+	ret := ATermParse(l)
+	if ret == 0 { 
+		t.Logf("%s\n", FinalTerm.String())		
+	} else { 
+		t.FailNow()
+	}
+}
+
+// func BenchmarkHello(b *testing.B) {
+//     for i := 0; i < b.N; i++ {
+//         fmt.Sprintf("hello")
+//     }
+// }

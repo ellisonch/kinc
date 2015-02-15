@@ -168,10 +168,12 @@ void check(ComputationCell *c, StateCell* state) {
 	// 
 }
 
+// TODO: unsafe
 void updateStore(StateCell* stateCell, K* keyK, K* value) {
+	keyK = Inner(keyK); // get rid of String() wrapper
 	if (checkTypeSafety) {
 		if (keyK->label->type != e_string) {
-			panic("Expected key to be string label");
+			panic("Expected key to be string label, but really %s", KToString(keyK));
 		}
 	}
 	int key = keyK->label->string_val[0] - 'a';
@@ -187,7 +189,14 @@ K* state_get_item_from_name(StateCell* stateCell, int i) {
 	return stateCell->elements[i - 'a'];
 }
 
+// TODO unsafe
 K* state_get_item(StateCell* stateCell, K* i) {
-	int variable = i->label->string_val[0] - 'a';
+	K* keyK = Inner(i);
+	if (checkTypeSafety) {
+		if (keyK->label->type != e_string) {
+			panic("Expected key to be string label, but really %s", KToString(keyK));
+		}
+	}
+	int variable = keyK->label->string_val[0] - 'a';
 	return stateCell->elements[variable];
 }

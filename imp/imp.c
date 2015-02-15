@@ -33,51 +33,58 @@ char* givenLabels[] = {
 	"Statements",
 	"Var",
 	"While",
+	"Paren",
 };
 
-#define symbol_assign 0
-#define symbol_div 1
-#define symbol_id 2
-#define symbol_if 3
-#define symbol_lte 4
-#define symbol_neg 5
-#define symbol_not 6
-#define symbol_plus 7
-#define symbol_program 8
-#define symbol_skip 9
-#define symbol_statements 10
-#define symbol_var 11
-#define symbol_while 12
+#define symbol_Assign 0
+#define symbol_Div 1
+#define symbol_Id 2
+#define symbol_If 3
+#define symbol_LTE 4
+#define symbol_Neg 5
+#define symbol_Not 6
+#define symbol_Plus 7
+#define symbol_Program 8
+#define symbol_Skip 9
+#define symbol_Statements 10
+#define symbol_Var 11
+#define symbol_While 12
+#define symbol_Paren 13
 
 void handleIf(Configuration* config, int* change);
 
-K* k_skip() { return NewK(SymbolLabel(symbol_skip), NULL); }
-K* k_new_id(char* s) {
-	return NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel(s), NULL)));
-}
+K* k_skip() { return NewK(SymbolLabel(symbol_Skip), NULL); }
+// K* k_new_id(char* s) {
+// 	return NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel(s), NULL)));
+// }
 
 K* prog1(uint64_t upto) {
-	K* n = k_new_id("n");
-	K* s = k_new_id("s");
-	K* hundred = new_builtin_int(upto);
-	K* zero = new_builtin_int(0);
+	// K* n = k_new_id("n");
+	// K* s = k_new_id("s");
+	// K* hundred = new_builtin_int(upto);
+	// K* zero = new_builtin_int(0);
 
-	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
-	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
-	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, zero));
+	// K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
+	// K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
+	// K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, zero));
 
-	K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
-	K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
-	K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, new_builtin_int(1)));
-	K* nPno = NewK(SymbolLabel(symbol_plus), newArgs(2, n, negOne));
-	K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
-	K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
+	// K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
+	// K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
+	// K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, new_builtin_int(1)));
+	// K* nPno = NewK(SymbolLabel(symbol_plus), newArgs(2, n, negOne));
+	// K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
+	// K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
 
-	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, zero));
-	K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
-	K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
+	// K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, zero));
+	// K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
+	// K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
 
-	K* pgm = NewK(SymbolLabel(symbol_statements), newArgs(4, l1, l2, l3, l4));
+	// K* pgm = NewK(SymbolLabel(symbol_statements), newArgs(4, l1, l2, l3, l4));
+
+	K* hole_inp = new_builtin_int(upto);
+
+	K* pgm = NewK(SymbolLabel(symbol_Program), newArgs(1, NewK(SymbolLabel(symbol_Statements), newArgs(4, NewK(SymbolLabel(symbol_Var), newArgs(3, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("r"))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),hole_inp)),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),new_builtin_int(0))),NewK(SymbolLabel(symbol_While), newArgs(2, NewK(SymbolLabel(symbol_Not), newArgs(1, NewK(SymbolLabel(symbol_Paren), newArgs(1, NewK(SymbolLabel(symbol_LTE), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),new_builtin_int(0))))))),NewK(SymbolLabel(symbol_Statements), newArgs(2, NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Neg), newArgs(1, new_builtin_int(1)))))))))))))));
+
 	return pgm;
 }
 
@@ -128,11 +135,6 @@ static void handleValue(Configuration* config, int* change) {
 void handleVariable(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	if (checkTypeSafety) {
-		if (Inner(top)->label->type != e_string) {
-			panic("Expected key to be string label");
-		}
-	}
 	K* value = state_get_item(config->state, Inner(top));
 	if (value == NULL) {
 		panic("Trying to read unassigned variable");
@@ -145,6 +147,32 @@ void handleVariable(Configuration* config, int* change) {
 
 	// follows
 	handleValue(config, change);
+}
+
+void handleProgram(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
+
+	if (top->args->len == 1) {
+		if (printDebug) {
+			printf("Applying 'program' rule\n");
+		}
+		*change = 1;
+		K* newTop = top->args->a[0];
+		setHead(config->k, newTop);
+	}
+}
+// TODO: commonality
+void handleParen(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
+
+	if (top->args->len == 1) {
+		if (printDebug) {
+			printf("Applying 'paren' rule\n");
+		}
+		*change = 1;
+		K* newTop = top->args->a[0];
+		setHead(config->k, newTop);
+	}
 }
 
 void handleStatements(Configuration* config, int* change) {
@@ -226,8 +254,8 @@ void handleWhile(Configuration* config, int* change) {
 	*change = 1;
 	K* guard = top->args->a[0];
 	K* body = top->args->a[1];
-	K* then = NewK(SymbolLabel(symbol_statements), newArgs(2, body, top));
-	K* theIf = NewK(SymbolLabel(symbol_if), newArgs(3, guard, then, k_skip()));
+	K* then = NewK(SymbolLabel(symbol_Statements), newArgs(2, body, top));
+	K* theIf = NewK(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
 	setHead(config->k, theIf);
 
 	// follows
@@ -434,44 +462,47 @@ void repl(Configuration* config) {
 			handleValue(config, &change);
 		} else {
 			switch (topLabel) {
-				case symbol_id:
+				case symbol_Id:
 					handleVariable(config, &change);
 					break;
-				case symbol_statements:
+				case symbol_Statements:
 					handleStatements(config, &change);
 					break;
-				case symbol_var:
+				case symbol_Var:
 					handleVar(config, &change);
 					break;
-				case symbol_assign:
+				case symbol_Assign:
 					handleAssign(config, &change);
 					break;
-				case symbol_while:
+				case symbol_While:
 					handleWhile(config, &change);
 					break;
-				case symbol_if:
+				case symbol_If:
 					handleIf(config, &change);
 					break;
-				case symbol_not:
+				case symbol_Not:
 					handleNot(config, &change);
 					break;
-				case symbol_lte:
+				case symbol_LTE:
 					handleLTE(config, &change);
 					break;
-				case symbol_plus:
+				case symbol_Plus:
 					handlePlus(config, &change);
 					break;
-				case symbol_neg:
+				case symbol_Neg:
 					handleNeg(config, &change);
 					break;
-				case symbol_skip:
+				case symbol_Skip:
 					handleSkip(config, &change);
 					break;
-				case symbol_div:
+				case symbol_Div:
 					panic("don't handle Div");
 					break;
-				case symbol_program:
-					panic("don't handle Program");
+				case symbol_Program:
+					handleProgram(config, &change);
+					break;
+				case symbol_Paren:
+					handleParen(config, &change);
 					break;
 				default: 
 					panic("unrecognized label");

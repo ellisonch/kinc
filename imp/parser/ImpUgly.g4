@@ -70,6 +70,8 @@ int_expression returns [String s]
 		{ $s = "Div(" + $a.s + ", " + $b.s + ")"; }
 	| int_literal
 		{ $s = $int_literal.s; }
+	| hole_expression
+		{ $s = $hole_expression.s; }
 	| id
 		{ $s = $id.s; }
 	;
@@ -84,16 +86,22 @@ bool_expression returns [String s]
 		{ $s = "Not(" + $b.s + ")"; }
 	;
 
+hole_expression returns [String s]
+	: Hole_expression
+		{ $s = "#Hole(\"" + $Hole_expression.text + "\")"; }
+	;
+
 int_literal returns [String s]
 	: Int_literal
-		{ $s = "Int(" + $Int_literal.text + ")"; }
+		{ $s = "#Int(" + $Int_literal.text + ")"; }
 	;
 
 id returns [String s]
 	: Id
-		{ $s = "Id(\"" + $Id.text + "\")"; }
+		{ $s = "Id(#String(\"" + $Id.text + "\"))"; }
 	;
 
 Int_literal : [0-9]+ ;
+Hole_expression : [$][a-zA-Z][a-zA-Z0-9]* ;
 Id : [a-zA-Z][a-zA-Z0-9]* ;
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines

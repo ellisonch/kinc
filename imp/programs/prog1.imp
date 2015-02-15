@@ -1,5 +1,5 @@
 var n, s, r ;
-n = 100 ;
+n = $inp ;
 s = 0 ;
 while not(n <= 0) {
 	s = s + n ;
