@@ -365,9 +365,16 @@ void dump_garbage_info() {
 			free(args);
 		}
 	}
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		deadListsLen[i] = 0;
-	}
+	// deadListsLen[0] = 0;
+	// deadListsLen[1] = 0;
+	// deadListsLen[2] = 0;
+	// deadListsLen[3] = 0; // for some reason this is causing a segfault with clang
+	// deadListsLen[4] = 0;
+
+	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN-1; i++) {
+	// 	deadListsLen[i] = 0;
+	// 	// printf("%d\n", deadListsLen[i]);
+	// }
 	for (int i = 0; i < 8; i++) {
 		printf("args %d: %d\n", i, malloced[i]);
 	}
@@ -379,6 +386,4 @@ void dump_garbage_info() {
 	dump_label_garbage_info();
 
 	printf("----------------------\n");
-	// printf("intcount: %d\n", intcount);
-
 }

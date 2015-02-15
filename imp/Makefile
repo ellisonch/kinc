@@ -1,10 +1,6 @@
 CC=gcc
-CFLAGS=-std=c11 -Wall -gdwarf-2 -m64 -fno-omit-frame-pointer
-#  -O3
-
-# -flto -gdwarf-2 -m64 -fno-omit-frame-pointer  -O3
-# -g 
-# 
+CFLAGS=-std=c11 -Wall -g -gdwarf-2 -m64 -fno-omit-frame-pointer -O3
+# -flto
 # -pedantic
 build: imp.exe
 
