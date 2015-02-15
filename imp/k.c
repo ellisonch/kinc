@@ -167,7 +167,6 @@ const char* ListKToString(ListK* args) {
 	return s;
 }
 
-
 // TODO: leaks memory and is unsafe
 const char* KToString(K* k) {
 	char* s = malloc(300);
@@ -178,8 +177,6 @@ const char* KToString(K* k) {
 	}
 	return s;
 }
-
-
 
 void dispose_k(K* k) {
 	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
@@ -194,22 +191,14 @@ void dispose_k(K* k) {
 		Dec(arg);
 	}
 
-	// lenkargs := len(k.args)
-	
-
 	int lenkargs = k->args->cap;
 
-	// don't garbage collect the "builtins"
-	// if (lenkargs == 0 && k == Hole) {
-	// 	return
-	// }
-
 	if (lenkargs >= MAX_GARBAGE_ARG_LEN) {
-		panic("MAX_GARBAGE_ARG_LEN is not enough");
+		if (printDebug) {
+			printf("MAX_GARBAGE_ARG_LEN is not enough for dead term with len %d\n", lenkargs);
+		}		
 	}
-	// if (deadListsLen[lenkargs] >= MAX_GARBAGE_KEPT) {
-	// 	panic("garbage overflow");
-	// }
+
 	if (lenkargs < MAX_GARBAGE_ARG_LEN && deadListsLen[lenkargs] < MAX_GARBAGE_KEPT) {
 		deadLists[lenkargs][deadListsLen[lenkargs]] = k->args;
 		deadListsLen[lenkargs]++;
@@ -223,11 +212,6 @@ void dispose_k(K* k) {
 		if (printDebug) { printf("Freeing args\n"); }		
 		free(k->args);
 	}
-	// if lenkargs < MAX_GARBAGE_ARG_LEN && lenkargs > 0 {
-	// 	if len(deadLists[lenkargs-1]) < MAX_GARBAGE_KEPT {
-	// 		deadLists[lenkargs-1] = append(deadLists[lenkargs-1], k.args)
-	// 	}
-	// }
 
 	if (k->label->type != e_symbol) {
 		dispose_label(k->label);
@@ -240,11 +224,6 @@ void dispose_k(K* k) {
 		mallocedK--;
 		free(k);
 	}
-
-	// if len(deadK) < MAX_GARBAGE_KEPT {
-	// 	k.args = nil // not technically needed, just a bit safer
-	// 	deadK = append(deadK, k)
-	// }
 }
 
 void Dec(K* k) {
@@ -257,12 +236,10 @@ void Dec(K* k) {
 		}
 	}
 	if (newRefs == 0) {
-		// panic("Dead term found: %s", KToString(k));
+		// printf("Dead term found: %s", KToString(k));
 		dispose_k(k);
 	}
 }
-
-
 
 ListK* copyArgs(ListK* oldArgs) {
 	ListK* args = getDeadList(oldArgs->cap);
@@ -360,6 +337,16 @@ countentry** counts(K* k) {
 
 	counts_aux(k, counts);
 	return counts;
+}
+
+void countentry_delete_all(countentry** counts) {
+	countentry *s;
+	countentry *tmp;
+
+	HASH_ITER(hh, *counts, s, tmp) {
+		HASH_DEL(*counts, s);  /* delete; users advances to next */
+		free(s);            /* optional- if you want to free  */
+	}
 }
 
 void dump_garbage_info() {

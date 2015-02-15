@@ -25,6 +25,7 @@ K* UpdateArg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
 countentry** counts(K* k);
+void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();
 

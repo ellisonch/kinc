@@ -12,7 +12,7 @@
 #include "uthash.h"
 
 // TODO: terrible, not right, horrible
-// extern int next;
+extern int mallocedArgs;
 
 int next = 0;
 
@@ -107,6 +107,7 @@ void appendK(ComputationCell *kCell, K* k) {
 
 void check(ComputationCell *c, StateCell* state) {
 	ListK* allValues = malloc(sizeof(ListK));
+	mallocedArgs++; // FIXME this is goofy, needs to be unified with actually making args
 	allValues->cap = k_length(c) + 26;
 	allValues->len = k_length(c);
 	allValues->a = malloc(sizeof(K*) * (k_length(c) + 26));
@@ -122,6 +123,7 @@ void check(ComputationCell *c, StateCell* state) {
 		allValues->a[allValues->len++] = val;
 	}
 
+	// create a new fake term to hold all the other terms
 	K* specialk = NewK(SymbolLabel(1023), allValues); // TODO: FIXME FIX ME!!!!
 	for (int i = 0; i < specialk->args->len; i++) {
  		K* arg = specialk->args->a[i];
@@ -152,11 +154,17 @@ void check(ComputationCell *c, StateCell* state) {
 	// 		}
 	// 	}
 	// }
+	countentry_delete_all(cm);
 	free(cm);
 	if (bad) { 
 		printf("%s\n", KToString(specialk));
 		panic("Bad check()!");
 	}
+	for (int i = 0; i < specialk->args->len; i++) {
+ 		K* arg = specialk->args->a[i];
+ 		Inc(arg);
+ 	}
+	Dec(specialk);
 	// 
 }
 
