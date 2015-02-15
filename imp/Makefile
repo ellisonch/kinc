@@ -1,6 +1,8 @@
 CC=gcc
-CFLAGS=-std=c11 -O3 -m64 -Wall -fno-omit-frame-pointer -gdwarf-2 
-# -flto 
+CFLAGS=-std=c11 -Wall -gdwarf-2 -m64 -fno-omit-frame-pointer
+#  -O3
+
+# -flto -gdwarf-2 -m64 -fno-omit-frame-pointer  -O3
 # -g 
 # 
 # -pedantic

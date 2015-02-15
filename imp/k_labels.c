@@ -95,7 +95,11 @@ const char* LabelToString(KLabel* label) {
 		snprintf(s, 50, "%" PRId64, label->i64_val);
 		return s;
 	} else if (label->type == e_symbol) {
-		return symbol_names[label->symbol_val];
+		char* val = symbol_names[label->symbol_val];
+		if (val == NULL) {
+			panic("Couldn't find symbol name for %d\n", label->symbol_val);
+		}
+		return val;
 	} else {
 		panic("Some unknown label type %d found", label->type);
 	}

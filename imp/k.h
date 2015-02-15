@@ -4,10 +4,12 @@
 #include "k_types.h"
 #include "k_labels.h"
 #include "k_builtins.h"
+#include "uthash.h"
 
-typedef struct countentry {
+typedef struct {
 	K* entry;
 	int count;
+	UT_hash_handle hh;
 } countentry;
 
 // TODO: possibly can get rid of some of these:
@@ -22,7 +24,7 @@ ListK* newArgs(int count, ...);
 K* UpdateArg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
-countentry* counts(K* k);
+countentry** counts(K* k);
 
 void dump_garbage_info();
 

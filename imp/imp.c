@@ -52,15 +52,19 @@ char* givenLabels[] = {
 void handleIf(Configuration* config, int* change);
 
 K* k_skip() { return NewK(SymbolLabel(symbol_skip), NULL); }
+K* k_new_id(char* s) {
+	return NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel(s), NULL)));
+}
 
 K* prog1(uint64_t upto) {
-	K* n = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("n"), NULL)));
-	K* s = NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel("s"), NULL)));
+	K* n = k_new_id("n");
+	K* s = k_new_id("s");
 	K* hundred = new_builtin_int(upto);
+	K* zero = new_builtin_int(0);
 
 	K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
 	K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
-	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, new_builtin_int(0)));
+	K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, zero));
 
 	K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
 	K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
@@ -69,7 +73,7 @@ K* prog1(uint64_t upto) {
 	K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
 	K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
 
-	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, new_builtin_int(0)));
+	K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, zero));
 	K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
 	K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
 
@@ -486,7 +490,6 @@ Configuration* reduce(K* k) {
 	repl(config);
 	return config;
 }
-
 
 int main(int argv, char** argc) {
 	uint64_t upto = 100000;

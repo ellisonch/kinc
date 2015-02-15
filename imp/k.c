@@ -9,6 +9,7 @@
 #include "k_labels.h"
 #include "settings.h"
 #include "utils.h"
+#include "uthash.h"
 
 
 #define MAX_GARBAGE_KEPT 10000
@@ -334,26 +335,29 @@ K* updateTrimArgs(K* k, int left, int right) {
 	return k;
 }
 
-void counts_aux(K* k, countentry counts[]) {
-	int o = ((uintptr_t)k) % 1000000;
-	// printf("o = %d\n", o);
-	if (counts[o].entry == 0) {
-		counts[o].entry = k;
-		counts[o].count = 1;
-	} else if (counts[o].entry == k) {
-		counts[o].count++;
-		return;
+void counts_aux(K* k, countentry **counts) {
+	countentry *find;
+	HASH_FIND_INT(*counts, &k, find);
+	if (find == NULL) {
+		countentry *new = malloc(sizeof(*new));
+	 	new->entry = k;
+	 	new->count = 1;
+	 	HASH_ADD_INT(*counts, entry, new);
+
+	 	for (int i = 0; i < k->args->len; i++) {
+			K* arg = k->args->a[i];
+			counts_aux(arg, counts);
+		}
 	} else {
-		panic("Collision!");
-	}
-	for (int i = 0; i < k->args->len; i++) {
-		K* arg = k->args->a[i];
-		counts_aux(arg, counts);
+		find->count++;
+		// printf("Adding one to %s's count\n", KToString(k));
 	}
 }
 
-countentry* counts(K* k) {
-	countentry* counts = calloc(1000000, sizeof(countentry));
+countentry** counts(K* k) {
+	countentry** counts = malloc(sizeof(*counts));
+	*counts = NULL;
+
 	counts_aux(k, counts);
 	return counts;
 }

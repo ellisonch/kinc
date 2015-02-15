@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "utils.h"
 #include "cells.h"
+#include "uthash.h"
 
 // TODO: terrible, not right, horrible
 // extern int next;
@@ -121,28 +122,43 @@ void check(ComputationCell *c, StateCell* state) {
 		allValues->a[allValues->len++] = val;
 	}
 
-	K* specialk = NewK(SymbolLabel(18), allValues); // FIX ME!!!!
+	K* specialk = NewK(SymbolLabel(1023), allValues); // TODO: FIXME FIX ME!!!!
 	for (int i = 0; i < specialk->args->len; i++) {
  		K* arg = specialk->args->a[i];
  		Dec(arg);
  	}
 	specialk->refs = 1;
-	countentry* cm = counts(specialk);
+	countentry** cm = counts(specialk);
 
 	int bad = 0;
-	for (int i = 0; i < 1000000; i++) {
-		if (cm[i].entry != 0) {
-			K* k = cm[i].entry;
-			if (k->refs != cm[i].count) {
-				bad = 1;
-				printf("Count for %s should be %d!\n", KToString(k), cm[i].count);
-			}
+	for (countentry *s = *cm; s != NULL; s = s->hh.next) {
+		if (s->entry == 0) {
+			panic("There should be no 0 entries");
+		}
+		K* k = s->entry;
+		if (k->refs != s->count) {
+			bad = 1;
+			printf("Count for %s should be %d, but saw %d!\n", KToString(k), s->count, k->refs);
 		}
 	}
-	if (bad) { panic("Bad check()!"); }
-	free(cm);
-}
 
+	// int bad = 0;
+	// for (int i = 0; i < 1000000; i++) {
+	// 	if (cm[i].entry != 0) {
+	// 		K* k = cm[i].entry;
+	// 		if (k->refs != cm[i].count) {
+	// 			bad = 1;
+	// 			printf("Count for %s should be %d!\n", KToString(k), cm[i].count);
+	// 		}
+	// 	}
+	// }
+	free(cm);
+	if (bad) { 
+		printf("%s\n", KToString(specialk));
+		panic("Bad check()!");
+	}
+	// 
+}
 
 void updateStore(StateCell* stateCell, K* keyK, K* value) {
 	if (checkTypeSafety) {
