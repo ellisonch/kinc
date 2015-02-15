@@ -9,7 +9,8 @@
 
 #define printDebug 0
 
-#define shouldCheck 1
+// slow checks dealing with refcounting
+#define shouldCheck 0
 
 // technically not needed, but good to be safe
 #define checkTypeSafety 1
