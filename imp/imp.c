@@ -413,6 +413,37 @@ void handlePlus(Configuration* config, int* change) {
 	}
 }
 
+
+void handleDiv(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
+
+	K* left = top->args->a[0];
+	K* right = top->args->a[1];
+	if (!isValue(left)) {
+		if (printDebug) { printf("Applying '/-heat-left' rule\n"); }
+		*change = 1;
+		appendK(config->k, left);
+		K* newTop = UpdateArg(top, 0, Hole());
+		setPreHead(config->k, newTop);
+	} else if (!isValue(right)) {
+		if (printDebug) { printf("Applying '/-heat-right' rule\n"); }
+		*change = 1;
+		appendK(config->k, right);
+		K* newTop = UpdateArg(top, 1, Hole());
+		setPreHead(config->k, newTop);
+	} else {
+		if (printDebug) { printf("Applying '/' rule\n"); }
+		*change = 1;
+		int64_t leftv = Inner(left)->label->i64_val;
+		int64_t rightv = Inner(right)->label->i64_val;
+		K* newTop = new_builtin_int(leftv / rightv);
+		setHead(config->k, newTop);
+
+		// follows
+		handleValue(config, change);
+	}
+}
+
 void handleNeg(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
@@ -509,7 +540,7 @@ void repl(Configuration* config) {
 					handleSkip(config, &change);
 					break;
 				case symbol_Div:
-					panic("don't handle Div");
+					handleDiv(config, &change);
 					break;
 				case symbol_Program:
 					handleProgram(config, &change);
@@ -578,15 +609,14 @@ int main(int argc, char* argv[]) {
 			return 129;
 		}
 	}
+	FILE *file = stdin;
+	if (path != NULL) {
+		file = fopen(path, "r");
 
-	if (path == NULL) {
-		printf("You need to profile a program to run\n");
-		return 1;
-	}
-	FILE *file = fopen(path, "r");
-	if (file == NULL) {
-		printf("Couldn't open %s\n", path);
-		return 1;
+		if (file == NULL) {
+			printf("Couldn't open %s\n", path);
+			return 1;
+		}
 	}
 	K* prog = aterm_file_to_k(file, lh, new_builtin_int(upto));
 	fclose(file);

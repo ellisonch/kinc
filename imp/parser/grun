@@ -1,2 +1,3 @@
-CLASSPATH=./gen_java:$CLASSPATH
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+CLASSPATH=$DIR/gen_java:$CLASSPATH
 java org.antlr.v4.runtime.misc.TestRig "$@"

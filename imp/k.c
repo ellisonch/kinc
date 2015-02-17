@@ -430,7 +430,7 @@ K* aterm_file_to_k(FILE* file, label_helper lh, K* hole) {
 	if (at == NULL) {
 		panic("something went wrong with parsing!");
 	}
-	// printf("%s\n", aterm_to_string(*at));
+	printf("%s\n", aterm_to_string(*at));
 	K* ret = aterm_to_k(*at, lh, hole);
 	return ret;
 }
