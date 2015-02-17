@@ -36,7 +36,14 @@ KLabel* _new_label() {
 	return newL;
 }
 
-void dispose_label(KLabel* label) {
+void dispose_label(K* k) {
+	KLabel* label = k->label;
+
+	// TODO: why am I doing this?
+	if (label->type == e_symbol) {
+		return;
+	}
+
 	if (deadLabelLen < MAX_GARBAGE_KEPT) {
 		deadLabels[deadLabelLen++] = label;
 		if (printDebug) { printf("Saving label\n"); }

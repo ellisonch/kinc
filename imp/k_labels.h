@@ -4,7 +4,7 @@
 #include "k_types.h"
 
 const char* LabelToString(KLabel* label);
-void dispose_label(KLabel* label);
+void dispose_label(K* k);
 void dump_label_garbage_info();
 KLabel* SymbolLabel(int s);
 KLabel* Int64Label(int64_t i64);

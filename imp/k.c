@@ -21,6 +21,8 @@ K* deadK[MAX_GARBAGE_KEPT];
 int deadlen = 0;
 
 ListK* deadLists[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
+
+// the number of dead things of length i
 int deadListsLen[MAX_GARBAGE_ARG_LEN+1];
 
 int mallocedArgs;
@@ -202,44 +204,40 @@ const char* KToString(K* k) {
 	return s;
 }
 
-void dispose_k(K* k) {
-	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
+// we're done with a ListK, and we need to see if we can reuse it
+void dispose_args(K* k) {
+	ListK* args = k->args;
 
-	if (checkTermSize) {
-		if (k->args->len > 10) {
-			panic("Sanity check failed!");
-		}
-	}
-	for (int i = 0; i < k->args->len; i++) {
-		K* arg = k->args->a[i];
+	for (int i = 0; i < args->len; i++) {
+		K* arg = args->a[i];
 		Dec(arg);
 	}
 
-	int lenkargs = k->args->cap;
+	int number_of_args = args->cap;
 
-	if (lenkargs >= MAX_GARBAGE_ARG_LEN) {
-		if (printDebug) {
-			printf("MAX_GARBAGE_ARG_LEN is not enough for dead term with len %d\n", lenkargs);
-		}		
+	if (number_of_args >= MAX_GARBAGE_ARG_LEN) {
+		if (checkRightSettings) {
+			printf("MAX_GARBAGE_ARG_LEN is not enough for dead term with len %d\n", number_of_args);
+		}
 	}
-
-	if (lenkargs < MAX_GARBAGE_ARG_LEN && deadListsLen[lenkargs] < MAX_GARBAGE_KEPT) {
-		deadLists[lenkargs][deadListsLen[lenkargs]] = k->args;
-		deadListsLen[lenkargs]++;
+	if (number_of_args < MAX_GARBAGE_ARG_LEN && deadListsLen[number_of_args] < MAX_GARBAGE_KEPT) {
+		// save it
+		deadLists[number_of_args][deadListsLen[number_of_args]] = args;
+		deadListsLen[number_of_args]++;
 		if (printDebug) { printf("Saving args\n"); }
 	} else {
+		// kill it
 		mallocedArgs--;
-		if (k->args->cap > 0) {
-			malloced[k->args->cap]--;
-			free(k->args->a);
+		if (number_of_args > 0) {
+			malloced[number_of_args]--;
+			free(args->a);
 		}
 		if (printDebug) { printf("Freeing args\n"); }		
-		free(k->args);
+		free(args);
 	}
+}
 
-	if (k->label->type != e_symbol) {
-		dispose_label(k->label);
-	}
+void dispose_k_alone(K* k) {
 	if (deadlen < MAX_GARBAGE_KEPT) {
 		if (printDebug) { printf("Saving k\n"); }
 		deadK[deadlen++] = k;
@@ -248,6 +246,21 @@ void dispose_k(K* k) {
 		mallocedK--;
 		free(k);
 	}
+}
+
+// this is called where there are no references to k, so we can reclaim its memory for use elsewhere
+void dispose_k(K* k) {
+	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
+
+	if (checkTermSize) {
+		if (k->args->len > 10) {
+			panic("Sanity check failed!");
+		}
+	}
+
+	dispose_args(k);
+	dispose_label(k);
+	dispose_k_alone(k);
 }
 
 void Dec(K* k) {

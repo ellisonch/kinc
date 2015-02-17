@@ -28,19 +28,17 @@ int run_tests() {
 }
 
 int run_bench() {
-	uint64_t r;
-
 	clock_t t_start = clock();
-	r = run(p1, 500000);
 
-	r = run(p2, 7000);
+	run(p1, 500000);
 
-	r = run(p3, 20000);
+	run(p2, 7000);
+
+	run(p3, 20000);
 	
 	clock_t t_end = clock();
 	double t_sec = (double)(t_end - t_start) / CLOCKS_PER_SEC;
 	printf("Took %f\n", t_sec);
-	r = r;
 
 	// printf("%" PRId64 "\n", r);
 
