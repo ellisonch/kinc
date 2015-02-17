@@ -70,15 +70,19 @@ comma_list
 	;
 
 %%
+/*
 main() {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	yyin = stdin;
-	do { 
+	do {
 		yyparse();
 	} while(!feof(yyin));
+	printf("Getting ready to to_string\n");
 	char* sterm = aterm_to_string(final_term);
+	printf("Back from to_string\n");
 	printf("%s\n", sterm);
 }
+*/
 void yyerror(const char* s) {
 	fprintf(stderr, "Parse error: %s\n", s);
 	exit(1);

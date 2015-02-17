@@ -13,7 +13,15 @@
 
 %%
 
-[A-Za-z][A-Za-z0-9]* {
+["][$A-Za-z0-9]*["] {
+	char* p = malloc(strlen(yytext) + 1);
+	memcpy(p, yytext+1, strlen(yytext)-2);
+	p[strlen(yytext)-2] = '\0';
+	yylval.str = p; 
+	return TOK_STRING;
+}
+
+[A-Za-z#][A-Za-z0-9]* {
 	char* p = malloc(strlen(yytext) + 1);
 	strcpy(p, yytext);
 	yylval.str = p; 

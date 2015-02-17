@@ -41,7 +41,9 @@ char* at_list_to_string(at_list* l) {
 char* aterm_to_string(aterm at) {
 	switch (at.type) {
 		case AT_ERROR: {
-			return "AT_ERROR";
+			char* ret = malloc(100);
+			strcpy(ret, "AT_ERROR");
+			return ret;
 		}
 		case AT_INT64: {
 			// longtest int64 is -9223 37203 68547 75808
@@ -50,10 +52,14 @@ char* aterm_to_string(aterm at) {
 			return ret;
 		}
 		case AT_REAL: {
-			return "AT_REAL";
+			char* ret = malloc(100);
+			strcpy(ret, "AT_REAL");
+			return ret;
 		}
 		case AT_STRING: {
-			return "AT_STRING";
+			char* ret = malloc(strlen(at.string) + 2);
+			sprintf(ret, "\"%s\"", at.string);
+			return ret;
 		}
 		case AT_APPL: {
 			at_appl appl = at.appl;
@@ -70,10 +76,14 @@ char* aterm_to_string(aterm at) {
 			return ret;
 		}
 		case AT_LIST: {
-			return "AT_LIST";
+			char* ret = malloc(100);
+			strcpy(ret, "AT_LIST");
+			return ret;
 		}
 		default: {
-			return "Missing Case";
+			char* ret = malloc(100);
+			strcpy(ret, "Missing Case");
+			return ret;
 		}
 	}
 }
