@@ -43,4 +43,6 @@ struct aterm {
 at_list* at_list_append(at_list* oldp, aterm at);
 char* aterm_to_string(aterm at);
 
+aterm* at_parse(FILE* file);
+
 #endif

@@ -14,6 +14,9 @@ void yyerror(const char* s);
 aterm final_term;
 
 %}
+
+// %define api.pure full
+
 %union {
 	int64_t i64;
 	char* str;
