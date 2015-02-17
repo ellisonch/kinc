@@ -7,6 +7,9 @@ build: imp.exe
 # SRCS=$(wildcard *.c)
 # OBJS=$(SRCS:.c=.o)
 
+bench: imp.exe
+	time ./imp.exe --bench
+
 test: imp.exe
 	time ./imp.exe --test
 

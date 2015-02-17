@@ -24,6 +24,7 @@ adopt_spec opt_specs[] = {
     { ADOPT_VALUE, "input", 'i', NULL, "input for program" },
     { ADOPT_SWITCH, "help", 0, NULL, NULL, ADOPT_USAGE_HIDDEN },
     { ADOPT_SWITCH, "test", 't', NULL, "Turns testing on" },
+    { ADOPT_SWITCH, "bench", 't', NULL, "Turns benching on" },
     // { ADOPT_VALUE, "verbose", 'v', "level", "sets the verbosity level (default 1)" },
     // { ADOPT_VALUE, "channel", 'c', "channel", "sets the channel", ADOPT_USAGE_VALUE_REQUIRED },
     { ADOPT_LITERAL },
@@ -609,6 +610,7 @@ int main(int argc, char* argv[]) {
 	int upto = 5;
 	const char *path = NULL;
 	int test = 0;
+	int bench = 0;
 
 	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
 
@@ -628,6 +630,9 @@ int main(int argc, char* argv[]) {
 			if (strcmp(opt.spec->name, "test") == 0) {
 				test = 1;
 			}
+			if (strcmp(opt.spec->name, "bench") == 0) {
+				bench = 1;
+			}
 		} else {
 			fprintf(stderr, "Unknown option: %s\n", opt.value);
 			adopt_usage_fprint(stderr, argv[0], opt_specs);
@@ -635,7 +640,9 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	if (test) {
+	if (bench) {
+		run_bench();
+	} else if (test) {
 		run_tests();
 	} else {
 		uint64_t result = run(path, upto);
