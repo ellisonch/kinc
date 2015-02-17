@@ -12,8 +12,8 @@ while not(n <= 0) do (
 */
 
 program 
-	: statements
-		{ System.out.println("Program(" + $statements.s + ")"); }
+	: statements int_expression
+		{ System.out.println("Program(" + $statements.s + ", " + $int_expression.s + ")"); }
 ;
 statements returns [String s] locals [String temp = ""]
 	: 

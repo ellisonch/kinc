@@ -5,3 +5,4 @@ while not(n <= 0) {
 	s = s + n ;
 	n = n + -1
 }
+s

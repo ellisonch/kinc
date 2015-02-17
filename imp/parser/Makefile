@@ -1,6 +1,4 @@
 run: aterm2c.exe gen_java/ImpUglyParser.class
-	cat ../programs/prog1.imp
-	cat ../programs/prog1.imp | ./grun ImpUgly program 
 	cat ../programs/prog1.imp | ./grun ImpUgly program | ./aterm2c.exe
 
 aterm2c.exe: aterm2c.go
