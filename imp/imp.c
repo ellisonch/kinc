@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "adopt.h"
+#include "test.h"
 
 typedef struct {
 	StateCell* state;
@@ -22,6 +23,7 @@ adopt_spec opt_specs[] = {
     // { ADOPT_VALUE, "debug", 'd', NULL, "displays debug information" },
     { ADOPT_VALUE, "input", 'i', NULL, "input for program" },
     { ADOPT_SWITCH, "help", 0, NULL, NULL, ADOPT_USAGE_HIDDEN },
+    { ADOPT_SWITCH, "test", 't', NULL, "Turns testing on" },
     // { ADOPT_VALUE, "verbose", 'v', "level", "sets the verbosity level (default 1)" },
     // { ADOPT_VALUE, "channel", 'c', "channel", "sets the channel", ADOPT_USAGE_VALUE_REQUIRED },
     { ADOPT_LITERAL },
@@ -576,49 +578,11 @@ Configuration* reduce(K* k) {
 	return config;
 }
 
-int main(int argc, char* argv[]) {
-
-	adopt_parser parser;
-	adopt_opt opt;
-	// const char *value;
-	int upto = 5;
-	const char *path = NULL;
-
+uint64_t run(const char* path, int64_t upto) {
 	label_helper lh;
 	lh.count = sizeof(givenLabels) / sizeof(givenLabels[0]);
 	lh.labels = &givenLabels[0];
 
-
-	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
-
-
-	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
-
-	// uint64_t upto = 100000;
-	// if (argv > 1) {
-	// 	upto = strtoll(argc[1], NULL, 10); // FIXME: fishy
-	// 	if (upto <= 0) {
-	// 		panic("Argument passed on command line needs to be bigger than 1");
-	// 	}
-	// }
-
-	while (adopt_parser_next(&opt, &parser)) {
-		if (opt.spec) {
-			printf("'%s' = ", opt.spec->name);
-			printf("'%s'\n", opt.value);
-			if (strcmp(opt.spec->name, "file") == 0) {
-				path = opt.value;
-				printf("Will load program file '%s'\n", path);
-			}
-			if (strcmp(opt.spec->name, "input") == 0) {
-				upto = atoi(opt.value);
-			}
-		} else {
-			fprintf(stderr, "Unknown option: %s\n", opt.value);
-			adopt_usage_fprint(stderr, argv[0], opt_specs);
-			return 129;
-		}
-	}
 	FILE *file = stdin;
 	if (path != NULL) {
 		file = fopen(path, "r");
@@ -631,19 +595,56 @@ int main(int argc, char* argv[]) {
 	K* prog = aterm_file_to_k(file, lh, new_builtin_int(upto));
 	fclose(file);
 
-	// K* prog2 = prog1(upto);
-
-	// printf("\n%s\n", KToString(prog));
-	// printf("\n%s\n", KToString(prog2));
-
 	Configuration* config = reduce(prog);
 	K* resultK = get_result(config->k);
 	int64_t result = Inner(resultK)->label->i64_val;
-	printf("Result: %" PRId64 "\n", result);
-	
-	dump_garbage_info();
+	return result;
+}
 
-	printf("\nrewrites: %" PRIu64 "\n", rewrites);
+int main(int argc, char* argv[]) {
+
+	adopt_parser parser;
+	adopt_opt opt;
+	// const char *value;
+	int upto = 5;
+	const char *path = NULL;
+	int test = 0;
+
+	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
+
+	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
+
+	while (adopt_parser_next(&opt, &parser)) {
+		if (opt.spec) {
+			printf("'%s' = ", opt.spec->name);
+			printf("'%s'\n", opt.value);
+			if (strcmp(opt.spec->name, "file") == 0) {
+				path = opt.value;
+				printf("Will load program file '%s'\n", path);
+			}
+			if (strcmp(opt.spec->name, "input") == 0) {
+				upto = atoi(opt.value);
+			}
+			if (strcmp(opt.spec->name, "test") == 0) {
+				test = 1;
+			}
+		} else {
+			fprintf(stderr, "Unknown option: %s\n", opt.value);
+			adopt_usage_fprint(stderr, argv[0], opt_specs);
+			return 129;
+		}
+	}
+	
+	if (test) {
+		run_tests();
+	} else {
+		uint64_t result = run(path, upto);
+		printf("Result: %" PRId64 "\n", result);
+	
+		dump_garbage_info();
+
+		printf("\nrewrites: %" PRIu64 "\n", rewrites);
+	}
 
 	return 0;
 }

@@ -428,7 +428,7 @@ K* aterm_file_to_k(FILE* file, label_helper lh, K* hole) {
 	if (at == NULL) {
 		panic("something went wrong with parsing!");
 	}
-	printf("%s\n", aterm_to_string(*at));
+	// printf("%s\n", aterm_to_string(*at));
 	K* ret = aterm_to_k(*at, lh, hole);
 	return ret;
 }
@@ -475,74 +475,9 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			int symbol = get_symbol(lh, at.appl.name);
 			ListK* args = aterm_list_to_args(at.appl.args, lh, hole);
 			return NewK(SymbolLabel(symbol), args);
-
-			// NewK(SymbolLabel(symbol_Statements), newArgs(4, NewK(SymbolLabel(symbol_Var)
-
-			// symbol_name := "symbol_" + t.Appl.Name
-			// args := ATermListToStringList(t.Appl.Args)
-			// var sargs string
-			// if len(args) == 0 {
-			// 	sargs = "NULL"
-			// } else {
-			// 	sargs = fmt.Sprintf("newArgs(%d, %s)", len(args), strings.Join(args, ","))
-			// }
-			// return fmt.Sprintf("NewK(SymbolLabel(%s), %s)", symbol_name, sargs)
-
 		}
 		default: {
 			panic("Missing case!");
 		}
 	}
 }
-
-
-// func ATermListToStringList(l []aterm.ATerm) []string {
-// 	arguments := make([]string, len(l))
-// 	for i, t := range l {
-// 		arguments[i] = ATermToC(&t)
-// 	}
-// 	// res := strings.Join(arguments, ",")
-// 	// fmt.Printf("%s\n", res)
-// 	// if strings.HasSuffix(res, " ") {
-// 	// 	panic(fmt.Sprintf("Something up with %v", l))
-// 	// }
-// 	return arguments
-// }
-// func ATermToC(t *aterm.ATerm) string {
-// 	switch t.Type {
-// 		case aterm.Error:
-// 			panic("Didn't expect error term in ATermToC()")
-// 		case aterm.String:
-// 			return fmt.Sprintf("new_builtin_string(\"%s\")", t.Str)
-// 		case aterm.Int:
-// 			// return NewK(Int64Label(t.Int), nil)
-// 			return fmt.Sprintf("new_builtin_int(%d)", t.Int)
-// 		case aterm.Appl:
-// 			if (t.Appl.Name == "#Int" || t.Appl.Name == "#String") {
-// 				return ATermToC(&t.Appl.Args[0])
-// 			}
-// 			if (t.Appl.Name == "#Hole") {
-// 				// return ATermToC(&t.Appl.Args[0])
-// 				nodolla := strings.TrimLeft(t.Appl.Args[0].Str, "$")
-// 				return "hole_" + nodolla
-// 				// strings.TrimLeft(t.Appl.Args[0], cutset)
-// 			}
-// 			// return NewK(StringLabel(t.Appl.Name), ATermListToListK(t.Appl.Args))
-// 			// symbol, ok := symbolMap[t.Appl.Name]
-// 			// if !ok {
-// 			// 	panic(fmt.Sprintf("Couldn't find symbol %s", t.Appl.Name))
-// 			// }
-// 			symbol_name := "symbol_" + t.Appl.Name
-// 			args := ATermListToStringList(t.Appl.Args)
-// 			var sargs string
-// 			if len(args) == 0 {
-// 				sargs = "NULL"
-// 			} else {
-// 				sargs = fmt.Sprintf("newArgs(%d, %s)", len(args), strings.Join(args, ","))
-// 			}
-// 			return fmt.Sprintf("NewK(SymbolLabel(%s), %s)", symbol_name, sargs)
-// 		// case aterm.List: 
-// 		// 	return NewK(StringLabel("KList"), ATermListToListK(t.List))
-// 	}
-// 	panic(fmt.Sprintf("Not handling default for %v", t))
-// }
