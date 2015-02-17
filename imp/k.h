@@ -1,6 +1,8 @@
 #ifndef K_H
 #define K_H
 
+#include <stdio.h>
+
 #include "k_types.h"
 #include "k_labels.h"
 #include "k_builtins.h"
@@ -13,6 +15,12 @@ typedef struct {
 } countentry;
 
 // TODO: possibly can get rid of some of these:
+
+
+typedef struct {
+	int count;
+	char** labels;
+} label_helper;
 
 const char* KToString(K* k);
 void Dec(K* k);
@@ -28,5 +36,7 @@ countentry** counts(K* k);
 void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();
+
+K* aterm_file_to_k(FILE* file, label_helper lh, K* hole);
 
 #endif

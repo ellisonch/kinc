@@ -1,6 +1,8 @@
 #ifndef K_TYPES_H
 #define K_TYPES_H
 
+#include <stdint.h>
+
 typedef enum {
 	e_symbol,
 	e_string,

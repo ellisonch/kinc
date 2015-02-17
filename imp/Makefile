@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-std=c11 -Wall -g -gdwarf-2 -m64 -fno-omit-frame-pointer -O3
+CFLAGS=-static -std=c11 -Wall -g -gdwarf-2 -m64 -fno-omit-frame-pointer -O3 -static
 # -flto
 # -pedantic
 build: imp.exe
@@ -15,8 +15,8 @@ run-big: imp.exe
 
 # %.o: %.c
 
-imp.exe: Makefile imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c
-	$(CC) $(CFLAGS) imp.c utils.c k.c cells.c k_labels.c k_builtins.c -o imp.exe
+imp.exe: Makefile imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h
+	$(CC) $(CFLAGS) imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c -L./aparser -laterm -o imp.exe
 
 profile: imp.exe
 	cmd /C "sleepy /r:\"imp.exe 2000000\""

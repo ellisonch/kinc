@@ -200,3 +200,11 @@ K* state_get_item(StateCell* stateCell, K* i) {
 	int variable = keyK->label->string_val[0] - 'a';
 	return stateCell->elements[variable];
 }
+
+K* get_result(ComputationCell *kCell) {
+	if (kCell->next != 1) {
+		panic("Expected a single value on the K Cell, but instead have %d", kCell->next);
+	}
+	return k_get_item(kCell, 0);
+}
+

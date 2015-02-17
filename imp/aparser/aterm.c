@@ -92,7 +92,7 @@ extern FILE* yyin;
 extern aterm final_term;
 
 aterm* at_parse(FILE* file) {
-	yyin = stdin;
+	yyin = file;
 	yyparse();
 	aterm* ret = malloc(sizeof(*ret));
 	memcpy(ret, &final_term, sizeof(aterm));

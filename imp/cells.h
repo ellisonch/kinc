@@ -30,6 +30,10 @@ void trimK(ComputationCell *kCell);
 void setHead(ComputationCell *kCell, K* k);
 void setPreHead(ComputationCell *kCell, K* k);
 void appendK(ComputationCell *kCell, K* k);
+
 char* stateString(ComputationCell *kCell, StateCell* stateCell);
+char* kCellToString(ComputationCell *kCell);
+
+K* get_result(ComputationCell *kCell);
 
 #endif

@@ -9,15 +9,25 @@
 #include "cells.h"
 #include "utils.h"
 #include "settings.h"
+#include "adopt.h"
 
 typedef struct {
 	StateCell* state;
 	ComputationCell* k;
 } Configuration;
 
-
 uint64_t rewrites;
 
+adopt_spec opt_specs[] = {
+    // { ADOPT_VALUE, "debug", 'd', NULL, "displays debug information" },
+    { ADOPT_VALUE, "input", 'i', NULL, "input for program" },
+    { ADOPT_SWITCH, "help", 0, NULL, NULL, ADOPT_USAGE_HIDDEN },
+    // { ADOPT_VALUE, "verbose", 'v', "level", "sets the verbosity level (default 1)" },
+    // { ADOPT_VALUE, "channel", 'c', "channel", "sets the channel", ADOPT_USAGE_VALUE_REQUIRED },
+    { ADOPT_LITERAL },
+    { ADOPT_ARG, "file", 'f', NULL, "file path" },
+    { 0 },
+};
 
 char* givenLabels[] = {
 	"Assign",
@@ -83,10 +93,11 @@ K* prog1(uint64_t upto) {
 
 	K* hole_inp = new_builtin_int(upto);
 
-	K* pgm = NewK(SymbolLabel(symbol_Program), newArgs(1, NewK(SymbolLabel(symbol_Statements), newArgs(4, NewK(SymbolLabel(symbol_Var), newArgs(3, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("r"))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),hole_inp)),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),new_builtin_int(0))),NewK(SymbolLabel(symbol_While), newArgs(2, NewK(SymbolLabel(symbol_Not), newArgs(1, NewK(SymbolLabel(symbol_Paren), newArgs(1, NewK(SymbolLabel(symbol_LTE), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),new_builtin_int(0))))))),NewK(SymbolLabel(symbol_Statements), newArgs(2, NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Neg), newArgs(1, new_builtin_int(1)))))))))))))));
+	K* pgm = NewK(SymbolLabel(symbol_Program), newArgs(2, NewK(SymbolLabel(symbol_Statements), newArgs(4, NewK(SymbolLabel(symbol_Var), newArgs(3, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("r"))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),hole_inp)),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),new_builtin_int(0))),NewK(SymbolLabel(symbol_While), newArgs(2, NewK(SymbolLabel(symbol_Not), newArgs(1, NewK(SymbolLabel(symbol_Paren), newArgs(1, NewK(SymbolLabel(symbol_LTE), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),new_builtin_int(0))))))),NewK(SymbolLabel(symbol_Statements), newArgs(2, NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Neg), newArgs(1, new_builtin_int(1))))))))))))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s")))));
 
 	return pgm;
 }
+
 
 int isValue(K* k) {
 	if (checkTypeSafety) {
@@ -152,13 +163,15 @@ void handleVariable(Configuration* config, int* change) {
 void handleProgram(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	if (top->args->len == 1) {
+	if (top->args->len == 2) {
 		if (printDebug) {
 			printf("Applying 'program' rule\n");
 		}
 		*change = 1;
-		K* newTop = top->args->a[0];
-		setHead(config->k, newTop);
+		K* body = top->args->a[0];
+		K* result = top->args->a[1];		
+		appendK(config->k, body);		
+		setPreHead(config->k, result);
 	}
 }
 // TODO: commonality
@@ -522,32 +535,71 @@ Configuration* reduce(K* k) {
 	return config;
 }
 
-int main(int argv, char** argc) {
-	uint64_t upto = 100000;
-	if (argv > 1) {
-		upto = strtoll(argc[1], NULL, 10); // FIXME: fishy
-		if (upto <= 0) {
-			panic("Argument passed on command line needs to be bigger than 1");
-		}
-	}
+int main(int argc, char* argv[]) {
+
+	adopt_parser parser;
+	adopt_opt opt;
+	// const char *value;
+	int upto = 100000;
+	const char *path = NULL;
+
+	label_helper lh;
+	lh.count = sizeof(givenLabels) / sizeof(givenLabels[0]);
+	lh.labels = &givenLabels[0];
+
+
 	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
 
-	K* prog = prog1(upto);
-	
+
+	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
+
+	// uint64_t upto = 100000;
+	// if (argv > 1) {
+	// 	upto = strtoll(argc[1], NULL, 10); // FIXME: fishy
+	// 	if (upto <= 0) {
+	// 		panic("Argument passed on command line needs to be bigger than 1");
+	// 	}
+	// }
+
+	while (adopt_parser_next(&opt, &parser)) {
+		if (opt.spec) {
+			printf("'%s' = ", opt.spec->name);
+			printf("'%s'\n", opt.value);
+			if (strcmp(opt.spec->name, "file") == 0) {
+				path = opt.value;
+				printf("Will load program file '%s'\n", path);
+			}
+			if (strcmp(opt.spec->name, "input") == 0) {
+				upto = atoi(opt.value);
+			}
+		} else {
+			fprintf(stderr, "Unknown option: %s\n", opt.value);
+			adopt_usage_fprint(stderr, argv[0], opt_specs);
+			return 129;
+		}
+	}
+
+	if (path == NULL) {
+		printf("You need to profile a program to run\n");
+		return 1;
+	}
+	FILE *file = fopen(path, "r");
+	if (file == NULL) {
+		printf("Couldn't open %s\n", path);
+		return 1;
+	}
+	K* prog = aterm_file_to_k(file, lh, new_builtin_int(upto));
+	fclose(file);
+
+	// K* prog2 = prog1(upto);
+
+	// printf("\n%s\n", KToString(prog));
+	// printf("\n%s\n", KToString(prog2));
 
 	Configuration* config = reduce(prog);
-
-
-	// printf("%s\n", stateString());
-	// stateCell['r' - 'a'] = k_one();
-	// printf("%s\n", stateString());
-	
-	if (state_get_item_from_name(config->state, 's') != NULL) {
-		int64_t result = Inner(state_get_item_from_name(config->state, 's'))->label->i64_val;
-		printf("Result: %" PRId64 "\n", result);
-	} else {
-		printf("'s' was not set!\n");
-	}
+	K* resultK = get_result(config->k);
+	int64_t result = Inner(resultK)->label->i64_val;
+	printf("Result: %" PRId64 "\n", result);
 	
 	dump_garbage_info();
 
