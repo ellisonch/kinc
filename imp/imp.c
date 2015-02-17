@@ -44,6 +44,7 @@ char* givenLabels[] = {
 	"Var",
 	"While",
 	"Paren",
+	"And",
 };
 
 #define symbol_Assign 0
@@ -60,6 +61,7 @@ char* givenLabels[] = {
 #define symbol_Var 11
 #define symbol_While 12
 #define symbol_Paren 13
+#define symbol_And 14
 
 void handleIf(Configuration* config, int* change);
 
@@ -67,37 +69,6 @@ K* k_skip() { return NewK(SymbolLabel(symbol_Skip), NULL); }
 // K* k_new_id(char* s) {
 // 	return NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel(s), NULL)));
 // }
-
-K* prog1(uint64_t upto) {
-	// K* n = k_new_id("n");
-	// K* s = k_new_id("s");
-	// K* hundred = new_builtin_int(upto);
-	// K* zero = new_builtin_int(0);
-
-	// K* l1 = NewK(SymbolLabel(symbol_var), newArgs(2, n, s));
-	// K* l2 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, hundred));
-	// K* l3 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, zero));
-
-	// K* sPn = NewK(SymbolLabel(symbol_plus), newArgs(2, s, n));
-	// K* l5 = NewK(SymbolLabel(symbol_assign), newArgs(2, s, sPn));
-	// K* negOne = NewK(SymbolLabel(symbol_neg), newArgs(1, new_builtin_int(1)));
-	// K* nPno = NewK(SymbolLabel(symbol_plus), newArgs(2, n, negOne));
-	// K* l6 = NewK(SymbolLabel(symbol_assign), newArgs(2, n, nPno));
-	// K* body = NewK(SymbolLabel(symbol_statements), newArgs(2, l5, l6));
-
-	// K* nLTzero = NewK(SymbolLabel(symbol_lte), newArgs(2, n, zero));
-	// K* guard = NewK(SymbolLabel(symbol_not), newArgs(1, nLTzero));
-	// K* l4 = NewK(SymbolLabel(symbol_while), newArgs(2, guard, body));
-
-	// K* pgm = NewK(SymbolLabel(symbol_statements), newArgs(4, l1, l2, l3, l4));
-
-	K* hole_inp = new_builtin_int(upto);
-
-	K* pgm = NewK(SymbolLabel(symbol_Program), newArgs(2, NewK(SymbolLabel(symbol_Statements), newArgs(4, NewK(SymbolLabel(symbol_Var), newArgs(3, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("r"))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),hole_inp)),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),new_builtin_int(0))),NewK(SymbolLabel(symbol_While), newArgs(2, NewK(SymbolLabel(symbol_Not), newArgs(1, NewK(SymbolLabel(symbol_Paren), newArgs(1, NewK(SymbolLabel(symbol_LTE), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),new_builtin_int(0))))))),NewK(SymbolLabel(symbol_Statements), newArgs(2, NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s"))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))))))),NewK(SymbolLabel(symbol_Assign), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Plus), newArgs(2, NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("n"))),NewK(SymbolLabel(symbol_Neg), newArgs(1, new_builtin_int(1))))))))))))),NewK(SymbolLabel(symbol_Id), newArgs(1, new_builtin_string("s")))));
-
-	return pgm;
-}
-
 
 int isValue(K* k) {
 	if (checkTypeSafety) {
@@ -261,7 +232,7 @@ void handleAssign(Configuration* config, int* change) {
 void handleWhile(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	if (printDebug) { 
+	if (printDebug) {
 		printf("Applying 'while' rule\n");
 	}
 	*change = 1;
@@ -270,6 +241,8 @@ void handleWhile(Configuration* config, int* change) {
 	K* then = NewK(SymbolLabel(symbol_Statements), newArgs(2, body, top));
 	K* theIf = NewK(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
 	setHead(config->k, theIf);
+
+	// printf("Hit while, leaving behind %s\n", KToString(theIf));
 
 	// follows
 	handleIf(config, change);
@@ -290,7 +263,7 @@ void handleIf(Configuration* config, int* change) {
 	} else {
 		if (checkTypeSafety) {
 			if (Inner(guard)->label->type != e_symbol) {
-				panic("Expected key to be symbol label");
+				panic("Expected key to be symbol label.  Guard is %s\n", KToString(guard));
 			}
 		}
 		if (is_true(Inner(guard))) {
@@ -413,7 +386,6 @@ void handlePlus(Configuration* config, int* change) {
 	}
 }
 
-
 void handleDiv(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
@@ -437,6 +409,41 @@ void handleDiv(Configuration* config, int* change) {
 		int64_t leftv = Inner(left)->label->i64_val;
 		int64_t rightv = Inner(right)->label->i64_val;
 		K* newTop = new_builtin_int(leftv / rightv);
+		setHead(config->k, newTop);
+
+		// follows
+		handleValue(config, change);
+	}
+}
+
+void handleAnd(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
+
+	K* left = top->args->a[0];
+	K* right = top->args->a[1];
+	if (!isValue(left)) {
+		if (printDebug) { printf("Applying '&&-heat-left' rule\n"); }
+		*change = 1;
+		appendK(config->k, left);
+		K* newTop = UpdateArg(top, 0, Hole());
+		setPreHead(config->k, newTop);
+	} else if (!isValue(right)) {
+		if (printDebug) { printf("Applying '&&-heat-right' rule\n"); }
+		*change = 1;
+		appendK(config->k, right);
+		K* newTop = UpdateArg(top, 1, Hole());
+		setPreHead(config->k, newTop);
+	} else {
+		if (printDebug) { printf("Applying '&&' rule\n"); }
+		*change = 1;
+
+		K* result;
+		if (is_true(Inner(left)) && is_true(Inner(right))) {
+			result = k_true();
+		} else {
+			result = k_false();
+		}
+		K* newTop = result;
 		setHead(config->k, newTop);
 
 		// follows
@@ -485,7 +492,7 @@ void repl(Configuration* config) {
 		if (k_length(config->k) == 0) {
 			break;
 		}
-		if (k_length(config->k) > 10) {
+		if (k_length(config->k) > MAX_K) {
 			printf("%s", stateString(config->k, config->state));
 			printf("\n-----------------\n");
 			panic("Safety check!");
@@ -542,6 +549,9 @@ void repl(Configuration* config) {
 				case symbol_Div:
 					handleDiv(config, &change);
 					break;
+				case symbol_And:
+					handleAnd(config, &change);
+					break;
 				case symbol_Program:
 					handleProgram(config, &change);
 					break;
@@ -571,7 +581,7 @@ int main(int argc, char* argv[]) {
 	adopt_parser parser;
 	adopt_opt opt;
 	// const char *value;
-	int upto = 100000;
+	int upto = 5;
 	const char *path = NULL;
 
 	label_helper lh;

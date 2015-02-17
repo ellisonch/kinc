@@ -15,8 +15,6 @@
 
 #define MAX_GARBAGE_KEPT 10000
 
-// when printing k terms, print the ref counts as well
-#define printRefCounts 1
 
 
 K* deadK[MAX_GARBAGE_KEPT];
