@@ -144,16 +144,18 @@ ListK* emptyArgs() {
 	return args;
 }
 
-K* NewK(KLabel* label, ListK* args) {
-	assert(label != NULL);
+K* k_new_empty(KLabel* label) {
+	return k_new(label, emptyArgs());
+}
 
-	if (args == NULL) {
-		args = emptyArgs();
-	}
+K* k_new(KLabel* label, ListK* args) {
+	assert(label != NULL);
+	assert(args != NULL);
+
 	for (int i = 0; i < args->len; i++) {
  		K* arg = args->a[i];
  		if (arg == NULL) {
- 			panic("Didn't expect nil arg in NewK()");
+ 			panic("Didn't expect nil arg in k_new()");
  		}
  		Inc(arg);
  	}
@@ -374,8 +376,8 @@ ListK* copyArgs(ListK* oldArgs) {
 
 K* copy(K* oldK) {
 	ListK* newArgs = copyArgs(oldK->args);
-	// K* k = NewK(copyLabel(oldK->label), newArgs);
-	K* k = NewK(oldK->label, newArgs);
+	// K* k = k_new(copyLabel(oldK->label), newArgs);
+	K* k = k_new(oldK->label, newArgs);
 	if (printDebug) {
 		printf("   New Old: %s\n", KToString(oldK));
 		printf("   New Copy: %s\n", KToString(k));
@@ -579,7 +581,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 
 			int symbol = get_symbol(lh, at.appl.name);
 			ListK* args = aterm_list_to_args(at.appl.args, lh, hole);
-			return NewK(SymbolLabel(symbol), args);
+			return k_new(SymbolLabel(symbol), args);
 		}
 		default: {
 			panic("Missing case!");

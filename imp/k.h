@@ -28,7 +28,8 @@ void Dec(K* k);
 void Inc(K* k);
 const char* ListKToString(ListK* args);
 
-K* NewK(KLabel* label, ListK* args);
+K* k_new_empty(KLabel* label);
+K* k_new(KLabel* label, ListK* args);
 ListK* newArgs(int count, ...);
 ListK* newArgs_array(int count, K** a);
 K* k_set_arg(K* k, int arg, K* newVal);

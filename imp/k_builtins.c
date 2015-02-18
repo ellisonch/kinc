@@ -50,17 +50,17 @@ void set_labels(int n, char* labels[static n]) {
 }
 
 K* Hole() {
-	return NewK(SymbolLabel(symbol_hole), NULL);
+	return k_new_empty(SymbolLabel(symbol_hole));
 }
 
-K* k_true() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_true), NULL))); }
-K* k_false() { return NewK(SymbolLabel(symbol_bool), newArgs(1, NewK(SymbolLabel(symbol_false), NULL))); }
+K* k_true() { return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_true)))); }
+K* k_false() { return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_false)))); }
 
 K* new_builtin_int(int64_t i) {
-	return NewK(SymbolLabel(symbol_int), newArgs(1, NewK(Int64Label(i), NULL)));
+	return k_new(SymbolLabel(symbol_int), newArgs(1, k_new_empty(Int64Label(i))));
 }
 K* new_builtin_string(char* i) {
-	return NewK(SymbolLabel(symbol_string), newArgs(1, NewK(StringLabel(i), NULL)));
+	return k_new(SymbolLabel(symbol_string), newArgs(1, k_new_empty(StringLabel(i))));
 }
 
 int is_int(K* k) {
@@ -87,9 +87,3 @@ int is_false(K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_false;
 }
-
-
-
-// K* Hole() {
-// 	return NewK(SymbolLabel(symbol_hole), NULL);
-// }

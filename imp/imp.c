@@ -68,10 +68,7 @@ char* givenLabels[] = {
 
 void handleIf(Configuration* config, int* change);
 
-K* k_skip() { return NewK(SymbolLabel(symbol_Skip), NULL); }
-// K* k_new_id(char* s) {
-// 	return NewK(SymbolLabel(symbol_id), newArgs(1, NewK(StringLabel(s), NULL)));
-// }
+K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 
 int isValue(K* k) {
 	if (checkTypeSafety) {
@@ -241,8 +238,8 @@ void handleWhile(Configuration* config, int* change) {
 	*change = 1;
 	K* guard = top->args->a[0];
 	K* body = top->args->a[1];
-	K* then = NewK(SymbolLabel(symbol_Statements), newArgs(2, body, top));
-	K* theIf = NewK(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
+	K* then = k_new(SymbolLabel(symbol_Statements), newArgs(2, body, top));
+	K* theIf = k_new(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
 	computation_set_elem(config->k, 0, theIf);
 
 	// printf("Hit while, leaving behind %s\n", KToString(theIf));
