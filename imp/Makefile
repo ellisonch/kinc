@@ -1,10 +1,8 @@
 CC=gcc
 CFLAGS=-static -g -std=c11 -Wall -m64 -O3 
-# -flto
-# -O3 
-# -flto
-# CFLAGS=-static -std=c11 -Wall -pg -g -m64 -fno-omit-frame-pointer -O3 -flto
-# -gdwarf-2 -fno-omit-frame-pointer 
+FILES = imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c -L./aparser -laterm 
+DEPENDS = imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h inline_helper.h
+
 # -Wno-unused-function
 # -flto
 # -pedantic
@@ -22,13 +20,22 @@ test: imp.exe
 run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 
-# %.o: %.c
+imp.exe: Makefile $(DEPENDS)
+	$(CC) $(CFLAGS) $(FILES) -o imp.exe
 
-imp.exe: Makefile imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h inline_helper.h
-	$(CC) $(CFLAGS) imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c -L./aparser -laterm -o imp.exe
+imp-profile.exe: Makefile $(DEPENDS)
+	$(CC) $(CFLAGS) -pg $(FILES) -o imp-profile.exe	
 
-profile: imp.exe
-	sleepy //r:"imp.exe --bench" &
+imp-sleepy.exe: Makefile $(DEPENDS)
+	$(CC) $(CFLAGS) -fno-omit-frame-pointer -gdwarf-2 $(FILES) -o imp-sleepy.exe	
+
+profile: imp-profile.exe
+	./imp-profile.exe --bench
+	gprof ./imp-profile.exe > imp-profile.output
+	less imp-profile.output
+
+profile-sleepy: imp-sleepy.exe
+	sleepy //r:"imp-sleepy.exe --bench" &
 
 bench-python:
 	time (python programs/prog1.py && python programs/prog2.py && python programs/prog3.py)
