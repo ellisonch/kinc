@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "k.h"
 #include "settings.h"
@@ -73,28 +74,24 @@ char* stateString(ComputationCell *kCell, StateCell* stateCell) {
 	return s;
 }
 
-void trimK(ComputationCell *kCell) {
+void computation_remove_head(ComputationCell *kCell) {
+	assert(kCell->next >= 1);
+
 	int top = kCell->next - 1;
 	Dec(kCell->elements[top]);
 	kCell->next--;
 }
 
-void setHead(ComputationCell *kCell, K* k) {
-	int top = kCell->next - 1;
+void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
+	assert(kCell->next >= pos + 1);
+
+	int elem = kCell->next - 1 - pos;
 	Inc(k);
-	Dec(kCell->elements[top]);
-	kCell->elements[top] = k;
+	Dec(kCell->elements[elem]);
+	kCell->elements[elem] = k;
 }
 
-void setPreHead(ComputationCell *kCell, K* k) {
-	int pre = kCell->next - 2;
-	Inc(k);
-	Dec(kCell->elements[pre]);
-	kCell->elements[pre] = k;
-}
-
-
-void appendK(ComputationCell *kCell, K* k) {
+void computation_add_front(ComputationCell *kCell, K* k) {
 	if (checkStackSize) {
 		if (kCell->next >= MAX_K) {
 			panic("Trying to add too many elements to the K Cell!");

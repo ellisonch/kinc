@@ -1,6 +1,6 @@
 # int m, n, q, r, s ;
 s = 0
-m = 20000
+m = 7000
 while (not(m <= 2)):
 	n = m
 	m = m + -1

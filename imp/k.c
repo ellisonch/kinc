@@ -261,8 +261,19 @@ void dispose_k_itself(K* k) {
 	}
 }
 
+// static K* garbage_k_pending[MAX_GARBAGE_PENDING];
+// static int garbage_k_pending_next = 0;
+
+void dispose_k_aux(K* k) {
+	dispose_args(k);
+	dispose_label(k);
+	dispose_k_itself(k);
+}
+
 // this is called where there are no references to k, so we can reclaim its memory for use elsewhere
 void dispose_k(K* k) {
+	assert(k->refs == 0);
+
 	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
 
 	if (checkTermSize) {
@@ -271,9 +282,21 @@ void dispose_k(K* k) {
 		}
 	}
 
-	dispose_args(k);
-	dispose_label(k);
-	dispose_k_itself(k);
+	// if (garbage_k_pending_next < MAX_GARBAGE_PENDING) {
+	// 	garbage_k_pending[garbage_k_pending_next] = k;
+	// 	garbage_k_pending_next++;
+	// 	return;
+	// }
+
+	// for (int i = 0; i < MAX_GARBAGE_PENDING; i++) {
+	// 	assert(garbage_k_pending[i] != NULL);
+	// 	dispose_k_aux(garbage_k_pending[i]);
+	// }
+	dispose_k_aux(k);
+	// garbage_k_pending_next = 0;
+
+	// printf("Completed a cleansing\n");
+	// fflush(stdout);
 }
 
 void Dec(K* k) {
@@ -286,6 +309,14 @@ void Dec(K* k) {
 	}
 	if (newRefs == 0) {
 		// printf("Dead term found: %s", KToString(k));
+		// ListK* args = k->args;
+
+		// // since k is dead, we can remove one ref from any of its children
+		// for (int i = 0; i < args->len; i++) {
+		// 	K* arg = args->a[i];
+		// 	Dec(arg);
+		// }
+
 		dispose_k(k);
 	}
 }
@@ -317,7 +348,10 @@ K* copy(K* oldK) {
 	return k;
 }
 
-K* UpdateArg(K* k, int arg, K* newVal) {
+// updates an arg from a k to another k
+// sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
+K* k_set_arg(K* orig_k, int arg, K* newVal) {
+	K* k = orig_k;
 	if (printDebug) {
 		printf("Updating %s's %d argument to %s\n", KToString(k), arg, KToString(newVal));
 	}
@@ -325,15 +359,24 @@ K* UpdateArg(K* k, int arg, K* newVal) {
 		if (printDebug) {
 			printf("   Term is shared, need to copy\n");
 		}
-		// K* oldk = k;
-		k = copy(k);
+		k = copy(orig_k);
 	}
 	Inc(newVal);
-	Dec(k->args->a[arg]);
+	K* orig_arg = k->args->a[arg];
 	k->args->a[arg] = newVal;
 	if (printDebug) {
 		printf("   After updating: %s\n", KToString(k));
 	}
+	Dec(orig_arg);
+	// if (k != orig_k) {
+		
+	// 	printf("Was %s\n", KToString(orig_k));
+	// 	printf("Now %s\n\n", KToString(k));
+	// 	// Dec(orig_k);
+	// } else {
+	// 	// Dec(orig_arg);
+	// }
+
 	return k;
 }
 

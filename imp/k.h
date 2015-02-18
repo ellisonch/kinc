@@ -7,6 +7,7 @@
 #include "k_labels.h"
 #include "k_builtins.h"
 #include "uthash.h"
+// #include "inline_helper.h"
 
 typedef struct {
 	K* entry;
@@ -29,7 +30,7 @@ const char* ListKToString(ListK* args);
 
 K* NewK(KLabel* label, ListK* args);
 ListK* newArgs(int count, ...);
-K* UpdateArg(K* k, int arg, K* newVal);
+K* k_set_arg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
 countentry** counts(K* k);
