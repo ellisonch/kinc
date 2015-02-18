@@ -103,12 +103,12 @@ void computation_add_front(ComputationCell *kCell, K* k) {
 }
 
 void check(ComputationCell *c, StateCell* state) {
-	ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
-	allValues->cap = k_length(c) + 26;
-	allValues->len = k_length(c);
-	allValues->a = malloc(sizeof(K*) * (k_length(c) + 26));
+	// ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
+	// allValues->cap = k_length(c) + 26;
+	int len = k_length(c);
+	K** a = malloc(sizeof(K*) * (len + 26)); // FIXME unsafe
 	for (int i = 0; i < c->next; i++) {
-		allValues->a[i] = c->elements[i];
+		a[i] = c->elements[i];
 	}
 	// memcpy(allValues, c, sizeof(K*) * next);
 	for (int i = 0; i < MAX_STATE; i++) {
@@ -116,11 +116,14 @@ void check(ComputationCell *c, StateCell* state) {
 		if (val == NULL) {
 			continue;
 		}
-		allValues->a[allValues->len++] = val;
+		a[len++] = val;
 	}
+
+	ListK* allValues = newArgs_array(len, a);
 
 	// create a new fake term to hold all the other terms
 	K* specialk = NewK(SymbolLabel(1023), allValues); // TODO: FIXME FIX ME!!!!
+	// the args get inc()ed by being passed to newk, so dec() em
 	for (int i = 0; i < specialk->args->len; i++) {
  		K* arg = specialk->args->a[i];
  		Dec(arg);
@@ -140,16 +143,6 @@ void check(ComputationCell *c, StateCell* state) {
 		}
 	}
 
-	// int bad = 0;
-	// for (int i = 0; i < 1000000; i++) {
-	// 	if (cm[i].entry != 0) {
-	// 		K* k = cm[i].entry;
-	// 		if (k->refs != cm[i].count) {
-	// 			bad = 1;
-	// 			printf("Count for %s should be %d!\n", KToString(k), cm[i].count);
-	// 		}
-	// 	}
-	// }
 	countentry_delete_all(cm);
 	free(cm);
 	if (bad) { 
@@ -160,8 +153,11 @@ void check(ComputationCell *c, StateCell* state) {
  		K* arg = specialk->args->a[i];
  		Inc(arg);
  	}
+
+ 	// printf("%s\n", KToString(specialk));
+
 	Dec(specialk);
-	// 
+	// printf("%s\n", stateString(c, state));
 }
 
 // TODO: unsafe

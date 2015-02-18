@@ -601,12 +601,14 @@ uint64_t run(const char* path, int64_t upto) {
 	int64_t result = Inner(resultK)->label->i64_val;
 
 	printf("%s\n", stateString(config->k, config->state));
+	
+	check(config->k, config->state);
 
 	return result;
 }
 
 int main(int argc, char* argv[]) {
-
+	setvbuf(stdout, NULL, _IONBF, 0);
 	adopt_parser parser;
 	adopt_opt opt;
 	// const char *value;

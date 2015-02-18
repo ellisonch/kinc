@@ -30,6 +30,7 @@ const char* ListKToString(ListK* args);
 
 K* NewK(KLabel* label, ListK* args);
 ListK* newArgs(int count, ...);
+ListK* newArgs_array(int count, K** a);
 K* k_set_arg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
@@ -37,8 +38,6 @@ countentry** counts(K* k);
 void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();
-
-ListK* mallocArgs();
 
 K* aterm_file_to_k(FILE* file, label_helper lh, K* hole);
 

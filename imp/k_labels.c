@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stdarg.h>
 #include <string.h>
+#include <assert.h>
 
 #include "k.h"
 #include "settings.h"
@@ -36,6 +37,8 @@ KLabel* _new_label() {
 }
 
 void dispose_label(K* k) {
+	assert(k != NULL);
+
 	KLabel* label = k->label;
 
 	// TODO: why am I doing this?

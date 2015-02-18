@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-static -std=c11 -Wall -m64 -O3 
+CFLAGS=-static -g -std=c11 -Wall -m64 -O3 
 # -flto
 # -O3 
 # -flto

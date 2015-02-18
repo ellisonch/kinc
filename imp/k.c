@@ -27,7 +27,7 @@ ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
 int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
 
 int count_malloc_listk;
-int count_malloc_listk_array[10];
+int count_malloc_listk_array[MAX_MALLOC_LISTK_ARRAY_SIZE];
 
 int count_malloc_k = 0;
 
@@ -69,7 +69,9 @@ ListK* mallocArgs() {
 }
 
 K** mallocArgsA(int count) {
-	count_malloc_listk_array[count]++;
+	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+		count_malloc_listk_array[count]++;
+	}
 	return malloc(sizeof(K*) * count);
 }
 
@@ -143,6 +145,8 @@ ListK* emptyArgs() {
 }
 
 K* NewK(KLabel* label, ListK* args) {
+	assert(label != NULL);
+
 	if (args == NULL) {
 		args = emptyArgs();
 	}
@@ -161,6 +165,7 @@ K* NewK(KLabel* label, ListK* args) {
 	} else {
 		newK = mallocK();
 	}
+	assert(newK != NULL);
 	newK->label = label;
 	newK->args = args;
 	newK->refs = 0;
@@ -207,17 +212,28 @@ const char* KToString(K* k) {
 void terminate_args(ListK* args) {
 	int number_of_args = args->cap;
 
+	assert(args != NULL);
+	assert(args->a != NULL);
+	assert(number_of_args >= 0);
+	// assert(number_of_args < MAX_MALLOC_LISTK_ARRAY_SIZE);
+	assert(count_malloc_listk >= 1);
+
 	count_malloc_listk--;
 	if (number_of_args > 0) {
-		count_malloc_listk_array[number_of_args]--;
+		if (number_of_args < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+			assert(count_malloc_listk_array[number_of_args] >= 1);
+			count_malloc_listk_array[number_of_args]--;
+		}
 		free(args->a);
 	}
 	if (printDebug) { printf("Freeing args\n"); }		
 	free(args);
 }
 
+int COMPLAINED_MAX_GARBAGE_ARG_LEN = 0;
 // we're done with a ListK, and we need to see if we can reuse it
-void dispose_args(K* k) {
+void dispose_args(K* k) {	
+	assert(k != NULL);
 	ListK* args = k->args;
 
 	// since k is dead, we can remove one ref from any of its children
@@ -230,9 +246,11 @@ void dispose_args(K* k) {
 
 	// if we don't keep around args of this many arguments, then kill it
 	if (number_of_args >= MAX_GARBAGE_ARG_LEN) {
-		if (checkRightSettings) {
+		if (!COMPLAINED_MAX_GARBAGE_ARG_LEN && checkRightSettings) {
 			printf("MAX_GARBAGE_ARG_LEN is not enough for dead term with len %d\n", number_of_args);
+			COMPLAINED_MAX_GARBAGE_ARG_LEN = 1;
 		}
+
 		terminate_args(args);
 		return;
 	}
@@ -251,6 +269,8 @@ void dispose_args(K* k) {
 }
 
 void dispose_k_itself(K* k) {
+	assert(k != NULL);
+
 	if (garbage_k_next < MAX_GARBAGE_KEPT) {
 		if (printDebug) { printf("Saving k\n"); }
 		garbage_k[garbage_k_next++] = k;
@@ -272,12 +292,13 @@ void dispose_k_aux(K* k) {
 
 // this is called where there are no references to k, so we can reclaim its memory for use elsewhere
 void dispose_k(K* k) {
+	assert(k != NULL);
 	assert(k->refs == 0);
 
 	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
 
 	if (checkTermSize) {
-		if (k->args->len > 10) {
+		if (k->args->len > 50) {
 			panic("Sanity check failed!");
 		}
 	}
@@ -300,13 +321,16 @@ void dispose_k(K* k) {
 }
 
 void Dec(K* k) {
+	assert(k != NULL);
+	assert(k->refs >= 1);
+
 	k->refs--;
 	int newRefs = k->refs;
-	if (checkRefCounting) {
-		if (newRefs < 0) {
-			panic("Term %s has fewer than 0 refs :(", KToString(k));
-		}
-	}
+	// if (checkRefCounting) {
+	// 	if (newRefs < 0) {
+	// 		panic("Term %s has fewer than 0 refs :(", KToString(k));
+	// 	}
+	// }
 	if (newRefs == 0) {
 		// printf("Dead term found: %s", KToString(k));
 		// ListK* args = k->args;
@@ -450,11 +474,13 @@ void dump_garbage_info() {
 		for (int j = 0; j < garbage_listk_nexts[i]; j++) {
 			ListK* args = garbage_listk[i][j];
 			if (args->len > 0) {
-				count_malloc_listk_array[args->cap]--;
-				free(args->a);
+				if (args->cap < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+					count_malloc_listk_array[args->cap]--;
+				}
+				// free(args->a);
 			}
 			count_malloc_listk--;
-			free(args);
+			// free(args);
 		}
 	}
 	// deadListsLen[0] = 0;
@@ -467,7 +493,7 @@ void dump_garbage_info() {
 	// 	deadListsLen[i] = 0;
 	// 	// printf("%d\n", deadListsLen[i]);
 	// }
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < MAX_MALLOC_LISTK_ARRAY_SIZE; i++) {
 		printf("count_malloc_listk_array %d: %d\n", i, count_malloc_listk_array[i]);
 	}
 	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
