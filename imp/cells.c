@@ -40,6 +40,9 @@ int k_length(ComputationCell* cell) {
 K* k_get_item(ComputationCell* cell, int i) {
 	int spot = cell->next - 1 - i;
 	K* item = cell->elements[spot];
+	
+	assert(item != NULL);
+	assert(item->refs >= 1);
 	return item;
 }
 

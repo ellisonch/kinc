@@ -236,11 +236,11 @@ void dispose_args(K* k) {
 	assert(k != NULL);
 	ListK* args = k->args;
 
-	// since k is dead, we can remove one ref from any of its children
-	for (int i = 0; i < args->len; i++) {
-		K* arg = args->a[i];
-		Dec(arg);
-	}
+	// // since k is dead, we can remove one ref from any of its children
+	// for (int i = 0; i < args->len; i++) {
+	// 	K* arg = args->a[i];
+	// 	Dec(arg);
+	// }
 
 	int number_of_args = args->cap;
 
@@ -281,8 +281,8 @@ void dispose_k_itself(K* k) {
 	}
 }
 
-// static K* garbage_k_pending[MAX_GARBAGE_PENDING];
-// static int garbage_k_pending_next = 0;
+// K* garbage_k_pending[MAX_GARBAGE_PENDING];
+// int garbage_k_pending_next = 0;
 
 void dispose_k_aux(K* k) {
 	dispose_args(k);
@@ -303,20 +303,31 @@ void dispose_k(K* k) {
 		}
 	}
 
+	// since k is dead, we can remove one ref from any of its children
+	for (int i = 0; i < k->args->len; i++) {
+		K* arg = k->args->a[i];
+		Dec(arg);
+	}
+
 	// if (garbage_k_pending_next < MAX_GARBAGE_PENDING) {
 	// 	garbage_k_pending[garbage_k_pending_next] = k;
 	// 	garbage_k_pending_next++;
-	// 	return;
 	// }
 
-	// for (int i = 0; i < MAX_GARBAGE_PENDING; i++) {
-	// 	assert(garbage_k_pending[i] != NULL);
-	// 	dispose_k_aux(garbage_k_pending[i]);
+	// if (garbage_k_pending_next == MAX_GARBAGE_PENDING) {
+	// 	for (int i = 0; i < MAX_GARBAGE_PENDING; i++) {
+	// 		// printf("doing %d of %d\n", i, MAX_GARBAGE_PENDING);
+	// 		// printf("%s\n", KToString(garbage_k_pending[i]));
+	// 		assert(garbage_k_pending[i] != NULL);
+	// 		assert(garbage_k_pending[i]->refs == 0);
+	// 		dispose_k_aux(garbage_k_pending[i]);
+	// 	}
+	// 	garbage_k_pending_next = 0;
+	// 	// printf("Completed a cleansing\n");
 	// }
+	
 	dispose_k_aux(k);
-	// garbage_k_pending_next = 0;
-
-	// printf("Completed a cleansing\n");
+	
 	// fflush(stdout);
 }
 

@@ -99,7 +99,7 @@ static void handleValue(Configuration* config, int* change) {
 		K* arg = next->args->a[i];
 		if (checkTypeSafety) {
 			if (arg->label->type != e_symbol) {
-				panic("Expected string type in %s", KToString(next));
+				panic("Expected string type in %s\nK is %s\n", KToString(next), kCellToString(config->k));
 			}
 		}
 		if (is_hole(arg)) {
@@ -601,7 +601,7 @@ uint64_t run(const char* path, int64_t upto) {
 	int64_t result = Inner(resultK)->label->i64_val;
 
 	printf("%s\n", stateString(config->k, config->state));
-	
+
 	check(config->k, config->state);
 
 	return result;
