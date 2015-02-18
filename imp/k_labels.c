@@ -12,24 +12,23 @@
 // TODO: fix this
 extern char* symbol_names[];
 
-int deadLabelLen = 0;
+int garbage_label_next = 0;
+KLabel* garbage_label[MAX_GARBAGE_KEPT];
 
-KLabel* deadLabels[MAX_GARBAGE_KEPT];
-
-int mallocedLabels = 0;
+int count_malloc_label = 0;
 KLabel* symbolLabels[50];
 
 
 KLabel* mallocKLabel() {
-	mallocedLabels++;
+	count_malloc_label++;
 	return (KLabel*)malloc(sizeof(KLabel));
 }
 
 KLabel* _new_label() {
 	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
+	if (garbage_label_next > 0) {
+		newL = garbage_label[garbage_label_next - 1];
+		garbage_label_next--;
 	} else {
 		newL = mallocKLabel();
 	}
@@ -44,23 +43,23 @@ void dispose_label(K* k) {
 		return;
 	}
 
-	if (deadLabelLen < MAX_GARBAGE_KEPT) {
-		deadLabels[deadLabelLen++] = label;
+	if (garbage_label_next < MAX_GARBAGE_KEPT) {
+		garbage_label[garbage_label_next++] = label;
 		if (printDebug) { printf("Saving label\n"); }
 	} else {
 		if (printDebug) { printf("Freeing label\n"); }
-		mallocedLabels--;
+		count_malloc_label--;
 		free(label);
 	}
 }
 
 void dump_label_garbage_info() {
-	printf("MallocedLabels: %d\n", mallocedLabels);
-	printf("deadLabelLen: %d\n", deadLabelLen);
+	printf("count_malloc_label: %d\n", count_malloc_label);
+	printf("garbage_label_next: %d\n", garbage_label_next);
 }
 
 KLabel* StringLabel(const char* s) {
-	if (printDebug) { printf("Str DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Str garbage_label_next: %d\n", garbage_label_next); }
 	if (printDebug) { printf("Creating string label %s\n", s); }
 	KLabel* newL = _new_label();
 	newL->type = e_string;
@@ -72,7 +71,7 @@ KLabel* SymbolLabel(int s) {
 	if (symbolLabels[s] != NULL) {
 		return symbolLabels[s];
 	}
-	if (printDebug) { printf("Sym DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Sym garbage_label_next: %d\n", garbage_label_next); }
 	if (printDebug) { printf("Creating symbol label %s\n", symbol_names[s]); }
 	KLabel* newL = _new_label();
 	newL->type = e_symbol;
@@ -84,7 +83,7 @@ KLabel* SymbolLabel(int s) {
 
 KLabel* Int64Label(int64_t i64) {
 	// intcount++;
-	if (printDebug) { printf("Int DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Int garbage_label_next: %d\n", garbage_label_next); }
 	if (printDebug) { printf("Creating int label %" PRId64 "\n", i64); }
 	KLabel* newL = _new_label();
 	newL->type = e_i64;
@@ -116,12 +115,12 @@ const char* LabelToString(KLabel* label) {
 
 
 KLabel* copyLabel(KLabel* l) {
-	if (printDebug) { printf("Cpy DeadLabelLen: %d\n", deadLabelLen); }
+	if (printDebug) { printf("Cpy garbage_label_next: %d\n", garbage_label_next); }
 	if (printDebug) { printf("Creating copy label %s\n", LabelToString(l)); }
 	KLabel* newL;
-	if (deadLabelLen > 0) {
-		newL = deadLabels[deadLabelLen - 1];
-		deadLabelLen--;
+	if (garbage_label_next > 0) {
+		newL = garbage_label[garbage_label_next - 1];
+		garbage_label_next--;
 	} else {
 		newL = mallocKLabel();
 	}

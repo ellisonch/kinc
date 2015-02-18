@@ -37,6 +37,8 @@ void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();
 
+ListK* mallocArgs();
+
 K* aterm_file_to_k(FILE* file, label_helper lh, K* hole);
 
 #endif

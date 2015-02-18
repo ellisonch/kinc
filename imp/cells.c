@@ -106,8 +106,7 @@ void appendK(ComputationCell *kCell, K* k) {
 }
 
 void check(ComputationCell *c, StateCell* state) {
-	ListK* allValues = malloc(sizeof(ListK));
-	mallocedArgs++; // FIXME this is goofy, needs to be unified with actually making args
+	ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
 	allValues->cap = k_length(c) + 26;
 	allValues->len = k_length(c);
 	allValues->a = malloc(sizeof(K*) * (k_length(c) + 26));

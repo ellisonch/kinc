@@ -4,7 +4,7 @@
 #define MAX_STATE 26
 #define MAX_K 20
 #define MAX_GARBAGE_KEPT 10000
-#define MAX_GARBAGE_ARG_LEN 10
+#define MAX_GARBAGE_ARG_LEN 15
 
 
 // when printing k terms, print the ref counts as well

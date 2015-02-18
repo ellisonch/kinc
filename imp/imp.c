@@ -642,8 +642,10 @@ int main(int argc, char* argv[]) {
 	
 	if (bench) {
 		run_bench();
+		dump_garbage_info();
 	} else if (test) {
 		run_tests();
+		dump_garbage_info();
 	} else {
 		uint64_t result = run(path, upto);
 		printf("Result: %" PRId64 "\n", result);
