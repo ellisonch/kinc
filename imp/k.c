@@ -20,7 +20,7 @@ K* garbage_k[MAX_GARBAGE_KEPT];
 // int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
 // ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
 int garbage_listk_next = 0;
-ListK* garbage_listk_new[MAX_GARBAGE_KEPT];
+ListK* garbage_listk[MAX_GARBAGE_KEPT];
 
 
 int count_malloc_listk;
@@ -54,7 +54,7 @@ ListK* getDeadList(int reqLength) {
 		return NULL;
 	}
 
-	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
+	ListK* ret = garbage_listk[garbage_listk_next - 1];
 	assert(ret != NULL);
 	assert(ret->cap >= reqLength);
 
@@ -266,7 +266,7 @@ void dispose_args(K* k) {
 	}
 
 	// save it
-	garbage_listk_new[garbage_listk_next] = args;	
+	garbage_listk[garbage_listk_next] = args;	
 	garbage_listk_next++;
 
 	if (printDebug) { printf("Saving args\n"); }
@@ -618,7 +618,7 @@ void k_init() {
 	// 	garbage_k[i] = mallocK();
 	// 	garbage_k_next++;
 
-	// 	garbage_listk_new[i] = listk_create(0, 0);
+	// 	garbage_listk[i] = listk_create(0, 0);
 	// 	garbage_listk_next++;
 	// }
 	// assert(garbage_k_next == MAX_GARBAGE_KEPT);

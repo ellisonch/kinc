@@ -36,14 +36,16 @@ imp-fast.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) -o imp-fast.exe
 
 imp-profile.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -flto -pg $(FILES) -o imp-profile.exe	
+	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) -o imp-profile.exe	
 
 imp-sleepy.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) -o imp-sleepy.exe	
 
-profile: imp-profile.exe
+imp-profile.output: imp-profile.exe	
 	./imp-profile.exe --bench
 	gprof ./imp-profile.exe > imp-profile.output
+
+profile: imp-profile.output
 	less imp-profile.output
 
 profile-sleepy: imp-sleepy.exe
