@@ -389,36 +389,19 @@ void Dec(K* k) {
 	}
 }
 
-void copyArgs(ListK* newArgs, ListK* oldArgs) {
-	for (int i = 0; i < oldArgs->len; i++) {
-		newArgs->a[i] = oldArgs->a[i];
-		Inc(newArgs->a[i]);
-	}
-}
-
 K* copy(K* oldK) {
-	assert(oldK != NULL);
-	assert(oldK->args != NULL);
-	
-	K* newK = k_acquire(oldK->args->len, oldK->args->len);
-	newK->refs = 0;
-	newK->permanent = 0;
-	assert(newK != NULL);
-	newK->args = listk_acquire(oldK->args->len, oldK->args->len);
-	assert(newK->args != NULL);
-	newK->label = oldK->label;
-
-	copyArgs(newK->args, oldK->args);
+	K* k = k_new_array(oldK->label, oldK->args->len, oldK->args->a);
 	if (printDebug) {
 		char* sold = KToString(oldK);
-		char* snew = KToString(newK);
+		char* snew = KToString(k);
 		printf("   New Old: %s\n", sold);
 		printf("   New Copy: %s\n", snew);
 		free(sold);
 		free(snew);
 	}
-	return newK;
+	return k;
 }
+
 
 // updates an arg from a k to another k
 // sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
