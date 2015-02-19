@@ -57,9 +57,9 @@ ListK* getDeadList(int reqLength) {
 	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
 	assert(ret != NULL);
 	assert(ret->cap >= reqLength);
-	
+
 	garbage_listk_next--;
-	ret->len = reqLength;
+	// ret->len = reqLength;
 
 	if (printDebug) {
 		printf("Returning dead list of length %d\n", reqLength);

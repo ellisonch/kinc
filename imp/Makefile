@@ -6,6 +6,9 @@ DEPENDS = imp.c k.h k.c k_types.h utils.h utils.c settings.h cells.h cells.c k_l
 # -Wno-unused-function
 # -flto
 # -pedantic
+
+# gdb --args ./imp.exe --test
+
 build: imp.exe
 
 # SRCS=$(wildcard *.c)
