@@ -57,16 +57,8 @@ ListK* getDeadList(int reqLength) {
 	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
 	assert(ret != NULL);
 	assert(ret->cap >= reqLength);
+	
 	garbage_listk_next--;
-
-	if (checkGC) {
-		if (ret == NULL) {
-			panic("Didn't expect ret to be NULL");
-		}
-		if (ret->cap < reqLength) {
-			panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
-		}
-	}
 	ret->len = reqLength;
 
 	if (printDebug) {
