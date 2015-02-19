@@ -23,5 +23,6 @@
 #define checkGC 1
 #define checkTermSize 1
 #define checkStackSize 1
+#define helpSafety 1
 
 #endif

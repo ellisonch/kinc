@@ -75,8 +75,6 @@ ListK* getDeadList(int reqLength) {
 	return ret;
 }
 
-
-
 ListK* mallocArgs() {
 	count_malloc_listk++;
 	return malloc(sizeof(ListK));
@@ -88,7 +86,14 @@ K** mallocArgsA(int count) {
 	}
 	count_malloc_listk_array++;
 	// return malloc(sizeof(K*) * count);
-	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
+	K** a = malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
+
+	if (helpSafety) {
+		for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+			a[i] = NULL;
+		}
+	}
+	return a;
 }
 
 ListK* listk_acquire(int len, int cap) {
@@ -103,7 +108,36 @@ ListK* listk_acquire(int len, int cap) {
 	return args;
 }
 
-ListK* newArgs(int count, ...) {	
+
+// ListK* listk_create(int len, int cap) {
+// 	assert(len >= 0);
+// 	assert(cap <= MAX_GARBAGE_ARG_LEN);
+// 	ListK* args = mallocArgs();
+// 	args->a = mallocArgsA(cap);
+// 	args->cap = MAX_GARBAGE_ARG_LEN;
+// 	args->len = len;
+// 	return args;
+// }
+
+
+// ListK* listk_acquire(int len, int cap) {
+// 	// printf("%d, %d\n", len, cap);
+// 	ListK* args = getDeadList(cap);
+// 	if (args == NULL) {
+// 		args = listk_create(len, cap);
+// 	} else {
+// 		args->len = len;
+// 	}
+
+// 	assert(args != NULL);
+// 	assert(args->len == len);
+// 	assert(args->cap >= len);
+// 	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
+// 	assert(args->a != NULL);
+// 	return args;
+// }
+
+ListK* newArgs(int count, ...) {
 	ListK* args = listk_acquire(count, count);
 
 	va_list ap;
@@ -152,7 +186,7 @@ K* k_new_empty(KLabel* label) {
 K* k_new(KLabel* label, ListK* args) {
 	assert(label != NULL);
 	assert(args != NULL);
-	assert(args->len == 0 || args->a != NULL);
+	assert(args->a != NULL);
 
 	for (int i = 0; i < args->len; i++) {
  		K* arg = args->a[i];

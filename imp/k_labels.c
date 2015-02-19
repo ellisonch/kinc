@@ -37,9 +37,10 @@ KLabel* _new_label() {
 }
 
 void dispose_label(K* k) {
-	assert(k != NULL);
+	assert(k->refs == 0);
 
 	KLabel* label = k->label;
+	assert(label != NULL);
 
 	// TODO: why am I doing this?
 	if (label->type == e_symbol) {

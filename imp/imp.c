@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <inttypes.h>
 #include <string.h>
+#include <assert.h>
 
 #include "k.h"
 #include "cells.h"
@@ -71,6 +72,9 @@ void handleIf(Configuration* config, int* change);
 K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 
 int isValue(K* k) {
+	assert(k != NULL);
+	assert(k->label != NULL);
+
 	if (checkTypeSafety) {
 		if (k->label->type != e_symbol) {
 			panic("Expected calling isValue on symbol labels");
