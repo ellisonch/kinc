@@ -30,9 +30,9 @@ void Inc(K* k);
 void k_init();
 
 K* k_new_empty(KLabel* label);
-K* k_new(KLabel* label, ListK* args);
-ListK* newArgs(int count, ...);
-ListK* newArgs_array(int count, K** a);
+K* k_new(KLabel* label, int count, ...);
+K* k_new_array(KLabel* label, int count, K** a);
+
 K* k_set_arg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);

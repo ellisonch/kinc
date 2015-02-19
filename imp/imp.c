@@ -242,8 +242,8 @@ void handleWhile(Configuration* config, int* change) {
 	*change = 1;
 	K* guard = top->args->a[0];
 	K* body = top->args->a[1];
-	K* then = k_new(SymbolLabel(symbol_Statements), newArgs(2, body, top));
-	K* theIf = k_new(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
+	K* then = k_new(SymbolLabel(symbol_Statements), 2, body, top);
+	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, k_skip());
 	computation_set_elem(config->k, 0, theIf);
 
 	// follows

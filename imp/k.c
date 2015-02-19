@@ -116,19 +116,6 @@ ListK* listk_acquire(int len, int cap) {
 	return args;
 }
 
-ListK* newArgs(int count, ...) {
-	ListK* args = listk_acquire(count, count);
-
-	va_list ap;
-	va_start(ap, count);
-	for (int i = 0; i < count; i++) {
-		args->a[i] = va_arg(ap, K*);
-	}
-	va_end(ap);
-
-	return args;
-}
-
 ListK* newArgs_array(int count, K** a) {
 	ListK* args = listk_acquire(count, count);
 
@@ -158,11 +145,7 @@ ListK* emptyArgs() {
 	return args;
 }
 
-K* k_new_empty(KLabel* label) {
-	return k_new(label, emptyArgs());
-}
-
-K* k_new(KLabel* label, ListK* args) {
+K* _k_new(KLabel* label, ListK* args) {
 	assert(label != NULL);
 	assert(args != NULL);
 	assert(args->a != NULL);
@@ -190,7 +173,32 @@ K* k_new(KLabel* label, ListK* args) {
 	return newK;
 }
 
+K* k_new_empty(KLabel* label) {
+	return _k_new(label, emptyArgs());
+}
 
+K* k_new_array(KLabel* label, int count, K** a) {
+	ListK* args = listk_acquire(count, count);
+
+	for (int i = 0; i < count; i++) {
+		args->a[i] = a[i];
+	}
+
+	return _k_new(label, args);
+}
+
+K* k_new(KLabel* label, int count, ...) {
+	ListK* args = listk_acquire(count, count);
+
+	va_list ap;
+	va_start(ap, count);
+	for (int i = 0; i < count; i++) {
+		args->a[i] = va_arg(ap, K*);
+	}
+	va_end(ap);
+
+	return _k_new(label, args);
+}
 
 // TODO: leaks memory and is unsafe
 char* ListKToString(ListK* args) {
@@ -385,7 +393,7 @@ ListK* copyArgs(ListK* oldArgs) {
 K* copy(K* oldK) {
 	ListK* newArgs = copyArgs(oldK->args);
 	// K* k = k_new(copyLabel(oldK->label), newArgs);
-	K* k = k_new(oldK->label, newArgs);
+	K* k = _k_new(oldK->label, newArgs);
 	if (printDebug) {
 		char* sold = KToString(oldK);
 		char* snew = KToString(k);
@@ -601,7 +609,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 
 			int symbol = get_symbol(lh, at.appl.name);
 			ListK* args = aterm_list_to_args(at.appl.args, lh, hole);
-			return k_new(SymbolLabel(symbol), args);
+			return _k_new(SymbolLabel(symbol), args);
 		}
 		default: {
 			panic("Missing case!");

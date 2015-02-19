@@ -54,9 +54,9 @@ K* _true;
 void k_init_builtins() {
 	_hole = k_new_empty(SymbolLabel(symbol_hole));
 	_hole->permanent = 1;
-	_false = k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_false))));
+	_false = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_false)));
 	_false->permanent = 1;
-	_true = k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_true)))); 
+	_true = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_true))); 
 	_true->permanent = 1;
 }
 
@@ -75,10 +75,10 @@ K* k_false() {
 }
 
 K* new_builtin_int(int64_t i) {
-	return k_new(SymbolLabel(symbol_int), newArgs(1, k_new_empty(Int64Label(i))));
+	return k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(i)));
 }
 K* new_builtin_string(char* i) {
-	return k_new(SymbolLabel(symbol_string), newArgs(1, k_new_empty(StringLabel(i))));
+	return k_new(SymbolLabel(symbol_string), 1, k_new_empty(StringLabel(i)));
 }
 
 int is_int(K* k) {
