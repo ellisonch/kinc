@@ -5,10 +5,8 @@
 #include "utils.h"
 #include "k.h"
 
-#define BUILTINS_MAX 1024
-
-char* symbol_names[BUILTINS_MAX] = {
-	[BUILTINS_MAX - 7] =
+char* symbol_names[SYMBOLS_MAX] = {
+	[SYMBOLS_MAX - 7] =
 	"String",
 	"_hole",
 	"Bool",
@@ -18,13 +16,13 @@ char* symbol_names[BUILTINS_MAX] = {
 	"_fake",
 };
 
-#define symbol_string (BUILTINS_MAX - 7)
-#define symbol_hole (BUILTINS_MAX - 6)
-#define symbol_bool (BUILTINS_MAX - 5)
-#define symbol_int (BUILTINS_MAX - 4)
-#define symbol_true (BUILTINS_MAX - 3)
-#define symbol_false (BUILTINS_MAX - 2)
-#define symbol_fake (BUILTINS_MAX - 1)
+#define symbol_string (SYMBOLS_MAX - 7)
+#define symbol_hole (SYMBOLS_MAX - 6)
+#define symbol_bool (SYMBOLS_MAX - 5)
+#define symbol_int (SYMBOLS_MAX - 4)
+#define symbol_true (SYMBOLS_MAX - 3)
+#define symbol_false (SYMBOLS_MAX - 2)
+#define symbol_fake (SYMBOLS_MAX - 1)
 
 // FIXME: can do better than this
 int num_labels = 7;
@@ -41,7 +39,7 @@ int num_labels = 7;
 
 void set_labels(int n, char* labels[static n]) {
 	assert(n >= 0);
-	assert(n + num_labels < BUILTINS_MAX);
+	assert(n + num_labels < SYMBOLS_MAX);
 
 	for (int i = 0; i < n; i++) {
 		symbol_names[i] = labels[i];

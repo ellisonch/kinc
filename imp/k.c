@@ -55,8 +55,8 @@ ListK* getDeadList(int reqLength) {
 	}
 
 	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
-	// assert(ret != NULL);
-	// assert(ret->cap >= reqLength);
+	assert(ret != NULL);
+	assert(ret->cap >= reqLength);
 	garbage_listk_next--;
 
 	if (checkGC) {
@@ -96,46 +96,33 @@ K** mallocArgsA(int count) {
 	return a;
 }
 
-ListK* listk_acquire(int len, int cap) {
-	// printf("%d, %d\n", len, cap);
-	ListK* args = getDeadList(cap);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->a = mallocArgsA(cap);
-		args->cap = MAX_GARBAGE_ARG_LEN;
-	}
+ListK* listk_create(int len, int cap) {
+	assert(len >= 0);
+	assert(cap <= MAX_GARBAGE_ARG_LEN);
+
+	ListK* args = mallocArgs();
+	args->a = mallocArgsA(cap);
+	args->cap = MAX_GARBAGE_ARG_LEN;
 	args->len = len;
 	return args;
 }
 
+ListK* listk_acquire(int len, int cap) {
+	// printf("%d, %d\n", len, cap);
+	ListK* args = getDeadList(cap);
+	if (args == NULL) {
+		args = listk_create(len, cap);
+	} else {
+		args->len = len;
+	}
 
-// ListK* listk_create(int len, int cap) {
-// 	assert(len >= 0);
-// 	assert(cap <= MAX_GARBAGE_ARG_LEN);
-// 	ListK* args = mallocArgs();
-// 	args->a = mallocArgsA(cap);
-// 	args->cap = MAX_GARBAGE_ARG_LEN;
-// 	args->len = len;
-// 	return args;
-// }
-
-
-// ListK* listk_acquire(int len, int cap) {
-// 	// printf("%d, %d\n", len, cap);
-// 	ListK* args = getDeadList(cap);
-// 	if (args == NULL) {
-// 		args = listk_create(len, cap);
-// 	} else {
-// 		args->len = len;
-// 	}
-
-// 	assert(args != NULL);
-// 	assert(args->len == len);
-// 	assert(args->cap >= len);
-// 	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
-// 	assert(args->a != NULL);
-// 	return args;
-// }
+	assert(args != NULL);
+	assert(args->len == len);
+	assert(args->cap >= len);
+	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
+	assert(args->a != NULL);
+	return args;
+}
 
 ListK* newArgs(int count, ...) {
 	ListK* args = listk_acquire(count, count);
@@ -256,20 +243,17 @@ char* KToString(K* k) {
 }
 
 void terminate_args(ListK* args) {
-	int number_of_args = args->cap;
-
 	assert(args != NULL);
 	assert(args->a != NULL);
-	assert(number_of_args >= 0);
-	// assert(number_of_args < MAX_MALLOC_LISTK_ARRAY_SIZE);
 	assert(count_malloc_listk >= 1);
 
-	count_malloc_listk--;
-	if (number_of_args > 0) {
-		count_malloc_listk_array--;
-		free(args->a);
-	}
 	if (printDebug) { printf("Freeing args\n"); }		
+
+	count_malloc_listk--;
+	count_malloc_listk_array--;
+	free(args->a);
+	args->a = NULL;
+	
 	free(args);
 }
 
@@ -277,16 +261,14 @@ int COMPLAINED_MAX_GARBAGE_ARG_LEN = 0;
 // we're done with a ListK, and we need to see if we can reuse it
 void dispose_args(K* k) {	
 	assert(k != NULL);
-	ListK* args = k->args;
+	assert(k->args != NULL);
 
-	// // since k is dead, we can remove one ref from any of its children
-	// for (int i = 0; i < args->len; i++) {
-	// 	K* arg = args->a[i];
-	// 	Dec(arg);
-	// }
+	ListK* args = k->args;
+	k->args = NULL;
 
 	// if we already have too many args of this many arguments, then kill it
-	if (garbage_listk_next >= MAX_GARBAGE_KEPT) {
+	assert(garbage_listk_next <= MAX_GARBAGE_KEPT);
+	if (garbage_listk_next == MAX_GARBAGE_KEPT) {		
 		terminate_args(args);
 		return;
 	}
@@ -294,6 +276,7 @@ void dispose_args(K* k) {
 	// save it
 	garbage_listk_new[garbage_listk_next] = args;	
 	garbage_listk_next++;
+
 	if (printDebug) { printf("Saving args\n"); }
 }
 
@@ -323,6 +306,8 @@ void dispose_k_aux(K* k) {
 void dispose_k(K* k) {
 	assert(k != NULL);
 	assert(k->refs == 0);
+	assert(k->args != NULL);
+	assert(k->args->a != NULL);
 
 	if (k->permanent) {
 		return;
@@ -342,7 +327,9 @@ void dispose_k(K* k) {
 
 	// since k is dead, we can remove one ref from any of its children
 	for (int i = 0; i < k->args->len; i++) {
-		K* arg = k->args->a[i];
+		K* arg = k->args->a[i];		
+		k->args->a[i] = NULL;
+		assert(arg != NULL);
 		Dec(arg);
 	}
 

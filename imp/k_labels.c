@@ -17,7 +17,7 @@ int garbage_label_next = 0;
 KLabel* garbage_label[MAX_GARBAGE_KEPT];
 
 int count_malloc_label = 0;
-KLabel* symbolLabels[50];
+KLabel* symbolLabels[SYMBOLS_MAX];
 
 
 KLabel* mallocKLabel() {
@@ -42,7 +42,7 @@ void dispose_label(K* k) {
 	KLabel* label = k->label;
 	assert(label != NULL);
 
-	// TODO: why am I doing this?
+	// we don't dispose of symbol labels because we keep a copy of each one in symbolLabels
 	if (label->type == e_symbol) {
 		return;
 	}
@@ -72,12 +72,14 @@ KLabel* StringLabel(const char* s) {
 }
 
 KLabel* SymbolLabel(int s) {
+	assert(s < SYMBOLS_MAX);
 	if (symbolLabels[s] != NULL) {
 		return symbolLabels[s];
 	}
 	if (printDebug) { printf("Sym garbage_label_next: %d\n", garbage_label_next); }
 	if (printDebug) { printf("Creating symbol label %s\n", symbol_names[s]); }
 	KLabel* newL = _new_label();
+	assert(newL != NULL);
 	newL->type = e_symbol;
 	newL->symbol_val = s;
 	symbolLabels[s] = newL;
@@ -115,8 +117,6 @@ char* LabelToString(KLabel* label) {
 	}
 	// return NULL;
 }
-
-
 
 KLabel* copyLabel(KLabel* l) {
 	if (printDebug) { 

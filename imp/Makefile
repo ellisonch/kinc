@@ -26,6 +26,9 @@ run: imp.exe
 imp.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -g -flto $(FILES) -o imp.exe
 
+asm: Makefile $(DEPENDS)
+	$(CC) $(CFLAGS) -S -g $(FILES)
+
 imp-fast.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) -o imp-fast.exe
 
