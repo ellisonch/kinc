@@ -145,6 +145,21 @@ ListK* emptyArgs() {
 	return args;
 }
 
+K* k_acquire(int len, int cap) {
+	K* newK = NULL;
+	if (garbage_k_next > 0) {
+		newK = garbage_k[garbage_k_next - 1];
+		garbage_k_next--;
+	} else {
+		newK = mallocK();
+	}
+	// newK->args = listk_acquire(len, cap);
+
+	assert(newK != NULL);
+	return newK;
+}
+
+
 K* _k_new(KLabel* label, ListK* args) {
 	assert(label != NULL);
 	assert(args != NULL);
@@ -158,13 +173,7 @@ K* _k_new(KLabel* label, ListK* args) {
  		Inc(arg);
  	}
 	
-	K* newK = NULL;
-	if (garbage_k_next > 0) {
-		newK = garbage_k[garbage_k_next - 1];
-		garbage_k_next--;
-	} else {
-		newK = mallocK();
-	}
+	K* newK = k_acquire(args->len, args->len);
 	assert(newK != NULL);
 	newK->label = label;
 	newK->args = args;
@@ -380,29 +389,35 @@ void Dec(K* k) {
 	}
 }
 
-ListK* copyArgs(ListK* oldArgs) {
-	ListK* args = listk_acquire(oldArgs->len, oldArgs->cap);
-
+void copyArgs(ListK* newArgs, ListK* oldArgs) {
 	for (int i = 0; i < oldArgs->len; i++) {
-		args->a[i] = oldArgs->a[i];
+		newArgs->a[i] = oldArgs->a[i];
+		Inc(newArgs->a[i]);
 	}
-
-	return args;
 }
 
 K* copy(K* oldK) {
-	ListK* newArgs = copyArgs(oldK->args);
-	// K* k = k_new(copyLabel(oldK->label), newArgs);
-	K* k = _k_new(oldK->label, newArgs);
+	assert(oldK != NULL);
+	assert(oldK->args != NULL);
+	
+	K* newK = k_acquire(oldK->args->len, oldK->args->len);
+	newK->refs = 0;
+	newK->permanent = 0;
+	assert(newK != NULL);
+	newK->args = listk_acquire(oldK->args->len, oldK->args->len);
+	assert(newK->args != NULL);
+	newK->label = oldK->label;
+
+	copyArgs(newK->args, oldK->args);
 	if (printDebug) {
 		char* sold = KToString(oldK);
-		char* snew = KToString(k);
+		char* snew = KToString(newK);
 		printf("   New Old: %s\n", sold);
 		printf("   New Copy: %s\n", snew);
 		free(sold);
 		free(snew);
 	}
-	return k;
+	return newK;
 }
 
 // updates an arg from a k to another k
