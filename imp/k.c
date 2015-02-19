@@ -620,4 +620,15 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 
 void k_init() {
 	k_init_builtins();
+
+	// preallocate garbage; doesn't seem to help
+	// for (int i = 0; i < MAX_GARBAGE_KEPT; i++) {
+	// 	garbage_k[i] = mallocK();
+	// 	garbage_k_next++;
+
+	// 	garbage_listk_new[i] = listk_create(0, 0);
+	// 	garbage_listk_next++;
+	// }
+	// assert(garbage_k_next == MAX_GARBAGE_KEPT);
+	// assert(garbage_listk_next == MAX_GARBAGE_KEPT);
 }
