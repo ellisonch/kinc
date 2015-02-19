@@ -1,4 +1,4 @@
-all: libaterm.a
+all: atermparser.exe
 
 parser.tab.c parser.tab.h: parser.y
 	bison -d parser.y

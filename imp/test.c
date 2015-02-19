@@ -8,6 +8,7 @@
 const char* p1 = "programs/prog1.aterm";
 const char* p2 = "programs/prog2.aterm";
 const char* p3 = "programs/prog3.aterm";
+const char* p4 = "programs/prog4.aterm";
 
 int run_tests() {
 	uint64_t r;
@@ -18,8 +19,11 @@ int run_tests() {
 	r = run(p2, 1000);
 	assert(r == 59541);
 
-	r = run(p3, 1000);	
+	r = run(p3, 1000);
 	assert(r == 168);
+
+	r = run(p4, 1100087778366101931LL);
+	assert(r = 3);
 	
 	// printf("%" PRId64 "\n", r);
 
@@ -35,6 +39,8 @@ int run_bench() {
 	run(p2, 7000);
 
 	run(p3, 20000);
+
+	run(p4, 1100087778366101931LL);
 	
 	clock_t t_end = clock();
 	double t_sec = (double)(t_end - t_start) / CLOCKS_PER_SEC;

@@ -1,4 +1,4 @@
-
+// primes up to m
 var i, m, n, q, r, s, t, x, y, z ;
 m = $inp ; 
 n = 2 ;

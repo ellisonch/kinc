@@ -29,7 +29,7 @@
 }
 
 [0-9]+ {
-	yylval.i64 = atoi(yytext);
+	yylval.i64 = atoll(yytext);
 	return TOK_I64; 
 }
 

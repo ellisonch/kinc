@@ -1,3 +1,4 @@
+// sum up to n
 var n, s, r ;
 n = $inp ;
 s = 0 ;

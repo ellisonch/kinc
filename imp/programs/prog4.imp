@@ -1,0 +1,12 @@
+// gcd(a, b)
+var a, b ;
+a = $inp ;
+b = 7540113804746346429 ;
+while (not(a <= b && b <= a)) {
+	if (b <= a) {
+		a = a - b
+	} else {
+		b = b - a
+	}
+}
+a

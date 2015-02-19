@@ -52,4 +52,4 @@ profile-sleepy: imp-sleepy.exe
 	sleepy //r:"imp-sleepy.exe --bench" &
 
 bench-python:
-	time (python programs/prog1.py && python programs/prog2.py && python programs/prog3.py)
+	time (python programs/prog1.py && python programs/prog2.py && python programs/prog3.py && python programs/prog4.py)

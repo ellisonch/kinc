@@ -49,6 +49,7 @@ char* givenLabels[] = {
 	"While",
 	"Paren",
 	"And",
+	"Minus",
 };
 
 #define symbol_Assign 0
@@ -66,6 +67,7 @@ char* givenLabels[] = {
 #define symbol_While 12
 #define symbol_Paren 13
 #define symbol_And 14
+#define symbol_Minus 15
 
 void handleIf(Configuration* config, int* change);
 
@@ -388,6 +390,36 @@ void handlePlus(Configuration* config, int* change) {
 	}
 }
 
+void handleMinus(Configuration* config, int* change) {
+	K* top = k_get_item(config->k, 0);
+
+	K* left = top->args->a[0];
+	K* right = top->args->a[1];
+	if (!isValue(left)) {
+		if (printDebug) { printf("Applying '--heat-left' rule\n"); }
+		*change = 1;
+		computation_add_front(config->k, left);
+		K* newTop = k_set_arg(top, 0, Hole());
+		computation_set_elem(config->k, 1, newTop);
+	} else if (!isValue(right)) {
+		if (printDebug) { printf("Applying '--heat-right' rule\n"); }
+		*change = 1;
+		computation_add_front(config->k, right);
+		K* newTop = k_set_arg(top, 1, Hole());
+		computation_set_elem(config->k, 1, newTop);
+	} else {
+		if (printDebug) { printf("Applying '-' rule\n"); }
+		*change = 1;
+		int64_t leftv = Inner(left)->label->i64_val;
+		int64_t rightv = Inner(right)->label->i64_val;
+		K* newTop = new_builtin_int(leftv - rightv);
+		computation_set_elem(config->k, 0, newTop);
+
+		// follows
+		handleValue(config, change);
+	}
+}
+
 void handleDiv(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
@@ -544,6 +576,9 @@ void repl(Configuration* config) {
 				case symbol_Plus:
 					handlePlus(config, &change);
 					break;
+				case symbol_Minus:
+					handleMinus(config, &change);
+					break;
 				case symbol_Neg:
 					handleNeg(config, &change);
 					break;
@@ -575,6 +610,10 @@ Configuration* reduce(K* k) {
 	config->k = newComputationCell();
 
 	computation_add_front(config->k, k);
+	
+	// char* ss = stateString(config->k, config->state);
+	// printf("%s\n", ss);
+	// free(ss);
 
 	repl(config);
 	return config;

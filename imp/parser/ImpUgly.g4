@@ -105,3 +105,6 @@ Int_literal : [0-9]+ ;
 Hole_expression : [$][a-zA-Z][a-zA-Z0-9]* ;
 Id : [a-zA-Z][a-zA-Z0-9]* ;
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
+LINE_COMMENT
+    : '//' ~[\r\n]* -> skip
+;
