@@ -619,6 +619,8 @@ int main(int argc, char* argv[]) {
 	int test = 0;
 	int bench = 0;
 
+	k_init();
+
 	// for (int i = 0; i < 3000; i += 10) {
 	// 	printf("pow(%d) = %d; log(%d) = %d\n", i, next_highest_power(i), i, ceil_log2(i));
 	// }

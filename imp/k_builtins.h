@@ -18,4 +18,6 @@ K* k_false();
 K* new_builtin_int(int64_t i);
 K* new_builtin_string(char* i);
 
+void k_init_builtins();
+
 #endif

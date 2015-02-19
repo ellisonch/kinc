@@ -27,6 +27,8 @@ char* KToString(K* k);
 void Dec(K* k);
 void Inc(K* k);
 
+void k_init();
+
 K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, ListK* args);
 ListK* newArgs(int count, ...);

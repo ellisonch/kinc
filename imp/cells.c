@@ -201,7 +201,7 @@ K* state_get_item(StateCell* stateCell, K* i) {
 
 K* get_result(ComputationCell *kCell) {
 	if (kCell->next != 1) {
-		panic("Expected a single value on the K Cell, but instead have %d", kCell->next);
+		panic("Expected a single value on the K Cell, but instead have %d.  %s", kCell->next, kCellToString(kCell));
 	}
 	return k_get_item(kCell, 0);
 }

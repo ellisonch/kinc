@@ -25,9 +25,10 @@ typedef struct K {
 	struct ListK {
 		int cap;
 		int len;
-		struct K* a[MAX_GARBAGE_ARG_LEN];
+		struct K** a;
 	}* args;
 	int refs;
+	int permanent; // doesn't get garbage collected
 } K;
 
 typedef struct ListK ListK;

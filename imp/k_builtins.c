@@ -49,8 +49,16 @@ void set_labels(int n, char* labels[static n]) {
 	}
 }
 
+K* _hole;
+
+void k_init_builtins() {
+	_hole = k_new_empty(SymbolLabel(symbol_hole));
+	_hole->permanent = 1;
+}
+
 K* Hole() {
-	return k_new_empty(SymbolLabel(symbol_hole));
+	// return k_new_empty(SymbolLabel(symbol_hole));
+	return _hole;
 }
 
 K* k_true() { return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_true)))); }

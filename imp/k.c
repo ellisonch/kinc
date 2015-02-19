@@ -85,23 +85,23 @@ ListK* mallocArgs() {
 	return malloc(sizeof(ListK));
 }
 
-// K** mallocArgsA(int count) {
-// 	if (count > MAX_GARBAGE_ARG_LEN) {
-// 		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
-// 	}
-// 	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
-// 		count_malloc_listk_array[count]++;
-// 	}
-// 	// return malloc(sizeof(K*) * count);
-// 	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
-// }
+K** mallocArgsA(int count) {
+	if (count > MAX_GARBAGE_ARG_LEN) {
+		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
+	}
+	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+		count_malloc_listk_array[count]++;
+	}
+	// return malloc(sizeof(K*) * count);
+	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
+}
 
 ListK* listk_acquire(int len, int cap) {
 	// printf("%d, %d\n", len, cap);
 	ListK* args = getDeadList(cap);
 	if (args == NULL) {
 		args = mallocArgs();
-		// args->a = mallocArgsA(cap);
+		args->a = mallocArgsA(cap);
 		args->cap = MAX_GARBAGE_ARG_LEN;
 	}
 	args->len = len;
@@ -178,6 +178,7 @@ K* k_new(KLabel* label, ListK* args) {
 	newK->label = label;
 	newK->args = args;
 	newK->refs = 0;
+	newK->permanent = 0;
 	return newK;
 }
 
@@ -296,6 +297,10 @@ void dispose_k_aux(K* k) {
 void dispose_k(K* k) {
 	assert(k != NULL);
 	assert(k->refs == 0);
+
+	if (k->permanent) {
+		return;
+	}
 
 	if (printDebug) {
 		char* sk = KToString(k);
@@ -596,4 +601,9 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			panic("Missing case!");
 		}
 	}
+}
+
+
+void k_init() {
+	k_init_builtins();
 }
