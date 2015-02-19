@@ -583,7 +583,8 @@ K* aterm_file_to_k(FILE* file, label_helper lh, K* hole) {
 	return ret;
 }
 
-ListK* aterm_list_to_args(at_list* l, label_helper lh, K* hole) {
+
+int aterm_list_to_args(at_list* l, label_helper lh, K* hole, K*** ret) {
 	int count = 0;
 	at_list* start = l;
 
@@ -593,7 +594,8 @@ ListK* aterm_list_to_args(at_list* l, label_helper lh, K* hole) {
 	}
 
 	if (count == 0) {
-		return emptyArgs();
+		*ret = NULL;
+		return 0;
 	}
 
 	K** args = malloc(count * sizeof(K*));
@@ -603,7 +605,9 @@ ListK* aterm_list_to_args(at_list* l, label_helper lh, K* hole) {
 		l = l->next;
 	}
 
-	return newArgs_array(count, args);
+	// *ret = newArgs_array(count, args);
+	*ret = args;
+	return count;
 }
 
 K* aterm_to_k(aterm at, label_helper lh, K* hole) {
@@ -623,8 +627,11 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			}
 
 			int symbol = get_symbol(lh, at.appl.name);
-			ListK* args = aterm_list_to_args(at.appl.args, lh, hole);
-			return _k_new(SymbolLabel(symbol), args);
+			K** a;
+			int count = aterm_list_to_args(at.appl.args, lh, hole, &a);
+			K* k = k_new_array(SymbolLabel(symbol), count, a);
+			free(a);
+			return k;
 		}
 		default: {
 			panic("Missing case!");
