@@ -40,7 +40,7 @@ int k_length(ComputationCell* cell) {
 K* k_get_item(ComputationCell* cell, int i) {
 	int spot = cell->next - 1 - i;
 	K* item = cell->elements[spot];
-	
+
 	assert(item != NULL);
 	assert(item->refs >= 1);
 	return item;
@@ -51,9 +51,11 @@ char* kCellToString(ComputationCell *kCell) {
 	char* s = malloc(10000);
 	strcpy(s, "k(\n");
 	for (int i = kCell->next - 1; i >= 0; i--) {
+		char* sk = KToString(kCell->elements[i]);
 		strcat(s, "  ~> ");
-		strcat(s, KToString(kCell->elements[i]));
+		strcat(s, sk);
 		strcat(s, "\n");
+		free(sk);
 	}
 	strcat(s, ")\n");
 	return s;
@@ -67,13 +69,17 @@ char* stateString(ComputationCell *kCell, StateCell* stateCell) {
 		if (stateCell->elements[i] != NULL) {
 			char var[] = "  x -> ";
  			var[2] = i + 'a';
+ 			char* sk = KToString(stateCell->elements[i]);
 			strcat(s, var);
-			strcat(s, KToString(stateCell->elements[i]));
+			strcat(s, sk);
 			strcat(s, "\n");
+			free(sk);
 		}
 	}
+	char* sk = kCellToString(kCell);
 	strcat(s, ")\n");
-	strcat(s, kCellToString(kCell));
+	strcat(s, sk);
+	free(sk);
 	return s;
 }
 
@@ -157,10 +163,7 @@ void check(ComputationCell *c, StateCell* state) {
  		Inc(arg);
  	}
 
- 	// printf("%s\n", KToString(specialk));
-
 	Dec(specialk);
-	// printf("%s\n", stateString(c, state));
 }
 
 // TODO: unsafe
@@ -203,3 +206,19 @@ K* get_result(ComputationCell *kCell) {
 	return k_get_item(kCell, 0);
 }
 
+void computation_cleanup(ComputationCell *kCell) {
+	while (kCell->next > 0) {
+		computation_remove_head(kCell);
+	}
+}
+
+// TODO: assumes 26 vars
+void state_cleanup(StateCell *stateCell) {
+	for (int i = 0; i < 26; i++) {
+		K* oldK = stateCell->elements[i];
+		stateCell->elements[i] = NULL;
+		if (oldK != NULL) {
+			Dec(oldK);
+		}
+	}
+}

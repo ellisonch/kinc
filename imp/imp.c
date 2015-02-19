@@ -242,8 +242,6 @@ void handleWhile(Configuration* config, int* change) {
 	K* theIf = k_new(SymbolLabel(symbol_If), newArgs(3, guard, then, k_skip()));
 	computation_set_elem(config->k, 0, theIf);
 
-	// printf("Hit while, leaving behind %s\n", KToString(theIf));
-
 	// follows
 	handleIf(config, change);
 }
@@ -486,8 +484,10 @@ void repl(Configuration* config) {
 		rewrites++;
 		change = 0;
 		if (printDebug) {
-			printf("%s", stateString(config->k, config->state));
+			char* ss = stateString(config->k, config->state);
+			printf("%s", ss);
 			printf("\n-----------------\n");
+			free(ss);
 		}
 		if (k_length(config->k) == 0) {
 			break;
@@ -597,9 +597,14 @@ uint64_t run(const char* path, int64_t upto) {
 	K* resultK = get_result(config->k);
 	int64_t result = Inner(resultK)->label->i64_val;
 
-	printf("%s\n", stateString(config->k, config->state));
+	char* ss = stateString(config->k, config->state);
+	printf("%s\n", ss);
+	free(ss);
 
 	check(config->k, config->state);
+
+	computation_cleanup(config->k);
+	state_cleanup(config->state);
 
 	return result;
 }

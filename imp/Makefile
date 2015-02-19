@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-static -g -std=c11 -Wall -m64 -O3 
+CFLAGS=-static -g -std=c11 -Wall -m64 -O3
 FILES = imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c -L./aparser -laterm 
 DEPENDS = imp.c k.h k.c utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h inline_helper.h
-
+# -DNDEBUG
 # -Wno-unused-function
 # -flto
 # -pedantic
@@ -21,10 +21,10 @@ run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 
 imp.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) $(FILES) -o imp.exe
+	$(CC) $(CFLAGS) -flto $(FILES) -o imp.exe
 
 imp-profile.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -pg $(FILES) -o imp-profile.exe	
+	$(CC) $(CFLAGS) -flto -pg $(FILES) -o imp-profile.exe	
 
 imp-sleepy.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -fno-omit-frame-pointer -gdwarf-2 $(FILES) -o imp-sleepy.exe	

@@ -151,6 +151,7 @@ K* k_new_empty(KLabel* label) {
 K* k_new(KLabel* label, ListK* args) {
 	assert(label != NULL);
 	assert(args != NULL);
+	assert(args->len == 0 || args->a != NULL);
 
 	for (int i = 0; i < args->len; i++) {
  		K* arg = args->a[i];
@@ -177,37 +178,44 @@ K* k_new(KLabel* label, ListK* args) {
 
 
 // TODO: leaks memory and is unsafe
-const char* ListKToString(ListK* args) {
+char* ListKToString(ListK* args) {
+	char* ret;
 	if (args == NULL) {
-		return "";
+		return string_make_copy("");
 	}
-	char* s = malloc(3000);
-	s[0] = '\0';
+	ret = malloc(3000);
+	ret[0] = '\0';
 
-	// size_t len = strlen(s);
+	// size_t len = strlen(ret);
 	for (int i = 0; i < args->len; i++) {
 		K* arg = args->a[i];
-		strcat(s, KToString(arg));
+		char* sk = KToString(arg);
+		strcat(ret, sk);
+		free(sk);
 		if (i < args->len - 1) {
-			strcat(s, ", ");
+			strcat(ret, ", ");
 		}
 	}
 	
-	return s;
+	return ret;
 }
 
 // TODO: leaks memory and is unsafe
-const char* KToString(K* k) {
+char* KToString(K* k) {
 	char* s = malloc(1000);
 	if (k == NULL) {
 		strcpy(s, "(null)");
 		return s;
 	}
+	char* sargs = ListKToString(k->args);
+	char* slabel = LabelToString(k->label);
 	if (printRefCounts) {
-		snprintf(s, 1000, "%s[%d](%s)", LabelToString(k->label), k->refs, ListKToString(k->args));
+		snprintf(s, 1000, "%s[%d](%s)", slabel, k->refs, sargs);
 	} else {
-		snprintf(s, 1000, "%s(%s)", LabelToString(k->label), ListKToString(k->args));
+		snprintf(s, 1000, "%s(%s)", slabel, sargs);
 	}
+	free(sargs);
+	free(slabel);
 	return s;
 }
 
@@ -297,7 +305,11 @@ void dispose_k(K* k) {
 	assert(k != NULL);
 	assert(k->refs == 0);
 
-	if (printDebug) { printf("Dead term {%s}\n", KToString(k)); }
+	if (printDebug) {
+		char* sk = KToString(k);
+		printf("Dead term {%s}\n", sk);
+		free(sk);
+	}
 
 	if (checkTermSize) {
 		if (k->args->len > 50) {
@@ -379,8 +391,12 @@ K* copy(K* oldK) {
 	// K* k = k_new(copyLabel(oldK->label), newArgs);
 	K* k = k_new(oldK->label, newArgs);
 	if (printDebug) {
-		printf("   New Old: %s\n", KToString(oldK));
-		printf("   New Copy: %s\n", KToString(k));
+		char* sold = KToString(oldK);
+		char* snew = KToString(k);
+		printf("   New Old: %s\n", sold);
+		printf("   New Copy: %s\n", snew);
+		free(sold);
+		free(snew);
 	}
 	return k;
 }
@@ -390,7 +406,11 @@ K* copy(K* oldK) {
 K* k_set_arg(K* orig_k, int arg, K* newVal) {
 	K* k = orig_k;
 	if (printDebug) {
-		printf("Updating %s's %d argument to %s\n", KToString(k), arg, KToString(newVal));
+		char* sold = KToString(k);
+		char* snew = KToString(newVal);
+		printf("Updating %s's %d argument to %s\n", sold, arg, snew);
+		free(sold);
+		free(snew);
 	}
 	if (k->refs > 1) {
 		if (printDebug) {
@@ -402,7 +422,9 @@ K* k_set_arg(K* orig_k, int arg, K* newVal) {
 	K* orig_arg = k->args->a[arg];
 	k->args->a[arg] = newVal;
 	if (printDebug) {
-		printf("   After updating: %s\n", KToString(k));
+		char* sk = KToString(k);
+		printf("   After updating: %s\n", sk);
+		free(sk);
 	}
 	Dec(orig_arg);
 	// if (k != orig_k) {

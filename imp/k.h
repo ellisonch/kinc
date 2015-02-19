@@ -23,10 +23,9 @@ typedef struct {
 	char** labels;
 } label_helper;
 
-const char* KToString(K* k);
+char* KToString(K* k);
 void Dec(K* k);
 void Inc(K* k);
-const char* ListKToString(ListK* args);
 
 K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, ListK* args);

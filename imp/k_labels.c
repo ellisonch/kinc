@@ -96,9 +96,9 @@ KLabel* Int64Label(int64_t i64) {
 
 
 // TODO: leaks memory and is unsafe
-const char* LabelToString(KLabel* label) {
+char* LabelToString(KLabel* label) {
 	if (label->type == e_string) {
-		return label->string_val;
+		return string_make_copy(label->string_val);
 	} else if (label->type == e_i64) {
 		char* s = malloc(50);
 		snprintf(s, 50, "%" PRId64, label->i64_val);
@@ -108,7 +108,7 @@ const char* LabelToString(KLabel* label) {
 		if (val == NULL) {
 			panic("Couldn't find symbol name for %d\n", label->symbol_val);
 		}
-		return val;
+		return string_make_copy(val);
 	} else {
 		panic("Some unknown label type %d found", label->type);
 	}
@@ -118,8 +118,12 @@ const char* LabelToString(KLabel* label) {
 
 
 KLabel* copyLabel(KLabel* l) {
-	if (printDebug) { printf("Cpy garbage_label_next: %d\n", garbage_label_next); }
-	if (printDebug) { printf("Creating copy label %s\n", LabelToString(l)); }
+	if (printDebug) { 
+		printf("Cpy garbage_label_next: %d\n", garbage_label_next);
+		char* s = LabelToString(l);
+		printf("Creating copy label %s\n", s);
+		free(s);
+	}
 	KLabel* newL;
 	if (garbage_label_next > 0) {
 		newL = garbage_label[garbage_label_next - 1];

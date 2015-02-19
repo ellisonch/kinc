@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -12,6 +13,13 @@ _Noreturn void _panic(const char* func, const char* file, int line, const char* 
 	vfprintf(stderr, format, va);
 	fprintf(stderr, "\n");
 	exit(1);
+}
+
+char* string_make_copy(const char* s) {
+	assert(s != NULL);
+	char* ret = malloc(strlen(s) + 1);
+	strcpy(ret, s);
+	return ret;
 }
 
 // ll_list* ll_new() {
@@ -52,5 +60,5 @@ _Noreturn void _panic(const char* func, const char* file, int line, const char* 
 // 		panic("Tried to remove from empty list");
 // 	}
 // 	ll_node* node = list->head;
-	
+
 // }
