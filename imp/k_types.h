@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "settings.h"
+
 typedef enum {
 	e_symbol,
 	e_string,
@@ -23,7 +25,7 @@ typedef struct K {
 	struct ListK {
 		int cap;
 		int len;
-		struct K** a;
+		struct K* a[MAX_GARBAGE_ARG_LEN];
 	}* args;
 	int refs;
 } K;

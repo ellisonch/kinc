@@ -85,23 +85,23 @@ ListK* mallocArgs() {
 	return malloc(sizeof(ListK));
 }
 
-K** mallocArgsA(int count) {
-	if (count > MAX_GARBAGE_ARG_LEN) {
-		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
-	}
-	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
-		count_malloc_listk_array[count]++;
-	}
-	// return malloc(sizeof(K*) * count);
-	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
-}
+// K** mallocArgsA(int count) {
+// 	if (count > MAX_GARBAGE_ARG_LEN) {
+// 		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
+// 	}
+// 	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+// 		count_malloc_listk_array[count]++;
+// 	}
+// 	// return malloc(sizeof(K*) * count);
+// 	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
+// }
 
 ListK* listk_acquire(int len, int cap) {
 	// printf("%d, %d\n", len, cap);
 	ListK* args = getDeadList(cap);
 	if (args == NULL) {
 		args = mallocArgs();
-		args->a = mallocArgsA(cap);
+		// args->a = mallocArgsA(cap);
 		args->cap = MAX_GARBAGE_ARG_LEN;
 	}
 	args->len = len;
