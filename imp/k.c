@@ -13,10 +13,6 @@
 #include "uthash.h"
 #include "aparser/aterm.h"
 
-
-#define MAX_GARBAGE_KEPT 10000
-
-
 int garbage_k_next = 0;
 K* garbage_k[MAX_GARBAGE_KEPT];
 
@@ -28,7 +24,7 @@ ListK* garbage_listk_new[MAX_GARBAGE_KEPT];
 
 
 int count_malloc_listk;
-int count_malloc_listk_array[MAX_MALLOC_LISTK_ARRAY_SIZE];
+int count_malloc_listk_array;
 
 int count_malloc_k = 0;
 
@@ -50,7 +46,6 @@ int count_malloc_k = 0;
 // }
 
 ListK* getDeadList(int reqLength) {
-	// return NULL;
 	if (reqLength > MAX_GARBAGE_ARG_LEN) {
 		return NULL;
 	}
@@ -60,6 +55,8 @@ ListK* getDeadList(int reqLength) {
 	}
 
 	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
+	// assert(ret != NULL);
+	// assert(ret->cap >= reqLength);
 	garbage_listk_next--;
 
 	if (checkGC) {
@@ -89,9 +86,7 @@ K** mallocArgsA(int count) {
 	if (count > MAX_GARBAGE_ARG_LEN) {
 		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
 	}
-	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
-		count_malloc_listk_array[count]++;
-	}
+	count_malloc_listk_array++;
 	// return malloc(sizeof(K*) * count);
 	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
 }
@@ -237,10 +232,7 @@ void terminate_args(ListK* args) {
 
 	count_malloc_listk--;
 	if (number_of_args > 0) {
-		if (number_of_args < MAX_MALLOC_LISTK_ARRAY_SIZE) {
-			assert(count_malloc_listk_array[number_of_args] >= 1);
-			count_malloc_listk_array[number_of_args]--;
-		}
+		count_malloc_listk_array--;
 		free(args->a);
 	}
 	if (printDebug) { printf("Freeing args\n"); }		
@@ -519,9 +511,10 @@ void dump_garbage_info() {
 	// 	deadListsLen[i] = 0;
 	// 	// printf("%d\n", deadListsLen[i]);
 	// }
-	for (int i = 0; i < MAX_MALLOC_LISTK_ARRAY_SIZE; i++) {
-		printf("count_malloc_listk_array %d: %d\n", i, count_malloc_listk_array[i]);
-	}
+	printf("count_malloc_listk_array: %d\n", count_malloc_listk_array);
+	// for (int i = 0; i < MAX_MALLOC_LISTK_ARRAY_SIZE; i++) {
+	// 	printf("count_malloc_listk_array %d: %d\n", i, count_malloc_listk_array[i]);
+	// }
 	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
 	// 	printf("garbage_listk_nexts %d: %d\n", i, garbage_listk_nexts[i]);
 	// }

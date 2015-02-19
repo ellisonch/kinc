@@ -6,7 +6,6 @@
 // #define MAX_GARBAGE_PENDING 100
 #define MAX_GARBAGE_KEPT 10000
 #define MAX_GARBAGE_ARG_LEN 64
-#define MAX_MALLOC_LISTK_ARRAY_SIZE 6
 
 
 // when printing k terms, print the ref counts as well
