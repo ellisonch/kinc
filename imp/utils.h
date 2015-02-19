@@ -5,6 +5,8 @@
 
 _Noreturn void _panic(const char* func, const char* file, int line, const char* format, ...);
 char* string_make_copy(const char* s);
+int ceil_log2(unsigned long long x);
+int next_highest_power(int v);
 
 struct ll_node;
 typedef struct ll_node ll_node;

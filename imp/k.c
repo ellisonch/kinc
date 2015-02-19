@@ -17,37 +17,54 @@
 #define MAX_GARBAGE_KEPT 10000
 
 
-
-K* garbage_k[MAX_GARBAGE_KEPT];
 int garbage_k_next = 0;
-
-ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
+K* garbage_k[MAX_GARBAGE_KEPT];
 
 // the next available garbage location
-int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
+// int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
+// ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
+int garbage_listk_next = 0;
+ListK* garbage_listk_new[MAX_GARBAGE_KEPT];
+
 
 int count_malloc_listk;
 int count_malloc_listk_array[MAX_MALLOC_LISTK_ARRAY_SIZE];
 
 int count_malloc_k = 0;
 
+// int list_get_right_size_offset(int n) {
+// 	if (n <= 16) {
+// 		return 0;
+// 	}
+// 	return ceil_log2(n);
+// }
+
+// int list_get_right_size(int n) {
+// 	if (n == 0) {
+// 		return 1;
+// 	}
+// 	// if (n <= 16) {
+// 	// 	return 16;
+// 	// }
+// 	return next_highest_power(n);
+// }
+
 ListK* getDeadList(int reqLength) {
 	// return NULL;
 	if (reqLength > MAX_GARBAGE_ARG_LEN) {
 		return NULL;
 	}
-	ListK** deadList = garbage_listk[reqLength];
-	if (garbage_listk_nexts[reqLength] == 0) {
+	if (garbage_listk_next == 0) {
 		if (printDebug) { printf("No dead stuff of length %d\n", reqLength); }
 		return NULL;
 	}
 
-	ListK* ret = deadList[garbage_listk_nexts[reqLength] - 1];
-	garbage_listk_nexts[reqLength]--;
+	ListK* ret = garbage_listk_new[garbage_listk_next - 1];
+	garbage_listk_next--;
 
 	if (checkGC) {
 		if (ret == NULL) {
-			panic("Didn't expect ret to be nil");
+			panic("Didn't expect ret to be NULL");
 		}
 		if (ret->cap < reqLength) {
 			panic("Expected list to be of cap %d, but it was %d instead", reqLength, ret->cap);
@@ -69,25 +86,30 @@ ListK* mallocArgs() {
 }
 
 K** mallocArgsA(int count) {
+	if (count > MAX_GARBAGE_ARG_LEN) {
+		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
+	}
 	if (count < MAX_MALLOC_LISTK_ARRAY_SIZE) {
 		count_malloc_listk_array[count]++;
 	}
-	return malloc(sizeof(K*) * count);
+	// return malloc(sizeof(K*) * count);
+	return malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
 }
 
-ListK* newArgs(int count, ...) {
-	ListK* args = getDeadList(count);
+ListK* listk_acquire(int len, int cap) {
+	// printf("%d, %d\n", len, cap);
+	ListK* args = getDeadList(cap);
 	if (args == NULL) {
 		args = mallocArgs();
-		args->a = mallocArgsA(count);
-		args->cap = count;
-		args->len = count;
+		args->a = mallocArgsA(cap);
+		args->cap = MAX_GARBAGE_ARG_LEN;
 	}
-	if (checkGC) {
-		if (count != args->len) {
-			panic("Expected %d == %d\n", count, args->len);
-		}
-	}
+	args->len = len;
+	return args;
+}
+
+ListK* newArgs(int count, ...) {	
+	ListK* args = listk_acquire(count, count);
 
 	va_list ap;
 	va_start(ap, count);
@@ -100,18 +122,7 @@ ListK* newArgs(int count, ...) {
 }
 
 ListK* newArgs_array(int count, K** a) {
-	ListK* args = getDeadList(count);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->a = mallocArgsA(count);
-		args->cap = count;
-		args->len = count;
-	}
-	if (checkGC) {
-		if (count != args->len) {
-			panic("Expected %d == %d\n", count, args->len);
-		}
-	}
+	ListK* args = listk_acquire(count, count);
 
 	for (int i = 0; i < count; i++) {
 		args->a[i] = a[i];
@@ -135,12 +146,7 @@ K* mallocK() {
 }
 
 ListK* emptyArgs() {
-	ListK* args = getDeadList(0);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->cap = 0;
-		args->len = 0;
-	}
+	ListK* args = listk_acquire(0, 0);
 	return args;
 }
 
@@ -156,7 +162,7 @@ K* k_new(KLabel* label, ListK* args) {
 	for (int i = 0; i < args->len; i++) {
  		K* arg = args->a[i];
  		if (arg == NULL) {
- 			panic("Didn't expect nil arg in k_new()");
+ 			panic("Didn't expect NULL arg in k_new().  len: %d, cap: %d", args->len, args->cap);
  		}
  		Inc(arg);
  	}
@@ -252,29 +258,15 @@ void dispose_args(K* k) {
 	// 	Dec(arg);
 	// }
 
-	int number_of_args = args->cap;
-
-	// if we don't keep around args of this many arguments, then kill it
-	if (number_of_args >= MAX_GARBAGE_ARG_LEN) {
-		if (!COMPLAINED_MAX_GARBAGE_ARG_LEN && checkRightSettings) {
-			printf("MAX_GARBAGE_ARG_LEN is not enough for dead term with len %d\n", number_of_args);
-			COMPLAINED_MAX_GARBAGE_ARG_LEN = 1;
-		}
-
-		terminate_args(args);
-		return;
-	}
-
 	// if we already have too many args of this many arguments, then kill it
-	int next_arg_index = garbage_listk_nexts[number_of_args];
-	if (next_arg_index >= MAX_GARBAGE_KEPT) {
+	if (garbage_listk_next >= MAX_GARBAGE_KEPT) {
 		terminate_args(args);
 		return;
 	}
 
 	// save it
-	garbage_listk_nexts[number_of_args]++;
-	garbage_listk[number_of_args][next_arg_index] = args;
+	garbage_listk_new[garbage_listk_next] = args;	
+	garbage_listk_next++;
 	if (printDebug) { printf("Saving args\n"); }
 }
 
@@ -371,13 +363,7 @@ void Dec(K* k) {
 }
 
 ListK* copyArgs(ListK* oldArgs) {
-	ListK* args = getDeadList(oldArgs->cap);
-	if (args == NULL) {
-		args = mallocArgs();
-		args->cap = oldArgs->cap;
-		args->len = oldArgs->len;
-		args->a = mallocArgsA(oldArgs->cap);
-	}
+	ListK* args = listk_acquire(oldArgs->len, oldArgs->cap);
 
 	for (int i = 0; i < oldArgs->len; i++) {
 		args->a[i] = oldArgs->a[i];
@@ -505,19 +491,19 @@ void dump_garbage_info() {
 	printf("\ncount_malloc_k: %d\n", count_malloc_k);
 	printf("garbage_k_next: %d\n\n", garbage_k_next);
 
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		for (int j = 0; j < garbage_listk_nexts[i]; j++) {
-			ListK* args = garbage_listk[i][j];
-			if (args->len > 0) {
-				if (args->cap < MAX_MALLOC_LISTK_ARRAY_SIZE) {
-					count_malloc_listk_array[args->cap]--;
-				}
-				// free(args->a);
-			}
-			count_malloc_listk--;
-			// free(args);
-		}
-	}
+	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+	// 	for (int j = 0; j < garbage_listk_nexts[i]; j++) {
+	// 		ListK* args = garbage_listk[i][j];
+	// 		if (args->len > 0) {
+	// 			if (args->cap < MAX_MALLOC_LISTK_ARRAY_SIZE) {
+	// 				count_malloc_listk_array[args->cap]--;
+	// 			}
+	// 			// free(args->a);
+	// 		}
+	// 		count_malloc_listk--;
+	// 		// free(args);
+	// 	}
+	// }
 	// deadListsLen[0] = 0;
 	// deadListsLen[1] = 0;
 	// deadListsLen[2] = 0;
@@ -531,9 +517,10 @@ void dump_garbage_info() {
 	for (int i = 0; i < MAX_MALLOC_LISTK_ARRAY_SIZE; i++) {
 		printf("count_malloc_listk_array %d: %d\n", i, count_malloc_listk_array[i]);
 	}
-	for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
-		printf("garbage_listk_nexts %d: %d\n", i, garbage_listk_nexts[i]);
-	}
+	// for (int i = 0; i < MAX_GARBAGE_ARG_LEN; i++) {
+	// 	printf("garbage_listk_nexts %d: %d\n", i, garbage_listk_nexts[i]);
+	// }
+	printf("garbage_listk_next: %d\n", garbage_listk_next);
 	printf("count_malloc_listk: %d\n\n", count_malloc_listk);
 
 	dump_label_garbage_info();

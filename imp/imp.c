@@ -619,6 +619,11 @@ int main(int argc, char* argv[]) {
 	int test = 0;
 	int bench = 0;
 
+	// for (int i = 0; i < 3000; i += 10) {
+	// 	printf("pow(%d) = %d; log(%d) = %d\n", i, next_highest_power(i), i, ceil_log2(i));
+	// }
+	// return;
+
 	set_labels(sizeof(givenLabels) / sizeof(givenLabels[0]), givenLabels);
 
 	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
