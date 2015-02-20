@@ -18,6 +18,10 @@ void _k_set_arg(K* k, int i, K* v);
 int garbage_k_next = 0;
 K* garbage_k[MAX_GARBAGE_KEPT];
 
+double garbage_get_capacity() {
+	return (double) garbage_k_next / MAX_GARBAGE_KEPT;
+}
+
 // the next available garbage location
 // int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
 // ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];

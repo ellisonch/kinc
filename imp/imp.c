@@ -521,6 +521,10 @@ void repl(Configuration* config) {
 	int change = 1;
 	do {
 		rewrites++;
+		// if (rewrites % 1000 == 0) {
+		// 	double cap = garbage_get_capacity();
+		// 	fprintf(stderr, "%f\n", cap);
+		// }
 		change = 0;
 		if (printDebug) {
 			char* ss = stateString(config->k, config->state);

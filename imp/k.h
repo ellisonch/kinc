@@ -37,6 +37,8 @@ K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, int count, ...);
 K* k_new_array(KLabel* label, int count, K** a);
 
+double garbage_get_capacity();
+
 void Dec(K* k);
 void Inc(K* k);
 
