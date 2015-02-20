@@ -30,10 +30,10 @@ int count_malloc_listk_array;
 
 int count_malloc_k = 0;
 
-ListK* _mallocArgs() {
-	count_malloc_listk++;
-	return malloc(sizeof(ListK));
-}
+// ListK* _mallocArgs() {
+// 	count_malloc_listk++;
+// 	return malloc(sizeof(ListK));
+// }
 
 K** _mallocArgsA(int count) {
 	if (count > MAX_GARBAGE_ARG_LEN) {
@@ -51,22 +51,22 @@ K** _mallocArgsA(int count) {
 	return a;
 }
 
-ListK* _listk_acquire(int len, int cap) {
-	assert(len >= 0);
-	assert(cap <= MAX_GARBAGE_ARG_LEN);
+// ListK* _listk_acquire(int len, int cap) {
+// 	assert(len >= 0);
+// 	assert(cap <= MAX_GARBAGE_ARG_LEN);
 
-	ListK* args = _mallocArgs();
-	args->a = _mallocArgsA(cap);
-	args->cap = MAX_GARBAGE_ARG_LEN;
-	args->len = len;
+// 	ListK* args = _mallocArgs();
+// 	args->a = _mallocArgsA(cap);
+// 	args->cap = MAX_GARBAGE_ARG_LEN;
+// 	args.len = len;
 
-	assert(args != NULL);
-	assert(args->len == len);
-	assert(args->cap >= len);
-	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
-	assert(args->a != NULL);
-	return args;
-}
+// 	assert(args != NULL);
+// 	assert(args.len == len);
+// 	assert(args->cap >= len);
+// 	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
+// 	assert(args->a != NULL);
+// 	return args;
+// }
 
 void Inc(K* k) {
 	assert(k != NULL);
@@ -84,19 +84,22 @@ K* _k_acquire(int len, int cap) {
 	if (garbage_k_next > 0) {
 		newK = garbage_k[garbage_k_next - 1];
 		garbage_k_next--;
-		assert(newK->args != NULL);
-		newK->args->len = len;
+		// assert(newK->args != NULL);
+		newK->args.len = len;
 	} else {
 		newK = mallocK();
-		ListK* args = _listk_acquire(len, cap);
-		newK->args = args;
-		assert(newK->args != NULL);
+		newK->args.a = _mallocArgsA(cap);
+		newK->args.cap = MAX_GARBAGE_ARG_LEN;
+		newK->args.len = len;		
+		// ListK* args = _listk_acquire(len, cap);
+		// newK->args = args;
+		// assert(newK->args != NULL);
 	}
 
 	assert(newK != NULL);
-	assert(newK->args != NULL);
-	assert(newK->args->len == len);
-	assert(newK->args->cap >= cap);
+	// assert(newK->args != NULL);
+	assert(newK->args.len == len);
+	assert(newK->args.cap >= cap);
 	return newK;
 }
 
@@ -106,8 +109,8 @@ K* _k_fresh(KLabel* label, int len) {
 	
 	K* newK = _k_acquire(len, len);
 	assert(newK != NULL);
-	assert(newK->args != NULL);
-	assert(newK->args->len >= len);
+	// assert(newK->args != NULL);
+	assert(newK->args.len >= len);
 
 	newK->label = label;
 	newK->refs = 0;
@@ -182,7 +185,7 @@ char* KToString(K* k) {
 		strcpy(s, "(null)");
 		return s;
 	}
-	char* sargs = ListKToString(k->args);
+	char* sargs = ListKToString(&k->args);
 	char* slabel = LabelToString(k->label);
 	if (printRefCounts) {
 		snprintf(s, 1000, "%s[%d](%s)", slabel, k->refs, sargs);
@@ -206,7 +209,7 @@ void free_args(ListK* args) {
 	free(args->a);
 	args->a = NULL;
 	
-	free(args);
+	// free(args);
 }
 
 void dispose_k_itself(K* k) {
@@ -217,8 +220,9 @@ void dispose_k_itself(K* k) {
 		garbage_k[garbage_k_next++] = k;
 	} else {
 		if (printDebug) { printf("Freeing k\n"); }
-		free_args(k->args);
-		k->args = NULL;
+		free_args(&k->args);
+		k->args.a = NULL;
+		// k->args = NULL;
 		count_malloc_k--;
 		free(k);
 	}
@@ -237,8 +241,8 @@ void dispose_k_aux(K* k) {
 void dispose_k(K* k) {
 	assert(k != NULL);
 	assert(k->refs == 0);
-	assert(k->args != NULL);
-	assert(k->args->a != NULL);
+	// assert(k->args != NULL);
+	assert(k->args.a != NULL);
 
 	if (k->permanent) {
 		return;
@@ -290,7 +294,7 @@ void Dec(K* k) {
 }
 
 K* copy(K* oldK) {
-	K* k = k_new_array(oldK->label, k_num_args(oldK), oldK->args->a);
+	K* k = k_new_array(oldK->label, k_num_args(oldK), oldK->args.a);
 	if (printDebug) {
 		char* sold = KToString(oldK);
 		char* snew = KToString(k);
@@ -437,26 +441,26 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 K* k_get_arg(K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
-	assert(k->args != NULL);
-	assert(k->args->len > i);
+	// assert(k->args != NULL);
+	assert(k->args.len > i);
 
-	return k->args->a[i];
+	return k->args.a[i];
 }
 
 int k_num_args(K* k) {
 	assert(k != NULL);
-	assert(k->args != NULL);
+	// assert(k->args != NULL);
 
-	return k->args->len;
+	return k->args.len;
 }
 
 void _k_set_arg(K* k, int i, K* v) {
 	assert(k != NULL);
 	assert(i >= 0);
-	assert(k->args != NULL);
-	assert(k->args->len > i);
+	// assert(k->args != NULL);
+	assert(k->args.len > i);
 
-	k->args->a[i] = v;
+	k->args.a[i] = v;
 }
 
 // updates an arg from a k to another k
@@ -511,7 +515,7 @@ K* updateTrimArgs(K* k, int left, int right) {
 		_k_set_arg(k, newi, k_get_arg(k, i)); 
 		newi++;
 	}
-	k->args->len = right - left;
+	k->args.len = right - left;
 	// k.args = k.args[left:right];
 	return k;
 }

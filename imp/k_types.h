@@ -26,7 +26,7 @@ typedef struct K {
 		int cap;
 		int len;
 		struct K** a;
-	}* args;
+	} args;
 	int refs;
 	int permanent; // doesn't get garbage collected
 } K;
