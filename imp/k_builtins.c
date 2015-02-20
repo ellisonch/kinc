@@ -95,27 +95,27 @@ K* new_builtin_string(char* i) {
 	return k_new(SymbolLabel(symbol_string), 1, k_new_empty(StringLabel(i)));
 }
 
-int is_int(K* k) {
+int is_int(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_int;
 }
 
-int is_bool(K* k) {
+int is_bool(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_bool;
 }
 
-int is_hole(K* k) {
+int is_hole(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_hole;
 }
 
-int is_true(K* k) {
+int is_true(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_true;
 }
 
-int is_false(K* k) {
+int is_false(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_false;
 }

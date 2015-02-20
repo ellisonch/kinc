@@ -5,11 +5,11 @@
 
 void set_labels(int n, char* labels[static n]);
 
-int is_int(K* k);
-int is_bool(K* k);
-int is_hole(K* k);
-int is_true(K* k);
-int is_false(K* k);
+int is_int(const K* k);
+int is_bool(const K* k);
+int is_hole(const K* k);
+int is_true(const K* k);
+int is_false(const K* k);
 
 K* k_hole();
 K* k_true();

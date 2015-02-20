@@ -30,11 +30,11 @@ StateCell* newStateCell() {
 	return cell;
 }
 
-int k_length(ComputationCell* cell) {
+int k_length(const ComputationCell* cell) {
 	return cell->next;
 }
 
-K* k_get_item(ComputationCell* cell, int i) {
+K* k_get_item(const ComputationCell* cell, int i) {
 	int spot = cell->next - 1 - i;
 	K* item = cell->elements[spot];
 
@@ -44,7 +44,7 @@ K* k_get_item(ComputationCell* cell, int i) {
 }
 
 // FIXME: leaks memory, sucks
-char* kCellToString(ComputationCell *kCell) {
+char* kCellToString(const ComputationCell *kCell) {
 	char* s = malloc(10000);
 	strcpy(s, "k(\n");
 	for (int i = kCell->next - 1; i >= 0; i--) {
@@ -59,7 +59,7 @@ char* kCellToString(ComputationCell *kCell) {
 }
 
 // FIXME: leaks memory, sucks
-char* stateString(ComputationCell *kCell, StateCell* stateCell) {
+char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
 	char* s = malloc(20000);
 	strcpy(s, "state(\n"); 
 	for (int i = 0; i < 26; i++) {
@@ -108,11 +108,11 @@ void computation_add_front(ComputationCell *kCell, K* k) {
 	kCell->next++;
 }
 
-void check(ComputationCell *c, StateCell* state) {
+void check(const ComputationCell *c, const StateCell* state) {
 	// ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
 	// allValues->cap = k_length(c) + 26;
 	int len = k_length(c);
-	K** a = malloc(sizeof(K*) * (len + 26)); // FIXME unsafe
+	const K** a = malloc(sizeof(K*) * (len + 26)); // FIXME unsafe
 	for (int i = 0; i < c->next; i++) {
 		a[i] = c->elements[i];
 	}
@@ -132,7 +132,7 @@ void check(ComputationCell *c, StateCell* state) {
 		if (s->entry == 0) {
 			panic("There should be no 0 entries");
 		}
-		K* k = s->entry;
+		const K* k = s->entry;
 		if (k->refs != s->count) {
 			bad = 1;
 			printf("Count for %s should be %d, but saw %d!\n", KToString(k), s->count, k->refs);
@@ -165,12 +165,12 @@ void updateStore(StateCell* stateCell, K* keyK, K* value) {
 	}
 }
 
-K* state_get_item_from_name(StateCell* stateCell, int i) {
+K* state_get_item_from_name(const StateCell* stateCell, int i) {
 	return stateCell->elements[i - 'a'];
 }
 
 // TODO unsafe
-K* state_get_item(StateCell* stateCell, K* i) {
+K* state_get_item(const StateCell* stateCell, const K* i) {
 	K* keyK = k_get_arg(i, 0);
 	if (checkTypeSafety) {
 		if (keyK->label->type != e_string) {
@@ -181,7 +181,7 @@ K* state_get_item(StateCell* stateCell, K* i) {
 	return stateCell->elements[variable];
 }
 
-K* get_result(ComputationCell *kCell) {
+K* get_result(const ComputationCell *kCell) {
 	if (kCell->next != 1) {
 		panic("Expected a single value on the K Cell, but instead have %d.  %s", kCell->next, kCellToString(kCell));
 	}

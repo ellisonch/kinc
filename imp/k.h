@@ -10,7 +10,7 @@
 // #include "inline_helper.h"
 
 typedef struct {
-	K* entry;
+	const K* entry;
 	int count;
 	UT_hash_handle hh;
 } countentry;
@@ -23,13 +23,13 @@ typedef struct {
 	char** labels;
 } label_helper;
 
-char* KToString(K* k);
+char* KToString(const K* k);
 
 
 void k_init();
 
-K* k_get_arg(K* k, int i);
-int k_num_args(K* k);
+K* k_get_arg(const K* k, int i);
+int k_num_args(const K* k);
 K* k_replace_arg(K* k, int arg, K* ov, K* nv);
 K* updateTrimArgs(K* k, int left, int right);
 
@@ -42,7 +42,7 @@ double garbage_get_capacity();
 void Dec(K* k);
 void Inc(K* k);
 
-countentry** counts(int len, K** a);
+countentry** counts(int len, const K** a);
 void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();

@@ -129,7 +129,7 @@ K* k_new(KLabel* label, int count, ...) {
 }
 
 // TODO: leaks memory and is unsafe
-char* ListKToString(ListK* args) {
+char* ListKToString(const ListK* args) {
 	char* ret;
 	if (args == NULL) {
 		return string_make_copy("");
@@ -152,7 +152,7 @@ char* ListKToString(ListK* args) {
 }
 
 // TODO: leaks memory and is unsafe
-char* KToString(K* k) {
+char* KToString(const K* k) {
 	char* s = malloc(1000);
 	if (k == NULL) {
 		strcpy(s, "(null)");
@@ -266,7 +266,7 @@ void Dec(K* k) {
 	}
 }
 
-K* copy(K* oldK) {
+K* copy(const K* oldK) {
 	K* k = k_new_array(oldK->label, k_num_args(oldK), oldK->args.a);
 	if (printDebug) {
 		char* sold = KToString(oldK);
@@ -279,7 +279,7 @@ K* copy(K* oldK) {
 	return k;
 }
 
-void counts_aux(K* k, countentry **counts) {
+void counts_aux(const K* k, countentry **counts) {
 	countentry *find;
 	HASH_FIND_INT(*counts, &k, find);
 	if (find == NULL) {
@@ -298,12 +298,12 @@ void counts_aux(K* k, countentry **counts) {
 	}
 }
 
-countentry** counts(int len, K** a) {
+countentry** counts(int len, const K** a) {
 	countentry** counts = malloc(sizeof(*counts));
 	*counts = NULL;
 
 	for (int i = 0; i < len; i++) {
-		K* k = a[i];
+		const K* k = a[i];
 		counts_aux(k, counts);
 	}
 	
@@ -333,7 +333,7 @@ void dump_garbage_info() {
 	printf("----------------------\n");
 }
 
-int get_symbol(label_helper lh, char* name) {
+int get_symbol(label_helper lh, const char* name) {
 	for (int i = 0; i < lh.count; i++) {
 		if (strcmp(name, lh.labels[i]) == 0) {
 			return i;
@@ -411,7 +411,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 	}
 }
 
-K* k_get_arg(K* k, int i) {
+K* k_get_arg(const K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
 	// assert(k->args != NULL);
@@ -420,7 +420,7 @@ K* k_get_arg(K* k, int i) {
 	return k->args.a[i];
 }
 
-int k_num_args(K* k) {
+int k_num_args(const K* k) {
 	assert(k != NULL);
 	// assert(k->args != NULL);
 
