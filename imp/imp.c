@@ -103,7 +103,7 @@ static void handleValue(Configuration* config, int* change) {
 		K* arg = k_get_arg(next, i);
 		if (checkTypeSafety) {
 			if (arg->label->type != e_symbol) {
-				panic("Expected string type in %s\nK is %s\n", KToString(next), kCellToString(config->k));
+				panic("Expected symbol type in %s\nK is %s\n", KToString(next), kCellToString(config->k));
 			}
 		}
 		if (is_hole(arg)) {
@@ -113,7 +113,9 @@ static void handleValue(Configuration* config, int* change) {
 			*change = 1;
 			K* newTop = k_replace_arg(next, i, top);
 			computation_remove_head(config->k);
-			computation_set_elem(config->k, 0, newTop);
+			if (newTop != next) {
+				computation_set_elem(config->k, 0, newTop);
+			}
 			break;
 		}
 	}
