@@ -1,0 +1,13 @@
+// fib
+x = 1 ;
+n = 1 ;
+y = 1 ;
+z = 1 ;
+while ( n <= $inp ) {
+	t = y ;
+	x = y ;
+	y = z ;
+	z = t + y ;
+	n = n + 1 
+} 
+x
