@@ -28,6 +28,8 @@ char* KToString(K* k);
 
 void k_init();
 
+K* k_get_arg(K* k, int i);
+
 K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, int count, ...);
 K* k_new_array(KLabel* label, int count, K** a);

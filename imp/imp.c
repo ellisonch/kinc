@@ -100,7 +100,7 @@ static void handleValue(Configuration* config, int* change) {
 	K* next = k_get_item(config->k, 1);
 
 	for (int i = 0; i < next->args->len; i++) {
-		K* arg = next->args->a[i];
+		K* arg = k_get_arg(next, i);
 		if (checkTypeSafety) {
 			if (arg->label->type != e_symbol) {
 				panic("Expected string type in %s\nK is %s\n", KToString(next), kCellToString(config->k));
@@ -146,8 +146,8 @@ void handleProgram(Configuration* config, int* change) {
 			printf("Applying 'program' rule\n");
 		}
 		*change = 1;
-		K* body = top->args->a[0];
-		K* result = top->args->a[1];		
+		K* body = k_get_arg(top, 0);
+		K* result = k_get_arg(top, 1);		
 		computation_add_front(config->k, body);		
 		computation_set_elem(config->k, 1, result);
 	}
@@ -161,7 +161,7 @@ void handleParen(Configuration* config, int* change) {
 			printf("Applying 'paren' rule\n");
 		}
 		*change = 1;
-		K* newTop = top->args->a[0];
+		K* newTop = k_get_arg(top, 0);
 		computation_set_elem(config->k, 0, newTop);
 	}
 }
@@ -180,14 +180,14 @@ void handleStatements(Configuration* config, int* change) {
 			printf("Applying 'statements-one' rule\n");
 		}
 		*change = 1;
-		K* newTop = top->args->a[0];
+		K* newTop = k_get_arg(top, 0);
 		computation_set_elem(config->k, 0, newTop);
 	} else {
 		if (printDebug) {
 			printf("Applying 'statements-many' rule\n");
 		}
 		*change = 1;
-		computation_add_front(config->k, top->args->a[0]);
+		computation_add_front(config->k, k_get_arg(top, 0));
 		K* newPreHead = updateTrimArgs(top, 1, top->args->len);
 		computation_set_elem(config->k, 1, newPreHead);
 	}
@@ -216,8 +216,8 @@ void handleVar(Configuration* config, int* change) {
 void handleAssign(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(right)) {
 		if (printDebug) { 
 			printf("Applying ':=-heat' rule\n");
@@ -243,8 +243,8 @@ void handleWhile(Configuration* config, int* change) {
 		printf("Applying 'while' rule\n");
 	}
 	*change = 1;
-	K* guard = top->args->a[0];
-	K* body = top->args->a[1];
+	K* guard = k_get_arg(top, 0);
+	K* body = k_get_arg(top, 1);
 	K* then = k_new(SymbolLabel(symbol_Statements), 2, body, top);
 	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, k_skip());
 	computation_set_elem(config->k, 0, theIf);
@@ -256,7 +256,7 @@ void handleWhile(Configuration* config, int* change) {
 void handleIf(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* guard = top->args->a[0];
+	K* guard = k_get_arg(top, 0);
 	if (!isValue(guard)) {
 		if (printDebug) {
 			printf("Applying 'if-heat' rule\n");
@@ -276,13 +276,13 @@ void handleIf(Configuration* config, int* change) {
 				printf("Applying 'if-true' rule\n");
 			}
 			*change = 1;
-			computation_set_elem(config->k, 0, top->args->a[1]);
+			computation_set_elem(config->k, 0, k_get_arg(top, 1));
 		} else if (is_false(Inner(guard))) {
 			if (printDebug) {
 				printf("Applying 'if-false' rule\n");
 			}
 			*change = 1;
-			computation_set_elem(config->k, 0, top->args->a[2]);
+			computation_set_elem(config->k, 0, k_get_arg(top, 2));
 		}
 	}
 }
@@ -331,8 +331,8 @@ void handleNot(Configuration* config, int* change) {
 void handleLTE(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '<=-heat-left' rule\n"); }
 		*change = 1;
@@ -364,8 +364,8 @@ void handleLTE(Configuration* config, int* change) {
 void handlePlus(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '+-heat-left' rule\n"); }
 		*change = 1;
@@ -394,8 +394,8 @@ void handlePlus(Configuration* config, int* change) {
 void handleMinus(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '--heat-left' rule\n"); }
 		*change = 1;
@@ -424,8 +424,8 @@ void handleMinus(Configuration* config, int* change) {
 void handleDiv(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '/-heat-left' rule\n"); }
 		*change = 1;
@@ -454,8 +454,8 @@ void handleDiv(Configuration* config, int* change) {
 void handleAnd(Configuration* config, int* change) {
 	K* top = k_get_item(config->k, 0);
 
-	K* left = top->args->a[0];
-	K* right = top->args->a[1];
+	K* left = k_get_arg(top, 0);
+	K* right = k_get_arg(top, 1);
 	if (!isValue(left)) {
 		if (printDebug) { printf("Applying '&&-heat-left' rule\n"); }
 		*change = 1;

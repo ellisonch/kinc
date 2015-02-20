@@ -500,6 +500,13 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 	}
 }
 
+K* k_get_arg(K* k, int i) {
+	assert(k != NULL);
+	assert(i >= 0);
+
+	return k->args->a[i];
+}
+
 
 void k_init() {
 	k_init_builtins();
