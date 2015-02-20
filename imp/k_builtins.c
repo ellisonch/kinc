@@ -50,14 +50,20 @@ void set_labels(int n, char* labels[static n]) {
 K* _hole;
 K* _false;
 K* _true;
+K* _zero;
+K* _one;
 
 void k_init_builtins() {
 	_hole = k_new_empty(SymbolLabel(symbol_hole));
 	_hole->permanent = 1;
 	_false = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_false)));
 	_false->permanent = 1;
-	_true = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_true))); 
+	_true = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_true)));
 	_true->permanent = 1;
+	_zero = k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(0)));
+	_zero->permanent = 1;
+	_one = k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(1)));
+	_one->permanent = 1;
 }
 
 K* Hole() {
@@ -73,6 +79,14 @@ K* k_false() {
 	// return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_false))));
 	return _false;
 }
+
+K* k_int_zero() {
+	return _zero;
+}
+K* k_int_one() {
+	return _one;
+}
+
 
 K* new_builtin_int(int64_t i) {
 	return k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(i)));

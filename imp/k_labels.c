@@ -38,6 +38,8 @@ KLabel* _new_label() {
 	return newL;
 }
 
+// TODO: should check to make sure none of these are permanent labels
+
 void dispose_label(K* k) {
 	assert(k->refs == 0);
 

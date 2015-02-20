@@ -14,6 +14,8 @@ int is_false(K* k);
 K* Hole();
 K* k_true();
 K* k_false();
+K* k_int_zero();
+K* k_int_one();
 
 K* new_builtin_int(int64_t i);
 K* new_builtin_string(char* i);

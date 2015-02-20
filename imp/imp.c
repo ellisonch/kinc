@@ -209,7 +209,7 @@ void handleVar(Configuration* config, int* change) {
 			printf("Applying 'var-something' rule\n");
 		}
 		*change = 1;
-		updateStore(config->state, k_get_arg(k_get_arg(top, 0), 0), new_builtin_int(0));
+		updateStore(config->state, k_get_arg(k_get_arg(top, 0), 0), k_int_zero());
 		K* newTop = updateTrimArgs(top, 1, k_num_args(top));
 		computation_set_elem(config->k, 0, newTop);
 	}
