@@ -30,7 +30,7 @@ void k_init();
 
 K* k_get_arg(K* k, int i);
 int k_num_args(K* k);
-K* k_replace_arg(K* k, int arg, K* newVal);
+K* k_replace_arg(K* k, int arg, K* ov, K* nv);
 K* updateTrimArgs(K* k, int left, int right);
 
 K* k_new_empty(KLabel* label);

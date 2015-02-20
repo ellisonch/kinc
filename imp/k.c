@@ -436,35 +436,49 @@ void _k_set_arg(K* k, int i, K* v) {
 	k->args.a[i] = v;
 }
 
+// static unsigned long long shared = 0;
+// static unsigned long long notshared = 0;
+// unsigned long long count = 0;
+
+
 // updates an arg from a k to another k
 // sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
-K* k_replace_arg(K* orig_k, int arg, K* newVal) {
-	assert(orig_k != NULL);
-	assert(newVal != NULL);
+// need to copy about 30% of time
+K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
+	assert(k != NULL);
+	assert(ov != NULL);
+	assert(nv != NULL);
 
-	K* k = orig_k;
+	// count++;
 	if (printDebug) {
 		char* sold = KToString(k);
-		char* snew = KToString(newVal);
+		char* snew = KToString(nv);
 		printf("Updating %s's %d argument to %s\n", sold, arg, snew);
 		free(sold);
 		free(snew);
 	}
 	if (k->refs > 1) {
+		// shared++;
 		if (printDebug) {
 			printf("   Term is shared, need to copy\n");
 		}
-		k = copy(orig_k);
+		k = copy(k);
 	}
-	Inc(newVal);
-	K* orig_arg = k_get_arg(k, arg);
-	_k_set_arg(k, arg, newVal);
+	//  else {
+	// 	notshared++;
+	// }
+	// if (count % 10000 == 0) {
+	// 	printf("%f\n", (double)shared / notshared);
+	// }
+	Inc(nv);
+	// K* orig_arg = k_get_arg(k, arg);
+	_k_set_arg(k, arg, nv);
 	if (printDebug) {
 		char* sk = KToString(k);
 		printf("   After updating: %s\n", sk);
 		free(sk);
 	}
-	Dec(orig_arg);
+	Dec(ov);
 
 	return k;
 }
