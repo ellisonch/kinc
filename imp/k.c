@@ -13,6 +13,8 @@
 #include "uthash.h"
 #include "aparser/aterm.h"
 
+void _k_set_arg(K* k, int i, K* v);
+
 int garbage_k_next = 0;
 K* garbage_k[MAX_GARBAGE_KEPT];
 
@@ -64,14 +66,6 @@ ListK* _listk_acquire(int len, int cap) {
 	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
 	assert(args->a != NULL);
 	return args;
-}
-
-K* Inner(K* k) {
-	assert(k != NULL);
-	assert(k->args != NULL);
-	assert(k->args->len > 0);
-
-	return k->args->a[0];
 }
 
 void Inc(K* k) {
@@ -133,7 +127,7 @@ K* k_new_array(KLabel* label, int count, K** a) {
 		if (arg == NULL) {
  			panic("Didn't expect NULL arg in k_new().  len: %d", count);
  		}
-		k->args->a[i] = arg;
+		_k_set_arg(k, i, arg);
 		Inc(arg);
 	}
 
@@ -150,7 +144,7 @@ K* k_new(KLabel* label, int count, ...) {
 		if (arg == NULL) {
  			panic("Didn't expect NULL arg in k_new().  len: %d", count);
  		}
-		k->args->a[i] = arg;
+ 		_k_set_arg(k, i, arg);
 		Inc(arg);
 	}
 	va_end(ap);
@@ -256,16 +250,10 @@ void dispose_k(K* k) {
 		free(sk);
 	}
 
-	if (checkTermSize) {
-		if (k->args->len > 50) {
-			panic("Sanity check failed!");
-		}
-	}
-
 	// since k is dead, we can remove one ref from any of its children
-	for (int i = 0; i < k->args->len; i++) {
-		K* arg = k->args->a[i];
-		k->args->a[i] = NULL;
+	for (int i = 0; i < k_num_args(k); i++) {
+		K* arg = k_get_arg(k, i);
+		_k_set_arg(k, i, NULL);
 		assert(arg != NULL);
 		Dec(arg);
 	}
@@ -302,7 +290,7 @@ void Dec(K* k) {
 }
 
 K* copy(K* oldK) {
-	K* k = k_new_array(oldK->label, oldK->args->len, oldK->args->a);
+	K* k = k_new_array(oldK->label, k_num_args(oldK), oldK->args->a);
 	if (printDebug) {
 		char* sold = KToString(oldK);
 		char* snew = KToString(k);
@@ -311,60 +299,6 @@ K* copy(K* oldK) {
 		free(sold);
 		free(snew);
 	}
-	return k;
-}
-
-// updates an arg from a k to another k
-// sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
-K* k_set_arg(K* orig_k, int arg, K* newVal) {
-	K* k = orig_k;
-	if (printDebug) {
-		char* sold = KToString(k);
-		char* snew = KToString(newVal);
-		printf("Updating %s's %d argument to %s\n", sold, arg, snew);
-		free(sold);
-		free(snew);
-	}
-	if (k->refs > 1) {
-		if (printDebug) {
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(orig_k);
-	}
-	Inc(newVal);
-	K* orig_arg = k->args->a[arg];
-	k->args->a[arg] = newVal;
-	if (printDebug) {
-		char* sk = KToString(k);
-		printf("   After updating: %s\n", sk);
-		free(sk);
-	}
-	Dec(orig_arg);
-
-	return k;
-}
-
-K* updateTrimArgs(K* k, int left, int right) {
-	if (k->refs > 1) {
-		if (printDebug) { 
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(k);
-	}
-	for (int i = 0; i < left; i++) {
-		Dec(k->args->a[i]);
-	}
-	for (int i = right; i < k->args->len; i++) {
-		Dec(k->args->a[i]);
-	}
-	// TODO: inefficient
-	int newi = 0;
-	for (int i = left; i < right; i++) {
-		k->args->a[newi] = k->args->a[i];
-		newi++;
-	}
-	k->args->len = right - left;
-	// k.args = k.args[left:right];
 	return k;
 }
 
@@ -377,8 +311,8 @@ void counts_aux(K* k, countentry **counts) {
 	 	new->count = 1;
 	 	HASH_ADD_INT(*counts, entry, new);
 
-	 	for (int i = 0; i < k->args->len; i++) {
-			K* arg = k->args->a[i];
+	 	for (int i = 0; i < k_num_args(k); i++) {
+			K* arg = k_get_arg(k, i);
 			counts_aux(arg, counts);
 		}
 	} else {
@@ -503,8 +437,83 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 K* k_get_arg(K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
+	assert(k->args != NULL);
+	assert(k->args->len > i);
 
 	return k->args->a[i];
+}
+
+int k_num_args(K* k) {
+	assert(k != NULL);
+	assert(k->args != NULL);
+
+	return k->args->len;
+}
+
+void _k_set_arg(K* k, int i, K* v) {
+	assert(k != NULL);
+	assert(i >= 0);
+	assert(k->args != NULL);
+	assert(k->args->len > i);
+
+	k->args->a[i] = v;
+}
+
+// updates an arg from a k to another k
+// sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
+K* k_replace_arg(K* orig_k, int arg, K* newVal) {
+	assert(orig_k != NULL);
+	assert(newVal != NULL);
+
+	K* k = orig_k;
+	if (printDebug) {
+		char* sold = KToString(k);
+		char* snew = KToString(newVal);
+		printf("Updating %s's %d argument to %s\n", sold, arg, snew);
+		free(sold);
+		free(snew);
+	}
+	if (k->refs > 1) {
+		if (printDebug) {
+			printf("   Term is shared, need to copy\n");
+		}
+		k = copy(orig_k);
+	}
+	Inc(newVal);
+	K* orig_arg = k_get_arg(k, arg);
+	_k_set_arg(k, arg, newVal);
+	if (printDebug) {
+		char* sk = KToString(k);
+		printf("   After updating: %s\n", sk);
+		free(sk);
+	}
+	Dec(orig_arg);
+
+	return k;
+}
+
+K* updateTrimArgs(K* k, int left, int right) {
+	if (k->refs > 1) {
+		if (printDebug) { 
+			printf("   Term is shared, need to copy\n");
+		}
+		k = copy(k);
+	}
+	for (int i = 0; i < left; i++) {
+		Dec(k_get_arg(k, i));
+	}
+	for (int i = right; i < k_num_args(k); i++) {
+		Dec(k_get_arg(k, i));
+	}
+	// TODO: inefficient
+	int newi = 0;
+	for (int i = left; i < right; i++) {
+		_k_set_arg(k, newi, k_get_arg(k, i)); 
+		newi++;
+	}
+	k->args->len = right - left;
+	// k.args = k.args[left:right];
+	return k;
 }
 
 

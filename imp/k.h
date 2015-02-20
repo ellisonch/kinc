@@ -29,6 +29,9 @@ char* KToString(K* k);
 void k_init();
 
 K* k_get_arg(K* k, int i);
+int k_num_args(K* k);
+K* k_replace_arg(K* k, int arg, K* newVal);
+K* updateTrimArgs(K* k, int left, int right);
 
 K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, int count, ...);
@@ -37,9 +40,6 @@ K* k_new_array(KLabel* label, int count, K** a);
 void Dec(K* k);
 void Inc(K* k);
 
-K* k_set_arg(K* k, int arg, K* newVal);
-K* Inner(K* k);
-K* updateTrimArgs(K* k, int left, int right);
 countentry** counts(int len, K** a);
 void countentry_delete_all(countentry** counts);
 
