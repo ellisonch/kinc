@@ -24,7 +24,7 @@ int run_tests() {
 
 	r = run(p4, 1100087778366101931LL);
 	assert(r = 3);
-	
+
 	// printf("%" PRId64 "\n", r);
 
 	//uint64_t run(const char* path, int64_t upto)
@@ -49,5 +49,14 @@ int run_bench() {
 	// printf("%" PRId64 "\n", r);
 
 	//uint64_t run(const char* path, int64_t upto)
+	return 0;
+}
+
+int run_mem() {
+	uint64_t r;
+	for (int i = 0; i < 20000; i++) {
+		r = run(p1, 1000);
+		assert(r == 500500);
+	}
 	return 0;
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
 
 #include "utils.h"
 
@@ -58,6 +59,19 @@ int ceil_log2(unsigned long long x) {
 	}
 
 	return y;
+}
+
+// http://c-for-dummies.com/blog/?p=69
+// "Feel free to use the delay() function in your code when a short pause is required."
+void delay(int milliseconds) {
+	long pause;
+	clock_t now,then;
+
+	pause = milliseconds*(CLOCKS_PER_SEC/1000);
+	now = then = clock();
+	while((now-then) < pause) {
+		now = clock();
+	}
 }
 
 // ll_list* ll_new() {

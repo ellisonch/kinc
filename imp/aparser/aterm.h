@@ -6,10 +6,10 @@
 typedef enum {
 	AT_ERROR,
 	AT_INT64,
-	AT_REAL,
+	// AT_REAL,
 	AT_STRING,
 	AT_APPL,
-	AT_LIST,
+	// AT_LIST,
 } at_type;
 
 struct aterm;
@@ -33,10 +33,10 @@ struct aterm {
 	at_type type;
 	union {
 		int64_t int64;
-		double real;
+		// double real;
 		char* string;
 		at_appl appl;
-		at_list* list;
+		// at_list* list;
 	};
 };
 
@@ -44,5 +44,6 @@ at_list* at_list_append(at_list* oldp, aterm at);
 char* aterm_to_string(aterm at);
 
 aterm* at_parse(FILE* file);
+void at_free(aterm* at);
 
 #endif

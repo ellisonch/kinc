@@ -25,7 +25,8 @@ adopt_spec opt_specs[] = {
     { ADOPT_VALUE, "input", 'i', NULL, "input for program" },
     { ADOPT_SWITCH, "help", 0, NULL, NULL, ADOPT_USAGE_HIDDEN },
     { ADOPT_SWITCH, "test", 't', NULL, "Turns testing on" },
-    { ADOPT_SWITCH, "bench", 't', NULL, "Turns benching on" },
+    { ADOPT_SWITCH, "bench", 'b', NULL, "Turns benching on" },
+    { ADOPT_SWITCH, "mem", 'm', NULL, "Turns mem test on" },
     // { ADOPT_VALUE, "verbose", 'v', "level", "sets the verbosity level (default 1)" },
     // { ADOPT_VALUE, "channel", 'c', "channel", "sets the channel", ADOPT_USAGE_VALUE_REQUIRED },
     { ADOPT_LITERAL },
@@ -649,6 +650,10 @@ uint64_t run(const char* path, int64_t upto) {
 	computation_cleanup(config->k);
 	state_cleanup(config->state);
 
+	free(config->k);
+	free(config->state);
+	free(config);
+
 	return result;
 }
 
@@ -661,6 +666,7 @@ int main(int argc, char* argv[]) {
 	const char *path = NULL;
 	int test = 0;
 	int bench = 0;
+	int mem = 0;
 
 	k_init();
 
@@ -690,6 +696,9 @@ int main(int argc, char* argv[]) {
 			if (strcmp(opt.spec->name, "bench") == 0) {
 				bench = 1;
 			}
+			if (strcmp(opt.spec->name, "mem") == 0) {
+				mem = 1;
+			}
 		} else {
 			fprintf(stderr, "Unknown option: %s\n", opt.value);
 			adopt_usage_fprint(stderr, argv[0], opt_specs);
@@ -699,6 +708,9 @@ int main(int argc, char* argv[]) {
 	
 	if (bench) {
 		run_bench();
+		dump_garbage_info();
+	} else if (mem) {
+		run_mem();
 		dump_garbage_info();
 	} else if (test) {
 		run_tests();

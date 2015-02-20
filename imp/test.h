@@ -3,5 +3,6 @@
 
 int run_tests();
 int run_bench();
+int run_mem();
 
 #endif

@@ -2,10 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <assert.h>
 
 #include "aterm.h"
 
-at_list* at_list_append(at_list* oldp, aterm at) {	
+at_list* at_list_append(at_list* oldp, aterm at) {
 	aterm* atp = malloc(sizeof(*atp));
 	atp = memcpy(atp, &at, sizeof(aterm));
 
@@ -51,11 +52,11 @@ char* aterm_to_string(aterm at) {
 			sprintf(ret, "%" PRId64, at.int64);
 			return ret;
 		}
-		case AT_REAL: {
-			char* ret = malloc(100);
-			strcpy(ret, "AT_REAL");
-			return ret;
-		}
+		// case AT_REAL: {
+		// 	char* ret = malloc(100);
+		// 	strcpy(ret, "AT_REAL");
+		// 	return ret;
+		// }
 		case AT_STRING: {
 			char* ret = malloc(strlen(at.string) + 2);
 			sprintf(ret, "\"%s\"", at.string);
@@ -75,11 +76,11 @@ char* aterm_to_string(aterm at) {
 
 			return ret;
 		}
-		case AT_LIST: {
-			char* ret = malloc(100);
-			strcpy(ret, "AT_LIST");
-			return ret;
-		}
+		// case AT_LIST: {
+		// 	char* ret = malloc(100);
+		// 	strcpy(ret, "AT_LIST");
+		// 	return ret;
+		// }
 		default: {
 			char* ret = malloc(100);
 			strcpy(ret, "Missing Case");
@@ -96,5 +97,35 @@ aterm* at_parse(FILE* file) {
 	yyparse();
 	aterm* ret = malloc(sizeof(*ret));
 	memcpy(ret, &final_term, sizeof(aterm));
+
 	return ret;
 };
+
+void at_list_free(at_list* curr) {
+	if (curr == NULL) {
+		return;
+	}
+	do {
+		at_list* next = curr->next;
+		at_free(curr->item);
+		free(curr);
+		curr = next;
+	} while (curr != NULL);
+}
+
+void at_free(aterm* at) {
+	assert(at != NULL);
+
+	switch (at->type) {
+		case AT_STRING: {
+			free(at->string);
+			break;
+		}
+		case AT_APPL: {
+			free(at->appl.name);
+			at_list_free(at->appl.args);
+			break;
+		}
+	}
+	free(at);
+}

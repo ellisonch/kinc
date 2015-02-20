@@ -28,6 +28,7 @@ int count_malloc_listk_array;
 
 int count_malloc_k = 0;
 
+
 // int list_get_right_size_offset(int n) {
 // 	if (n <= 16) {
 // 		return 0;
@@ -140,11 +141,6 @@ K* mallocK() {
 	return malloc(sizeof(K));
 }
 
-ListK* emptyArgs() {
-	ListK* args = listk_acquire(0, 0);
-	return args;
-}
-
 K* k_acquire(int len, int cap) {
 	K* newK = NULL;
 	if (garbage_k_next > 0) {
@@ -183,7 +179,8 @@ K* _k_new(KLabel* label, ListK* args) {
 }
 
 K* k_new_empty(KLabel* label) {
-	return _k_new(label, emptyArgs());
+	// return _k_new(label, emptyArgs());
+	return k_new_array(label, 0, NULL);
 }
 
 K* k_new_array(KLabel* label, int count, K** a) {
@@ -484,11 +481,15 @@ void counts_aux(K* k, countentry **counts) {
 	}
 }
 
-countentry** counts(K* k) {
+countentry** counts(int len, K** a) {
 	countentry** counts = malloc(sizeof(*counts));
 	*counts = NULL;
 
-	counts_aux(k, counts);
+	for (int i = 0; i < len; i++) {
+		K* k = a[i];
+		counts_aux(k, counts);
+	}
+	
 	return counts;
 }
 
@@ -563,6 +564,7 @@ K* aterm_file_to_k(FILE* file, label_helper lh, K* hole) {
 	}
 	// printf("%s\n", aterm_to_string(*at));
 	K* ret = aterm_to_k(*at, lh, hole);
+	at_free(at);
 	return ret;
 }
 
@@ -599,7 +601,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			return new_builtin_int(at.int64);
 		}
 		case AT_STRING: {
-			return new_builtin_string(at.string);
+			return new_builtin_string(string_make_copy(at.string));
 		}
 		case AT_APPL: {
 			if (strcmp(at.appl.name, "#Int") == 0 || strcmp(at.appl.name, "#String") == 0) {

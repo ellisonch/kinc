@@ -46,8 +46,8 @@ aterm
 		{ $$ = ((aterm){ .type = AT_STRING, .string = $1 }); } //  ATerm{Type: String, Str: $1}; 
 	| TOK_I64
 		{ $$ = ((aterm){ .type = AT_INT64, .int64 = $1 }); } // ATerm{Type: Int, Int: $1};
-	| TOK_REAL
-		{ $$ = ((aterm){ .type = AT_REAL, .real = $1 }); } // ATerm{Type: Real, Real: $1};
+	// | TOK_REAL
+		// { $$ = ((aterm){ .type = AT_REAL, .real = $1 }); } // ATerm{Type: Real, Real: $1};
 	| TOK_CONSTRUCTOR '(' comma_list ')'
 		{
 			at_appl appl = { .name = $1, .args = $3 };
@@ -58,8 +58,8 @@ aterm
 			at_appl appl = { .name = $1, .args = NULL };
 			$$ = ((aterm){ .type = AT_APPL, .appl = appl }); 
 		} // ATerm{Type: Appl, Appl: ATermAppl{$1, nil}}; // FIXME 
-	| '[' comma_list ']' 
-		{ $$ = ((aterm){ .type = AT_LIST }); } // ATerm{Type: List, List: ATermList($2)};
+	// | '[' comma_list ']' 
+		// { $$ = ((aterm){ .type = AT_LIST }); } // ATerm{Type: List, List: ATermList($2)};
 	;
 
 

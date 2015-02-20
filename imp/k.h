@@ -24,8 +24,7 @@ typedef struct {
 } label_helper;
 
 char* KToString(K* k);
-void Dec(K* k);
-void Inc(K* k);
+
 
 void k_init();
 
@@ -33,10 +32,13 @@ K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, int count, ...);
 K* k_new_array(KLabel* label, int count, K** a);
 
+void Dec(K* k);
+void Inc(K* k);
+
 K* k_set_arg(K* k, int arg, K* newVal);
 K* Inner(K* k);
 K* updateTrimArgs(K* k, int left, int right);
-countentry** counts(K* k);
+countentry** counts(int len, K** a);
 void countentry_delete_all(countentry** counts);
 
 void dump_garbage_info();

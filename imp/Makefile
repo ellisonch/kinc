@@ -23,6 +23,9 @@ bench-fast: imp-fast.exe
 test: imp.exe
 	time ./imp.exe --test
 
+mem: imp.exe
+	time ./imp.exe --mem
+
 run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 

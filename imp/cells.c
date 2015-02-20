@@ -12,9 +12,6 @@
 #include "cells.h"
 #include "uthash.h"
 
-// TODO: terrible, not right, horrible
-extern int mallocedArgs;
-
 int next = 0;
 
 ComputationCell* newComputationCell() {
@@ -131,14 +128,14 @@ void check(ComputationCell *c, StateCell* state) {
 	// ListK* allValues = newArgs_array(len, a);
 
 	// create a new fake term to hold all the other terms
-	K* specialk = k_new_array(SymbolLabel(1023), len, a); // TODO: FIXME FIX ME!!!!
+	// K* specialk = k_new_array(SymbolLabel(1023), len, a); // TODO: FIXME FIX ME!!!!
 	// the args get inc()ed by being passed to newk, so dec() em
-	for (int i = 0; i < specialk->args->len; i++) {
- 		K* arg = specialk->args->a[i];
- 		Dec(arg);
- 	}
-	specialk->refs = 1;
-	countentry** cm = counts(specialk);
+	// for (int i = 0; i < specialk->args->len; i++) {
+ // 		K* arg = specialk->args->a[i];
+ // 		Dec(arg);
+ // 	}
+	// specialk->refs = 1;
+	countentry** cm = counts(len, a);
 
 	int bad = 0;
 	for (countentry *s = *cm; s != NULL; s = s->hh.next) {
@@ -154,16 +151,17 @@ void check(ComputationCell *c, StateCell* state) {
 
 	countentry_delete_all(cm);
 	free(cm);
-	if (bad) { 
-		printf("%s\n", KToString(specialk));
+	free(a);
+	if (bad) {
+		// printf("%s\n", KToString(specialk));
 		panic("Bad check()!");
 	}
-	for (int i = 0; i < specialk->args->len; i++) {
- 		K* arg = specialk->args->a[i];
- 		Inc(arg);
- 	}
+	// for (int i = 0; i < specialk->args->len; i++) {
+ // 		K* arg = specialk->args->a[i];
+ // 		Inc(arg);
+ // 	}
 
-	Dec(specialk);
+	// Dec(specialk);
 }
 
 // TODO: unsafe
