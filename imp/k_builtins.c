@@ -67,16 +67,13 @@ void k_init_builtins() {
 }
 
 K* k_hole() {
-	// return k_new_empty(SymbolLabel(symbol_hole));
 	return _hole;
 }
 
 K* k_true() { 
-	// return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_true)))); 
 	return _true;
 }
 K* k_false() {
-	// return k_new(SymbolLabel(symbol_bool), newArgs(1, k_new_empty(SymbolLabel(symbol_false))));
 	return _false;
 }
 
@@ -89,6 +86,8 @@ K* k_int_one() {
 
 
 K* new_builtin_int(int64_t i) {
+	// K* arg = k_new_empty(Int64Label(i));
+	// return k_new_array(SymbolLabel(symbol_int), 1, &arg);
 	return k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(i)));
 }
 K* new_builtin_string(char* i) {
@@ -105,6 +104,7 @@ int is_bool(const K* k) {
 	return val == symbol_bool;
 }
 
+// TODO: could just compare against permanent _hole
 int is_hole(const K* k) {
 	int val = k->label->symbol_val;
 	return val == symbol_hole;

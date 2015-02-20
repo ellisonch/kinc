@@ -661,7 +661,6 @@ uint64_t run(const char* path, int64_t upto) {
 }
 
 void k_language_init() {
-	// K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 	_skip = k_new_empty(SymbolLabel(symbol_Skip));
 	k_make_permanent(_skip);
 }
