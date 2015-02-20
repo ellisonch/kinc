@@ -149,21 +149,14 @@ K* _k_acquire(int len, int cap) {
 	return newK;
 }
 
-K* _k_new(KLabel* label, ListK* args) {
+K* _k_fresh(KLabel* label, int len) {
 	assert(label != NULL);
-	assert(args != NULL);
-	assert(args->a != NULL);
-
-	for (int i = 0; i < args->len; i++) {
- 		K* arg = args->a[i];
- 		if (arg == NULL) {
- 			panic("Didn't expect NULL arg in k_new().  len: %d, cap: %d", args->len, args->cap);
- 		}
- 		Inc(arg);
- 	}
+	assert(len >= 0);
 	
-	K* newK = _k_acquire(args->len, args->len);
+	K* newK = _k_acquire(len, len);
 	assert(newK != NULL);
+	ListK* args = _listk_acquire(len, len);
+
 	newK->label = label;
 	newK->args = args;
 	newK->refs = 0;
@@ -172,31 +165,40 @@ K* _k_new(KLabel* label, ListK* args) {
 }
 
 K* k_new_empty(KLabel* label) {
-	// return _k_new(label, emptyArgs());
 	return k_new_array(label, 0, NULL);
 }
 
 K* k_new_array(KLabel* label, int count, K** a) {
-	ListK* args = _listk_acquire(count, count);
+	K* k = _k_fresh(label, count);
 
 	for (int i = 0; i < count; i++) {
-		args->a[i] = a[i];
+		K* arg = a[i];
+		if (arg == NULL) {
+ 			panic("Didn't expect NULL arg in k_new().  len: %d", count);
+ 		}
+		k->args->a[i] = arg;
+		Inc(arg);
 	}
 
-	return _k_new(label, args);
+	return k;
 }
 
 K* k_new(KLabel* label, int count, ...) {
-	ListK* args = _listk_acquire(count, count);
+	K* k = _k_fresh(label, count);
 
 	va_list ap;
 	va_start(ap, count);
 	for (int i = 0; i < count; i++) {
-		args->a[i] = va_arg(ap, K*);
+		K* arg = va_arg(ap, K*);
+		if (arg == NULL) {
+ 			panic("Didn't expect NULL arg in k_new().  len: %d", count);
+ 		}
+		k->args->a[i] = arg;
+		Inc(arg);
 	}
 	va_end(ap);
 
-	return _k_new(label, args);
+	return k;
 }
 
 // TODO: leaks memory and is unsafe
