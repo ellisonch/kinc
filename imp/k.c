@@ -61,15 +61,15 @@ K* _k_acquire(int len, int cap) {
 	}
 
 	if (garbage_k_next > 0) {
-		k = garbage_k[garbage_k_next - 1];
+		int top = garbage_k_next - 1;
+		k = garbage_k[top];
 		garbage_k_next--;
-		k->args.len = len;
 	} else {
 		k = mallocK();
 		k->args.a = _mallocArgsA(cap);
 		k->args.cap = MAX_GARBAGE_ARG_LEN;
-		k->args.len = len;
 	}
+	k->args.len = len;
 
 	assert(k != NULL);
 	assert(k->args.len == len);
