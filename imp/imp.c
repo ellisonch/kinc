@@ -77,12 +77,7 @@ K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 int isValue(K* k) {
 	assert(k != NULL);
 	assert(k->label != NULL);
-
-	if (checkTypeSafety) {
-		if (k->label->type != e_symbol) {
-			panic("Expected calling isValue on symbol labels");
-		}
-	}
+	assert(k->label->type == e_symbol);
 
 	if (is_int(k) || is_bool(k)) {
 		return 1;
