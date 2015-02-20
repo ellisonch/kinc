@@ -55,15 +55,15 @@ K* _one;
 
 void k_init_builtins() {
 	_hole = k_new_empty(SymbolLabel(symbol_hole));
-	_hole->permanent = 1;
+	k_make_permanent(_hole);
 	_false = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_false)));
-	_false->permanent = 1;
+	k_make_permanent(_false);
 	_true = k_new(SymbolLabel(symbol_bool), 1, k_new_empty(SymbolLabel(symbol_true)));
-	_true->permanent = 1;
+	k_make_permanent(_true);
 	_zero = k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(0)));
-	_zero->permanent = 1;
+	k_make_permanent(_zero);
 	_one = k_new(SymbolLabel(symbol_int), 1, k_new_empty(Int64Label(1)));
-	_one->permanent = 1;
+	k_make_permanent(_one);
 }
 
 K* k_hole() {

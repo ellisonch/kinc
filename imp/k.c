@@ -13,6 +13,8 @@
 #include "uthash.h"
 #include "aparser/aterm.h"
 
+extern void k_language_init(); // FIXME
+
 void _k_set_arg(K* k, int i, K* v);
 
 int garbage_k_next = 0;
@@ -100,9 +102,7 @@ K* k_new_array(KLabel* label, int count, K** a) {
 
 	for (int i = 0; i < count; i++) {
 		K* arg = a[i];
-		if (arg == NULL) {
- 			panic("Didn't expect NULL arg in k_new().  len: %d", count);
- 		}
+		assert(arg != NULL);
 		_k_set_arg(k, i, arg);
 		Inc(arg);
 	}
@@ -493,9 +493,14 @@ K* updateTrimArgs(K* k, int left, int right) {
 	return k;
 }
 
+void k_make_permanent(K* k) {
+	k->permanent = 1;
+}
+
 
 void k_init() {
 	k_init_builtins();
+	k_language_init();
 
 	// preallocate garbage; doesn't seem to help
 	// for (int i = 0; i < 100; i++) {

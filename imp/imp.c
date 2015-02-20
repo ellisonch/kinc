@@ -20,6 +20,8 @@ typedef struct {
 
 uint64_t rewrites;
 
+K* _skip;
+
 adopt_spec opt_specs[] = {
     // { ADOPT_VALUE, "debug", 'd', NULL, "displays debug information" },
     { ADOPT_VALUE, "input", 'i', NULL, "input for program" },
@@ -71,8 +73,6 @@ char* givenLabels[] = {
 #define symbol_Minus 15
 
 void handleIf(Configuration* config, K* top, int* change);
-
-K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 
 int isValue(K* k) {
 	assert(k != NULL);
@@ -243,7 +243,7 @@ void handleWhile(Configuration* config, K* top, int* change) {
 	K* guard = k_get_arg(top, 0);
 	K* body = k_get_arg(top, 1);
 	K* then = k_new(SymbolLabel(symbol_Statements), 2, body, top);
-	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, k_skip());
+	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, _skip);
 	computation_set_elem(config->k, 0, theIf);
 
 	// follows
@@ -658,6 +658,12 @@ uint64_t run(const char* path, int64_t upto) {
 	free(config);
 
 	return result;
+}
+
+void k_language_init() {
+	// K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
+	_skip = k_new_empty(SymbolLabel(symbol_Skip));
+	k_make_permanent(_skip);
 }
 
 int main(int argc, char* argv[]) {

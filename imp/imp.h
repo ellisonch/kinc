@@ -5,4 +5,6 @@
 
 uint64_t run(const char* path, int64_t upto);
 
+void k_language_init();
+
 #endif
