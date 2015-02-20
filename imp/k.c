@@ -22,29 +22,16 @@ double garbage_get_capacity() {
 	return (double) garbage_k_next / MAX_GARBAGE_KEPT;
 }
 
-// the next available garbage location
-// int garbage_listk_nexts[MAX_GARBAGE_ARG_LEN+1];
-// ListK* garbage_listk[MAX_GARBAGE_ARG_LEN+1][MAX_GARBAGE_KEPT];
-// int garbage_listk_next = 0;
-// ListK* garbage_listk[MAX_GARBAGE_KEPT];
-
-
 int count_malloc_listk;
 int count_malloc_listk_array;
 
 int count_malloc_k = 0;
-
-// ListK* _mallocArgs() {
-// 	count_malloc_listk++;
-// 	return malloc(sizeof(ListK));
-// }
 
 K** _mallocArgsA(int count) {
 	if (count > MAX_GARBAGE_ARG_LEN) {
 		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
 	}
 	count_malloc_listk_array++;
-	// return malloc(sizeof(K*) * count);
 	K** a = malloc(sizeof(K*) * MAX_GARBAGE_ARG_LEN);
 
 	if (helpSafety) {
@@ -54,23 +41,6 @@ K** _mallocArgsA(int count) {
 	}
 	return a;
 }
-
-// ListK* _listk_acquire(int len, int cap) {
-// 	assert(len >= 0);
-// 	assert(cap <= MAX_GARBAGE_ARG_LEN);
-
-// 	ListK* args = _mallocArgs();
-// 	args->a = _mallocArgsA(cap);
-// 	args->cap = MAX_GARBAGE_ARG_LEN;
-// 	args.len = len;
-
-// 	assert(args != NULL);
-// 	assert(args.len == len);
-// 	assert(args->cap >= len);
-// 	assert(args->cap <= MAX_GARBAGE_ARG_LEN);
-// 	assert(args->a != NULL);
-// 	return args;
-// }
 
 void Inc(K* k) {
 	assert(k != NULL);
@@ -84,27 +54,27 @@ K* mallocK() {
 }
 
 K* _k_acquire(int len, int cap) {
-	K* newK = NULL;
-	if (garbage_k_next > 0) {
-		newK = garbage_k[garbage_k_next - 1];
-		garbage_k_next--;
-		// assert(newK->args != NULL);
-		newK->args.len = len;
-	} else {
-		newK = mallocK();
-		newK->args.a = _mallocArgsA(cap);
-		newK->args.cap = MAX_GARBAGE_ARG_LEN;
-		newK->args.len = len;		
-		// ListK* args = _listk_acquire(len, cap);
-		// newK->args = args;
-		// assert(newK->args != NULL);
+	K* k = NULL;
+
+	if (cap > MAX_GARBAGE_ARG_LEN) {
+		panic("Don't handle args above %d", MAX_GARBAGE_ARG_LEN);
 	}
 
-	assert(newK != NULL);
-	// assert(newK->args != NULL);
-	assert(newK->args.len == len);
-	assert(newK->args.cap >= cap);
-	return newK;
+	if (garbage_k_next > 0) {
+		k = garbage_k[garbage_k_next - 1];
+		garbage_k_next--;
+		k->args.len = len;
+	} else {
+		k = mallocK();
+		k->args.a = _mallocArgsA(cap);
+		k->args.cap = MAX_GARBAGE_ARG_LEN;
+		k->args.len = len;
+	}
+
+	assert(k != NULL);
+	assert(k->args.len == len);
+	assert(k->args.cap >= cap);
+	return k;
 }
 
 K* _k_fresh(KLabel* label, int len) {
@@ -113,7 +83,6 @@ K* _k_fresh(KLabel* label, int len) {
 	
 	K* newK = _k_acquire(len, len);
 	assert(newK != NULL);
-	// assert(newK->args != NULL);
 	assert(newK->args.len >= len);
 
 	newK->label = label;
@@ -419,7 +388,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			return new_builtin_int(at.int64);
 		}
 		case AT_STRING: {
-			return new_builtin_string(string_make_copy(at.string));
+			return new_builtin_string(at.string);
 		}
 		case AT_APPL: {
 			if (strcmp(at.appl.name, "#Int") == 0 || strcmp(at.appl.name, "#String") == 0) {

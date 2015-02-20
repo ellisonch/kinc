@@ -10,6 +10,8 @@
 #include "settings.h"
 #include "utils.h"
 
+// TODO: strings are shared when copies are made
+
 // TODO: fix this
 extern char* symbol_names[];
 
@@ -47,6 +49,10 @@ void dispose_label(K* k) {
 		return;
 	}
 
+	if (label->type == e_string) {
+		free(label->string_val);
+	}
+
 	if (garbage_label_next < MAX_GARBAGE_KEPT) {
 		garbage_label[garbage_label_next++] = label;
 		if (printDebug) { printf("Saving label\n"); }
@@ -67,7 +73,7 @@ KLabel* StringLabel(const char* s) {
 	if (printDebug) { printf("Creating string label %s\n", s); }
 	KLabel* newL = _new_label();
 	newL->type = e_string;
-	newL->string_val = s;
+	newL->string_val = string_make_copy(s);
 	return newL;
 }
 
@@ -97,7 +103,6 @@ KLabel* Int64Label(int64_t i64) {
 	return newL;
 }
 
-
 // TODO: leaks memory and is unsafe
 char* LabelToString(KLabel* label) {
 	if (label->type == e_string) {
@@ -115,23 +120,4 @@ char* LabelToString(KLabel* label) {
 	} else {
 		panic("Some unknown label type %d found", label->type);
 	}
-	// return NULL;
-}
-
-KLabel* copyLabel(KLabel* l) {
-	if (printDebug) { 
-		printf("Cpy garbage_label_next: %d\n", garbage_label_next);
-		char* s = LabelToString(l);
-		printf("Creating copy label %s\n", s);
-		free(s);
-	}
-	KLabel* newL;
-	if (garbage_label_next > 0) {
-		newL = garbage_label[garbage_label_next - 1];
-		garbage_label_next--;
-	} else {
-		newL = mallocKLabel();
-	}
-	memcpy(newL, l, sizeof(KLabel));
-	return newL;
 }

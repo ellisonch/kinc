@@ -16,7 +16,7 @@ typedef struct {
 	union {
 		int64_t i64_val;
 		int symbol_val;
-		const char* string_val;
+		char* string_val;
 	};
 } KLabel;
 
