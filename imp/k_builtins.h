@@ -11,7 +11,7 @@ int is_hole(K* k);
 int is_true(K* k);
 int is_false(K* k);
 
-K* Hole();
+K* k_hole();
 K* k_true();
 K* k_false();
 K* k_int_zero();

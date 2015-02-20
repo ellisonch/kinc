@@ -436,11 +436,6 @@ void _k_set_arg(K* k, int i, K* v) {
 	k->args.a[i] = v;
 }
 
-// static unsigned long long shared = 0;
-// static unsigned long long notshared = 0;
-// unsigned long long count = 0;
-
-
 // updates an arg from a k to another k
 // sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
 // need to copy about 30% of time
@@ -449,7 +444,6 @@ K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
 	assert(ov != NULL);
 	assert(nv != NULL);
 
-	// count++;
 	if (printDebug) {
 		char* sold = KToString(k);
 		char* snew = KToString(nv);
@@ -458,20 +452,12 @@ K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
 		free(snew);
 	}
 	if (k->refs > 1) {
-		// shared++;
 		if (printDebug) {
 			printf("   Term is shared, need to copy\n");
 		}
 		k = copy(k);
 	}
-	//  else {
-	// 	notshared++;
-	// }
-	// if (count % 10000 == 0) {
-	// 	printf("%f\n", (double)shared / notshared);
-	// }
 	Inc(nv);
-	// K* orig_arg = k_get_arg(k, arg);
 	_k_set_arg(k, arg, nv);
 	if (printDebug) {
 		char* sk = KToString(k);

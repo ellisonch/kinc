@@ -70,7 +70,7 @@ char* givenLabels[] = {
 #define symbol_And 14
 #define symbol_Minus 15
 
-void handleIf(Configuration* config, int* change);
+void handleIf(Configuration* config, K* top, int* change);
 
 K* k_skip() { return k_new_empty(SymbolLabel(symbol_Skip)); }
 
@@ -91,12 +91,12 @@ int isValue(K* k) {
 	}
 }
 
-static void handleValue(Configuration* config, int* change) {
+static void handleValue(Configuration* config, K* top, int* change) {
 	if (k_length(config->k) == 1) {
 		return;
 	}
 
-	K* top = k_get_item(config->k, 0);
+	// K* top = k_get_item(config->k, 0);
 	K* next = k_get_item(config->k, 1);
 
 	for (int i = 0; i < k_num_args(next); i++) {
@@ -123,8 +123,8 @@ static void handleValue(Configuration* config, int* change) {
 
 
 // TODO: unsafe
-void handleVariable(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleVariable(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* value = state_get_item(config->state, k_get_arg(top, 0));
 	if (value == NULL) {
@@ -137,11 +137,11 @@ void handleVariable(Configuration* config, int* change) {
 
 
 	// follows
-	handleValue(config, change);
+	handleValue(config, value, change);
 }
 
-void handleProgram(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleProgram(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	if (k_num_args(top) == 2) {
 		if (printDebug) {
@@ -155,8 +155,8 @@ void handleProgram(Configuration* config, int* change) {
 	}
 }
 // TODO: commonality
-void handleParen(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleParen(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	if (k_num_args(top) == 1) {
 		if (printDebug) {
@@ -168,8 +168,8 @@ void handleParen(Configuration* config, int* change) {
 	}
 }
 
-void handleStatements(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleStatements(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	if (k_num_args(top) == 0) {
 		if (printDebug) {
@@ -195,8 +195,8 @@ void handleStatements(Configuration* config, int* change) {
 	}
 }
 
-void handleVar(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleVar(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	if (k_num_args(top) == 0) {
 		if (printDebug) {
@@ -215,8 +215,8 @@ void handleVar(Configuration* config, int* change) {
 	}
 }
 
-void handleAssign(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleAssign(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -226,7 +226,7 @@ void handleAssign(Configuration* config, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());
+		K* newTop = k_replace_arg(top, 1, right, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { 
@@ -238,8 +238,8 @@ void handleAssign(Configuration* config, int* change) {
 	}
 }
 
-void handleWhile(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleWhile(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	if (printDebug) {
 		printf("Applying 'while' rule\n");
@@ -252,11 +252,11 @@ void handleWhile(Configuration* config, int* change) {
 	computation_set_elem(config->k, 0, theIf);
 
 	// follows
-	handleIf(config, change);
+	handleIf(config, theIf, change);
 }
 
-void handleIf(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleIf(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* guard = k_get_arg(top, 0);
 	if (!isValue(guard)) {
@@ -265,7 +265,7 @@ void handleIf(Configuration* config, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, guard);
-		K* newTop = k_replace_arg(top, 0, guard, Hole());
+		K* newTop = k_replace_arg(top, 0, guard, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (checkTypeSafety) {
@@ -289,8 +289,8 @@ void handleIf(Configuration* config, int* change) {
 	}
 }
 
-void handleNot(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleNot(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* body = k_get_arg(top, 0);
 	if (!isValue(body)) {
@@ -299,7 +299,7 @@ void handleNot(Configuration* config, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, body);
-		K* newTop = k_replace_arg(top, 0, body, Hole());
+		K* newTop = k_replace_arg(top, 0, body, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (checkTypeSafety) {
@@ -315,7 +315,7 @@ void handleNot(Configuration* config, int* change) {
 			computation_set_elem(config->k, 0, k_true());
 
 			// follows
-			handleValue(config, change);
+			handleValue(config, k_true(), change);
 		} else if (is_true(k_get_arg(k_get_arg(top, 0), 0))) {
 			if (printDebug) {
 				printf("Applying 'not-true' rule\n");
@@ -324,14 +324,14 @@ void handleNot(Configuration* config, int* change) {
 			computation_set_elem(config->k, 0, k_false());
 
 			// follows
-			handleValue(config, change);
+			handleValue(config, k_false(), change);
 		}
 	}
 }
 
 
-void handleLTE(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleLTE(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -339,32 +339,34 @@ void handleLTE(Configuration* config, int* change) {
 		if (printDebug) { printf("Applying '<=-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, Hole());
+		K* newTop = k_replace_arg(top, 0, left, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '<=-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());	
+		K* newTop = k_replace_arg(top, 1, right, k_hole());	
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '<=' rule\n"); }
 		*change = 1;
 		int64_t leftv = k_get_arg(left, 0)->label->i64_val;
 		int64_t rightv = k_get_arg(right, 0)->label->i64_val;
+		K* new_head;
 		if (leftv <= rightv) {
-			computation_set_elem(config->k, 0, k_true());
+			new_head = k_true();
 		} else {
-			computation_set_elem(config->k, 0, k_false());
+			new_head = k_false();
 		}
+		computation_set_elem(config->k, 0, new_head);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, new_head, change);
 	}
 }
 
-void handlePlus(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handlePlus(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -372,13 +374,13 @@ void handlePlus(Configuration* config, int* change) {
 		if (printDebug) { printf("Applying '+-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, Hole());
+		K* newTop = k_replace_arg(top, 0, left, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '+-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());
+		K* newTop = k_replace_arg(top, 1, right, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '+' rule\n"); }
@@ -389,12 +391,12 @@ void handlePlus(Configuration* config, int* change) {
 		computation_set_elem(config->k, 0, newTop);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, newTop, change);
 	}
 }
 
-void handleMinus(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleMinus(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -402,13 +404,13 @@ void handleMinus(Configuration* config, int* change) {
 		if (printDebug) { printf("Applying '--heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, Hole());
+		K* newTop = k_replace_arg(top, 0, left, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '--heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());
+		K* newTop = k_replace_arg(top, 1, right, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '-' rule\n"); }
@@ -419,12 +421,12 @@ void handleMinus(Configuration* config, int* change) {
 		computation_set_elem(config->k, 0, newTop);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, newTop, change);
 	}
 }
 
-void handleDiv(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleDiv(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -432,13 +434,13 @@ void handleDiv(Configuration* config, int* change) {
 		if (printDebug) { printf("Applying '/-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, Hole());
+		K* newTop = k_replace_arg(top, 0, left, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '/-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());
+		K* newTop = k_replace_arg(top, 1, right, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '/' rule\n"); }
@@ -449,12 +451,12 @@ void handleDiv(Configuration* config, int* change) {
 		computation_set_elem(config->k, 0, newTop);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, newTop, change);
 	}
 }
 
-void handleAnd(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleAnd(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* left = k_get_arg(top, 0);
 	K* right = k_get_arg(top, 1);
@@ -462,13 +464,13 @@ void handleAnd(Configuration* config, int* change) {
 		if (printDebug) { printf("Applying '&&-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, Hole());
+		K* newTop = k_replace_arg(top, 0, left, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '&&-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, Hole());
+		K* newTop = k_replace_arg(top, 1, right, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '&&' rule\n"); }
@@ -484,19 +486,19 @@ void handleAnd(Configuration* config, int* change) {
 		computation_set_elem(config->k, 0, newTop);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, newTop, change);
 	}
 }
 
-void handleNeg(Configuration* config, int* change) {
-	K* top = k_get_item(config->k, 0);
+void handleNeg(Configuration* config, K* top, int* change) {
+	// K* top = k_get_item(config->k, 0);
 
 	K* body = k_get_arg(top, 0);
 	if (!isValue(body)) {
 		if (printDebug) { printf("Applying 'neg-heat' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, body);
-		K* newTop = k_replace_arg(top, 0, body, Hole());
+		K* newTop = k_replace_arg(top, 0, body, k_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying 'neg' rule\n"); }
@@ -507,11 +509,11 @@ void handleNeg(Configuration* config, int* change) {
 		computation_set_elem(config->k, 0, newTop);
 
 		// follows
-		handleValue(config, change);
+		handleValue(config, newTop, change);
 	}
 }
 
-void handleSkip(Configuration* config, int* change) {
+void handleSkip(Configuration* config, K* top, int* change) {
 	if (printDebug) { printf("Applying 'skip' rule\n"); }
 	*change = 1;
 	computation_remove_head(config->k);
@@ -553,56 +555,56 @@ void repl(Configuration* config) {
 		// printf("label: %s\n", topLabel);
 
 		if (isValue(top)) {
-			handleValue(config, &change);
+			handleValue(config, top, &change);
 		} else {
 			switch (topLabel) {
 				case symbol_Id:
-					handleVariable(config, &change);
+					handleVariable(config, top, &change);
 					break;
 				case symbol_Statements:
-					handleStatements(config, &change);
+					handleStatements(config, top, &change);
 					break;
 				case symbol_Var:
-					handleVar(config, &change);
+					handleVar(config, top, &change);
 					break;
 				case symbol_Assign:
-					handleAssign(config, &change);
+					handleAssign(config, top, &change);
 					break;
 				case symbol_While:
-					handleWhile(config, &change);
+					handleWhile(config, top, &change);
 					break;
 				case symbol_If:
-					handleIf(config, &change);
+					handleIf(config, top, &change);
 					break;
 				case symbol_Not:
-					handleNot(config, &change);
+					handleNot(config, top, &change);
 					break;
 				case symbol_LTE:
-					handleLTE(config, &change);
+					handleLTE(config, top, &change);
 					break;
 				case symbol_Plus:
-					handlePlus(config, &change);
+					handlePlus(config, top, &change);
 					break;
 				case symbol_Minus:
-					handleMinus(config, &change);
+					handleMinus(config, top, &change);
 					break;
 				case symbol_Neg:
-					handleNeg(config, &change);
+					handleNeg(config, top, &change);
 					break;
 				case symbol_Skip:
-					handleSkip(config, &change);
+					handleSkip(config, top, &change);
 					break;
 				case symbol_Div:
-					handleDiv(config, &change);
+					handleDiv(config, top, &change);
 					break;
 				case symbol_And:
-					handleAnd(config, &change);
+					handleAnd(config, top, &change);
 					break;
 				case symbol_Program:
-					handleProgram(config, &change);
+					handleProgram(config, top, &change);
 					break;
 				case symbol_Paren:
-					handleParen(config, &change);
+					handleParen(config, top, &change);
 					break;
 				default: 
 					panic("unrecognized label");

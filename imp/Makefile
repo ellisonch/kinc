@@ -35,6 +35,9 @@ imp.exe: Makefile $(DEPENDS)
 asm: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -S -g $(FILES)
 
+imp-O1.exe: Makefile $(DEPENDS)
+	$(CC) $(CFLAGS) -DNDEBUG -O1 -pg $(FILES) -o imp-O1.exe
+
 imp-fast.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) -o imp-fast.exe
 
@@ -44,12 +47,19 @@ imp-profile.exe: Makefile $(DEPENDS)
 imp-sleepy.exe: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) -o imp-sleepy.exe	
 
+imp-profile-O1.output: imp-O1.exe	
+	./imp-O1.exe --bench
+	gprof ./imp-O1.exe > imp-profile-O1.output
+
 imp-profile.output: imp-profile.exe	
 	./imp-profile.exe --bench
 	gprof ./imp-profile.exe > imp-profile.output
 
 profile: imp-profile.output
 	less imp-profile.output
+
+profile-O1: imp-profile-O1.output
+	less imp-profile-O1.output
 
 profile-sleepy: imp-sleepy.exe
 	sleepy //r:"imp-sleepy.exe --bench" &

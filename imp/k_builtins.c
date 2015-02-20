@@ -66,7 +66,7 @@ void k_init_builtins() {
 	_one->permanent = 1;
 }
 
-K* Hole() {
+K* k_hole() {
 	// return k_new_empty(SymbolLabel(symbol_hole));
 	return _hole;
 }
