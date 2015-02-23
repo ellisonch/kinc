@@ -6,6 +6,4 @@ configuration
 
 
 
-rule <k> X:Id => I ...</k> <state>... X |-> I ...</state>
-
-rule <k> skip() => skip() </k>
+rule <k> X:id => I </k>

@@ -3,7 +3,7 @@ package kinc
 import "testing"
 import "strings"
 import "fmt"
-// import "os"
+import "os"
 // import "os/signal"
 // import "syscall"
 
@@ -23,6 +23,7 @@ var tests = []struct {
 	{`configuration <k> </k> rule <k> foo() </k> `},
 	{`configuration <k> </k> rule foo(X) `},
 	{`configuration <k> </k> rule <k> (x => q)(Z, Y) </k>  `},
+	{`configuration <k> </k> rule <k> X:id => I </k>`},
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
@@ -52,25 +53,26 @@ func TestParser(t *testing.T) {
 	}
 }
 
-// func TestImp(t *testing.T) {
-// 	KincDebug = 1
+func TestImp(t *testing.T) {
+	yyDebug = 1
 
-// 	imp, err := os.Open("../imp/imp.kinc")
-// 	if (err != nil) {
-// 		t.Logf("Couldn't open file")
-// 		t.FailNow()
-// 	}
+	imp, err := os.Open("../imp/imp.kinc")
+	if (err != nil) {
+		t.Logf("Couldn't open file")
+		t.FailNow()
+	}
 
-// 	l := NewKincLexer(imp)
-// 	ret := KincParse(l)
+	l := NewLexer(imp)
+	ret := yyParse(l)
 
-// 	if ret == 0 {
-// 		t.Logf("\n%s\n", Final.String())
-// 	} else {
-// 		t.Logf("%s\n", l.ReportError())
-// 		t.FailNow()
-// 	}
-// }
+	if ret == 0 {
+		t.Logf("\n%s\n", Final.String())
+	} else {
+		t.Logf("%s\n", "Error")
+		t.FailNow()
+	}
+}
+
 // func TestParser2(t *testing.T) {
 // 	ATermDebug = 1
 // 	l := NewATermLexer(strings.NewReader(simpleProg4))

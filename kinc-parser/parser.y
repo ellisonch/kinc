@@ -19,6 +19,7 @@ var Final KincDefinition
 	term *Term
 	label *Label
 	term_list []*Term
+	term_variable Variable
 }
 /*
 lst []ATerm
@@ -39,7 +40,7 @@ at ATerm
 %type <term> term
 %type <label> label
 %type <term_list> term_list
-
+%type <term_variable> term_variable
 // these apparently encode precedence, so be careful
 %token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE
 %token <str> TOK_ARROW TOK_KRA 
@@ -86,7 +87,7 @@ rule
 		{ $$ = Rule{Term: $2} }
 
 term
-	: TOK_UC_NAME
+	: term_variable
 		{ $$ = &Term{Type: TermVariable, Variable: $1} }
 	| term TOK_ARROW term
 		{
@@ -104,6 +105,12 @@ term
 		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }
 	| cells
 		{ $$ = &Term{Type: TermCells, Cells: $1} }
+
+term_variable
+	: TOK_UC_NAME
+		{ $$ = Variable{Name: $1, Sort: ""} }
+	| TOK_UC_NAME ':' TOK_LC_NAME
+		{ $$ = Variable{Name: $1, Sort: $3} }
 
 label
 	: TOK_LC_NAME

@@ -88,7 +88,7 @@ func (r Rule) String() string {
 
 type Term struct {
 	Type TermType
-	Variable string
+	Variable Variable
 	Int64 int64 
 	Rewrite Rewrite
 	Cells []Cell
@@ -99,7 +99,7 @@ type Term struct {
 func (t *Term) String() string {
 	switch t.Type {
 		case TermError: return "Error"
-		case TermVariable: return t.Variable
+		case TermVariable: return t.Variable.String()
 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
 		case TermRewrite: return t.Rewrite.String()
 		case TermAppl: return t.Appl.String()
@@ -111,6 +111,15 @@ func (t *Term) String() string {
 			return children
 		default: return "Error"
 	}
+}
+
+type Variable struct {
+	Name string
+	Sort string
+}
+
+func (v Variable) String() string {
+	return fmt.Sprintf("%s:%s", v.Name, v.Sort)
 }
 
 type Appl struct {
