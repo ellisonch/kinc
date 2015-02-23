@@ -20,6 +20,7 @@ var Final KincDefinition
 	label *Label
 	term_list []*Term
 	term_variable Variable
+	cell_attributes CellAttributes
 }
 /*
 lst []ATerm
@@ -41,9 +42,10 @@ at ATerm
 %type <label> label
 %type <term_list> term_list
 %type <term_variable> term_variable
+%type <cell_attributes> cell_attributes
 // these apparently encode precedence, so be careful
-%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE
-%token <str> TOK_ARROW TOK_KRA 
+%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K
+%token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
@@ -62,12 +64,22 @@ configuration
 		{ $$ = Configuration{Cell: $1} }
 
 ccell
-	: '<' TOK_LC_NAME '>' ccells TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+	: TOK_CELL_BEGIN_K cell_attributes '>' ccells TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
-			if $2 != $6 {
-				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
+			if $1 != $6 {
+				panic(fmt.Sprintf("cell %s isn't %s", $1, $6))
 			}
-			$$ = CCell{Name: $2, Children: $4}
+			for k, v := range $2.Table {
+				if k == "type" {
+					fmt.Printf("%s has type %s\n", $1, v)
+					CellTypes[$1] = v
+				}
+			}
+			if _, ok := CellTypes[$1]; !ok {
+				CellTypes[$1] = "k"
+			}
+
+			$$ = CCell{Name: $1, Attributes: $2, Children: $4}
 		}
 
 ccells
@@ -75,6 +87,15 @@ ccells
 		{ $$ = []CCell{} }
 	| ccells ccell
 		{ $$ = append($1, $2) }
+
+cell_attributes
+	: // empty
+		{ $$ = CellAttributes{Table: make(map[string]string)} }
+	| cell_attributes TOK_LC_NAME '=' '"' TOK_LC_NAME '"'
+		{
+			$1.Table[$2] = $5
+			$$ = $1
+		}
 
 rules
 	: // empty
@@ -105,10 +126,12 @@ term
 		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }
 	| cells
 		{ $$ = &Term{Type: TermCells, Cells: $1} }
+	| '(' term ')'
+		{ $$ = &Term{Type: TermParen, Paren: $2} }
 
 term_variable
 	: TOK_UC_NAME
-		{ $$ = Variable{Name: $1, Sort: ""} }
+		{ $$ = Variable{Name: $1, Sort: "k"} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = Variable{Name: $1, Sort: $3} }
 
@@ -128,12 +151,12 @@ term_list
 
 
 cell
-	: '<' TOK_LC_NAME '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
-			if $2 != $6 {
+			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
-			}
-			$$ = Cell{Name: $2, Body: $4}
+			}*/
+			$$ = Cell{Name: $1, Body: $3}
 		}
 
 cells

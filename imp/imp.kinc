@@ -1,9 +1,11 @@
 configuration 
 <t>
-	<state> </state>
-	<k> </k>
+	<state type="map"> </state>
+	<k type="computation"> </k>
 </t>
 
 
 
-rule <k> X:id => I </k>
+rule 
+	<k> X:id => I ~> K </k> 
+	<state> X |-> Y </state>

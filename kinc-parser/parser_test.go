@@ -9,6 +9,7 @@ import "os"
 
 func go_sucks_parser_test() {
 	_ = fmt.Printf
+	_ = os.DevNull
 }
 
 var tests = []struct {
@@ -24,6 +25,9 @@ var tests = []struct {
 	{`configuration <k> </k> rule foo(X) `},
 	{`configuration <k> </k> rule <k> (x => q)(Z, Y) </k>  `},
 	{`configuration <k> </k> rule <k> X:id => I </k>`},
+	{`configuration <a> </a> rule <k> X => Y ~> Z </k>`},
+	{`configuration <a type="bag"> </a>`},
+	{`configuration <a type="bag"> </a> rule <a> V </a>`},
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
@@ -53,25 +57,25 @@ func TestParser(t *testing.T) {
 	}
 }
 
-func TestImp(t *testing.T) {
-	yyDebug = 1
+// func TestImp(t *testing.T) {
+// 	yyDebug = 1
 
-	imp, err := os.Open("../imp/imp.kinc")
-	if (err != nil) {
-		t.Logf("Couldn't open file")
-		t.FailNow()
-	}
+// 	imp, err := os.Open("../imp/imp.kinc")
+// 	if (err != nil) {
+// 		t.Logf("Couldn't open file")
+// 		t.FailNow()
+// 	}
 
-	l := NewLexer(imp)
-	ret := yyParse(l)
+// 	l := NewLexer(imp)
+// 	ret := yyParse(l)
 
-	if ret == 0 {
-		t.Logf("\n%s\n", Final.String())
-	} else {
-		t.Logf("%s\n", "Error")
-		t.FailNow()
-	}
-}
+// 	if ret == 0 {
+// 		t.Logf("\n%s\n", Final.String())
+// 	} else {
+// 		t.Logf("%s\n", "Error")
+// 		t.FailNow()
+// 	}
+// }
 
 // func TestParser2(t *testing.T) {
 // 	ATermDebug = 1

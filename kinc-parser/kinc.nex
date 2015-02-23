@@ -1,4 +1,16 @@
-/[ \t\r\n]/ { /* Skip blanks and tabs. */ } 
+/[ \t\r\n]/ { /* Skip blanks and tabs. */ }
+
+/<[a-z][a-zA-Z]*/ {
+	name := strings.TrimLeft(yylex.Text(), "<")
+	lval.str = name
+	/*if v, ok := CellTypes[name]; ok {
+		if v == "k" {
+			return TOK_CELL_BEGIN_K
+		}
+	}*/
+	return TOK_CELL_BEGIN_K
+}
+
 /,/ { return ',' }
 /\(/ { return '(' }
 /\)/ { return ')' }
@@ -6,11 +18,16 @@
 /\]/ { return ']' }
 /:/ { return ':' }
 /</ { return '<' }
+/"/ { return '"' }
+/|->/ { return TOK_MAPS_TO }
+
+
 /\.\.\.<\// { return TOK_CELL_RIGHT_OPEN }
 /<\// { return TOK_CELL_RIGHT_CLOSED }
 />\.\.\./ { return TOK_CELL_LEFT_OPEN }
 />/ { return '>' }
 /=>/ { return TOK_ARROW }
+/=/ { return '=' }
 /~>/ { return TOK_KRA }
 /configuration/ { return TOK_CONFIGURATION }
 /rule/ { return TOK_RULE }
@@ -24,7 +41,8 @@
 }
 
 // 
-package kinc 
+package kinc
+
 // import "os"
 // import "strconv"
 // type yySymType KincSymType

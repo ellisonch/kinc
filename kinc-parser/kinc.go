@@ -3,6 +3,8 @@ package kinc
 import "fmt"
 import "strings"
 
+var CellTypes = make(map[string]string)
+
 type Rules []Rule
 
 type KincDefinition struct {
@@ -30,7 +32,15 @@ func (c CCell) String() string {
 		children += cell.String()
 		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
 	}	
-	return fmt.Sprintf("<%s>%s</%s>", c.Name, children, c.Name)
+	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, children, c.Name)
+}
+
+func (a CellAttributes) String() string {	
+	children := []string{}
+	for k, v := range a.Table {
+		children = append(children, fmt.Sprintf("%s=\"%s\"", k, v))
+	}	
+	return strings.Join(children, " ")
 }
 
 // func (l CommaList) String() string {
@@ -55,8 +65,13 @@ const (
 
 type CCell struct {
 	Name string
+	Attributes CellAttributes
 	// Type CellType
 	Children []CCell
+}
+
+type CellAttributes struct {
+	Table map[string]string
 }
 
 type Cell struct {
@@ -94,6 +109,7 @@ type Term struct {
 	Cells []Cell
 	Appl Appl
 	Kra Kra
+	Paren *Term
 }
 
 func (t *Term) String() string {
@@ -103,6 +119,7 @@ func (t *Term) String() string {
 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
 		case TermRewrite: return t.Rewrite.String()
 		case TermAppl: return t.Appl.String()
+		case TermKra: return t.Kra.String()
 		case TermCells: 
 			children := ""
 			for _, cell := range t.Cells {
@@ -116,6 +133,10 @@ func (t *Term) String() string {
 type Variable struct {
 	Name string
 	Sort string
+}
+
+func (v Kra) String() string {
+	return fmt.Sprintf("%s ~> %s", v.LHS, v.RHS)
 }
 
 func (v Variable) String() string {
@@ -138,10 +159,6 @@ func (a Appl) String() string {
 type Kra struct {
 	LHS *Term
 	RHS *Term
-}
-
-func (r Kra) String() string {
-	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
 }
 
 type Rewrite struct {
@@ -204,6 +221,7 @@ const (
 	TermAppl
 	TermCells
 	TermKra
+	TermParen
 )
 
 // type ATerm struct {
