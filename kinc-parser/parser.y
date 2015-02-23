@@ -42,12 +42,12 @@ at ATerm
 
 // these apparently encode precedence, so be careful
 %token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE
-%token <str> TOK_ARROW TOK_BEGIN_END
+%token <str> TOK_ARROW TOK_KRA TOK_BEGIN_END
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
 %token <val> TOK_ERR
 
-%left TOK_ARROW
+%left TOK_ARROW TOK_KRA
 
 %%
 final
@@ -92,6 +92,12 @@ term
 			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
 			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
 			$$ = &Term{Type: TermRewrite, Rewrite: Rewrite{LHS: $1, RHS: $3}}
+		}
+	| term TOK_KRA term
+		{
+			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
+			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
+			$$ = &Term{Type: TermKra, Kra: Kra{LHS: $1, RHS: $3}}
 		}
 	| label '(' term_list ')'
 		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }

@@ -93,6 +93,7 @@ type Term struct {
 	Rewrite Rewrite
 	Cells []Cell
 	Appl Appl
+	Kra Kra
 }
 
 func (t *Term) String() string {
@@ -123,6 +124,15 @@ func (a Appl) String() string {
 		children = append(children, arg.String())
 	}
 	return fmt.Sprintf("%s(%s)", a.Label, strings.Join(children, ","))
+}
+
+type Kra struct {
+	LHS *Term
+	RHS *Term
+}
+
+func (r Kra) String() string {
+	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
 }
 
 type Rewrite struct {
@@ -184,6 +194,7 @@ const (
 	TermRewrite
 	TermAppl
 	TermCells
+	TermKra
 )
 
 // type ATerm struct {

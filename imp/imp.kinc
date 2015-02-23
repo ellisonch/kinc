@@ -1,0 +1,11 @@
+configuration 
+<t>
+	<state> </state>
+	<k> </k>
+</t>
+
+
+
+rule <k> X:Id => I ...</k> <state>... X |-> I ...</state>
+
+rule <k> skip() => skip() </k>

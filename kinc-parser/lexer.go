@@ -175,6 +175,21 @@ func (l *KincLex) Lex(lval *KincSymType) int {
 				l.stream.UnreadRune()
 			}
 			fallthrough
+			case r == '~': {
+				r2, size, err := l.stream.ReadRune()
+				_ = size
+				if err == io.EOF {
+					return TOK_EOF
+				}
+				if err != nil {
+					log.Fatalf("Error reading Rune: %v\n", err)
+				}
+				if r2 == '>' {
+					return TOK_KRA
+				}
+				l.stream.UnreadRune()
+			}
+			fallthrough
 			// case r == '{': return '{'
 			// case r == '}': return '}'
 			// case r == '[': return '['

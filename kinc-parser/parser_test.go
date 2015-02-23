@@ -3,7 +3,7 @@ package kinc
 import "testing"
 import "strings"
 import "fmt"
-// import "os"
+import "os"
 // import "os/signal"
 // import "syscall"
 
@@ -48,6 +48,26 @@ func TestParser(t *testing.T) {
 			t.Logf("%s\n", l.ReportError())
 			t.FailNow()
 		}
+	}
+}
+
+func TestImp(t *testing.T) {
+	KincDebug = 1
+
+	imp, err := os.Open("../imp/imp.kinc")
+	if (err != nil) {
+		t.Logf("Couldn't open file")
+		t.FailNow()
+	}
+
+	l := NewKincLexer(imp)
+	ret := KincParse(l)
+
+	if ret == 0 {
+		t.Logf("\n%s\n", Final.String())
+	} else {
+		t.Logf("%s\n", l.ReportError())
+		t.FailNow()
 	}
 }
 // func TestParser2(t *testing.T) {
