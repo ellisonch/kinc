@@ -1,7 +1,7 @@
 package kinc
 
 import "fmt"
-// import "strings"
+import "strings"
 
 type Rules []Rule
 
@@ -11,16 +11,13 @@ type KincDefinition struct {
 	Rules []Rule
 }
 
-func (at *KincDefinition) String() string {	
-	return fmt.Sprintf("%s\n%s", at.Configuration, at.Rules)
-	// switch at.Type {
-	// 	case Error: return "---Error---"
-	// 	case Int: return fmt.Sprintf("%d", at.Int)
-	// 	case Real: return fmt.Sprintf("%f", at.Real)
-	// 	case Appl: return fmt.Sprintf("%s(%s)", at.Appl.Name, at.Appl.Args.String())
-	// 	case List: return fmt.Sprintf("[%s]", CommaList(at.List).String())
-	// }
-	// return "---Error---"
+func (def *KincDefinition) String() string {
+	children := ""
+	for _, rule := range def.Rules {
+		children += rule.String() + "\n"
+		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
+	}
+	return fmt.Sprintf("%s\n%s", def.Configuration, children)
 }
 
 func (c Configuration) String() string {
@@ -68,6 +65,10 @@ type Cell struct {
 	Body *Term
 }
 
+func (c Cell) String() string {
+	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Body.String(), c.Name)
+}
+
 type Rule struct {
 	Term *Term
 }
@@ -76,14 +77,14 @@ func (r Rule) String() string {
 	return fmt.Sprintf("rule %s", r.Term.String())
 }
 
-func (rules Rules) String() string {	
-	children := ""
-	for _, rule := range rules {
-		children += rule.String()
-		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
-	}	
-	return children
-}
+// func (rules Rules) String() string {	
+// 	children := "xxx"
+// 	for _, rule := range rules {
+// 		children += rule.String()
+// 		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
+// 	}	
+// 	return children
+// }
 
 type Term struct {
 	Type TermType
@@ -100,8 +101,13 @@ func (t *Term) String() string {
 		case TermVariable: return t.Variable
 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
 		case TermRewrite: return t.Rewrite.String()
-		case TermAppl: return "Appl"
-		case TermCells: return "Cells"
+		case TermAppl: return t.Appl.String()
+		case TermCells: 
+			children := ""
+			for _, cell := range t.Cells {
+				children += cell.String()
+			}	
+			return children
 		default: return "Error"
 	}
 }
@@ -109,6 +115,14 @@ func (t *Term) String() string {
 type Appl struct {
 	Label *Label
 	Body []*Term
+}
+
+func (a Appl) String() string {
+	children := []string{}
+	for _, arg := range a.Body {
+		children = append(children, arg.String())
+	}
+	return fmt.Sprintf("%s(%s)", a.Label, strings.Join(children, ","))
 }
 
 type Rewrite struct {
@@ -138,9 +152,21 @@ type Label struct {
 	Rewrite LabelRewrite
 }
 
+func (l *Label) String() string {
+	switch l.Type {
+		case E_LabelName: return l.Name
+		case E_LabelRewrite: return l.Rewrite.String()
+		default: return "ERROR"
+	}
+}
+
 type LabelRewrite struct {
 	LHS *Label
 	RHS *Label
+}
+
+func (rw *LabelRewrite) String() string {
+	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
 }
 
 type LabelType int

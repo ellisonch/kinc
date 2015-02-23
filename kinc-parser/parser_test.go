@@ -14,15 +14,15 @@ func go_sucks_parser_test() {
 var tests = []struct {
 	inp string
 }{
-	// {`configuration <a> </a>`},
-	// {`configuration <a> <b> <c> </c> </b> </a>`},
-	// {`configuration <a> <b> </b> <c> <d> </d> </c> </a>`},
-	// {`configuration <k> </k> rule K`},
+	{`configuration <a> </a>`},
+	{`configuration <a> <b> <c> </c> </b> </a>`},
+	{`configuration <a> <b> </b> <c> <d> </d> </c> </a>`},
+	{`configuration <k> </k> rule K`},
 	{`configuration <k> </k> rule X => Y`},
 	{`configuration <k> </k> rule <k> X => Y </k> <mem> Z </mem> `},
-	// {`configuration <k> </k> rule <k> foo() </k> `},
-	// {`configuration <k> </k> rule foo(X) `},
-	// {`configuration <k> </k> rule <k> (x => q)(Z, Y) </k>  `},
+	{`configuration <k> </k> rule <k> foo() </k> `},
+	{`configuration <k> </k> rule foo(X) `},
+	{`configuration <k> </k> rule <k> (x => q)(Z, Y) </k>  `},
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
