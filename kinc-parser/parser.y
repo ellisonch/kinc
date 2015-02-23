@@ -21,6 +21,8 @@ var Final KincDefinition
 	term_list []*Term
 	term_variable Variable
 	cell_attributes CellAttributes
+	bag []*BagItem
+	bag_item *BagItem
 }
 /*
 lst []ATerm
@@ -43,8 +45,10 @@ at ATerm
 %type <term_list> term_list
 %type <term_variable> term_variable
 %type <cell_attributes> cell_attributes
+%type <bag> bag
+%type <bag_item> bag_item
 // these apparently encode precedence, so be careful
-%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K
+%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN
 %token <i64> TOK_INTEGER 
@@ -104,8 +108,8 @@ rules
 		{ $$ = append($1, $2) }
 
 rule
-	: TOK_RULE term
-		{ $$ = Rule{Term: $2} }
+	: TOK_RULE bag
+		{ $$ = Rule{Bag: $2} }
 
 term
 	: term_variable
@@ -124,8 +128,6 @@ term
 		}
 	| label '(' term_list ')'
 		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }
-	| cells
-		{ $$ = &Term{Type: TermCells, Cells: $1} }
 	| '(' term ')'
 		{ $$ = &Term{Type: TermParen, Paren: $2} }
 
@@ -149,9 +151,25 @@ term_list
 	| term_list ',' term
 		{ $$ = append($1, $3) }
 
+bag
+	: bag_item
+		{ $$ = []*BagItem{$1} }
+	| bag bag_item
+		{ $$ = append($1, $2) }
+
+bag_item
+	: cell
+		{ $$ = &BagItem{Type: BagCell, Cell: $1} }
 
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+		{
+			/*if $2 != $6 {
+				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
+			}*/
+			$$ = Cell{Name: $1, Body: $3}
+		}
+	| TOK_CELL_BEGIN_BAG '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))

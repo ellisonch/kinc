@@ -3,7 +3,11 @@ package kinc
 import "fmt"
 import "strings"
 
-var CellTypes = make(map[string]string)
+var CellTypes map[string]string
+
+func KincInit() {
+	CellTypes = make(map[string]string)
+}
 
 type Rules []Rule
 
@@ -85,11 +89,15 @@ func (c Cell) String() string {
 }
 
 type Rule struct {
-	Term *Term
+	Bag []*BagItem
 }
 
 func (r Rule) String() string {
-	return fmt.Sprintf("rule %s", r.Term.String())
+	children := []string{}
+	for _, b := range r.Bag {
+		children = append(children, b.String())
+	}
+	return strings.Join(children, " ")
 }
 
 // func (rules Rules) String() string {	
@@ -106,7 +114,7 @@ type Term struct {
 	Variable Variable
 	Int64 int64 
 	Rewrite Rewrite
-	Cells []Cell
+	// Cells []Cell
 	Appl Appl
 	Kra Kra
 	Paren *Term
@@ -120,12 +128,12 @@ func (t *Term) String() string {
 		case TermRewrite: return t.Rewrite.String()
 		case TermAppl: return t.Appl.String()
 		case TermKra: return t.Kra.String()
-		case TermCells: 
-			children := ""
-			for _, cell := range t.Cells {
-				children += cell.String()
-			}	
-			return children
+		// case TermCells: 
+		// 	children := ""
+		// 	for _, cell := range t.Cells {
+		// 		children += cell.String()
+		// 	}	
+		// 	return children
 		default: return "Error"
 	}
 }
@@ -219,10 +227,25 @@ const (
 	TermInt64
 	TermRewrite
 	TermAppl
-	TermCells
+	// TermCells
 	TermKra
 	TermParen
 )
+
+type BagType int
+const (
+	BagError = iota
+	BagCell
+)
+
+type BagItem struct {
+	Type BagType
+	Cell Cell
+}
+
+func (rw *BagItem) String() string {
+	return rw.Cell.String()
+}
 
 // type ATerm struct {
 // 	Type ATermType

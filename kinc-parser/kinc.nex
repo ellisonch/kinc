@@ -3,11 +3,14 @@
 /<[a-z][a-zA-Z]*/ {
 	name := strings.TrimLeft(yylex.Text(), "<")
 	lval.str = name
-	/*if v, ok := CellTypes[name]; ok {
+	if v, ok := CellTypes[name]; ok {
 		if v == "k" {
 			return TOK_CELL_BEGIN_K
 		}
-	}*/
+		if v == "bag" {
+			return TOK_CELL_BEGIN_BAG
+		}
+	}
 	return TOK_CELL_BEGIN_K
 }
 
