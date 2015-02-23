@@ -89,17 +89,17 @@ type Term struct {
 	Type TermType
 	Variable string
 	Int64 int64 
-	Rewrite *Rewrite
+	Rewrite Rewrite
 	Cells []Cell
-	Appl *Appl
+	Appl Appl
 }
 
 func (t *Term) String() string {
 	switch t.Type {
 		case TermError: return "Error"
 		case TermVariable: return t.Variable
-		case TermInt64: return "Int64"
-		case TermRewrite: return "Rewrite"
+		case TermInt64: return fmt.Sprintf("%d", t.Int64)
+		case TermRewrite: return t.Rewrite.String()
 		case TermAppl: return "Appl"
 		case TermCells: return "Cells"
 		default: return "Error"
@@ -108,7 +108,7 @@ func (t *Term) String() string {
 
 type Appl struct {
 	Label *Label
-	Body []Term
+	Body []*Term
 }
 
 type Rewrite struct {
@@ -116,15 +116,31 @@ type Rewrite struct {
 	RHS *Term
 }
 
+func (r Rewrite) String() string {
+	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
+}
+
+// func (r *Rewrite) String2(x int) string {
+// 	fmt.Printf("Rewrite %d\n", x)
+// 	// return fmt.Sprintf("%s => %s", r.LHS.String(), "RHS")
+// 	return fmt.Sprintf("%p: %p => %s", r, r.LHS, r.RHS.String2(x+1))
+// }
+
+// func (r *Rewrite) Strin2() string {
+// 	fmt.Printf("Rewrite %d")
+// 	// return fmt.Sprintf("%s => %s", r.LHS.String(), "RHS")
+// 	return fmt.Sprintf("%p: %p => %s", r, r.LHS.String, r.RHS.String())
+// }
+
 type Label struct {
 	Type LabelType
 	Name string
-	Rewrite *LabelRewrite
+	Rewrite LabelRewrite
 }
 
 type LabelRewrite struct {
-	LHS Label
-	RHS Label
+	LHS *Label
+	RHS *Label
 }
 
 type LabelType int

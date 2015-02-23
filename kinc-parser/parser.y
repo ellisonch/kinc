@@ -16,9 +16,9 @@ var Final KincDefinition
 	ccells []CCell
 	rule Rule
 	rules []Rule
-	term Term
-	label Label
-	term_list []Term
+	term *Term
+	label *Label
+	term_list []*Term
 }
 /*
 lst []ATerm
@@ -82,29 +82,33 @@ rules
 
 rule
 	: TOK_RULE term
-		{ $$ = Rule{Term: &$2} }
+		{ $$ = Rule{Term: $2} }
 
 term
 	: TOK_UC_NAME
-		{ $$ = Term{Type: TermVariable, Variable: $1} }
+		{ $$ = &Term{Type: TermVariable, Variable: $1} }
 	| term TOK_ARROW term
-		{ $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &$1, RHS: &$3}} }
+		{
+			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
+			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
+			$$ = &Term{Type: TermRewrite, Rewrite: Rewrite{LHS: $1, RHS: $3}}
+		}
 	| label '(' term_list ')'
-		{ $$ = Term{Type: TermAppl, Appl: &Appl{Label: &$1, Body: $3}} }
+		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }
 	| cells
-		{ $$ = Term{Type: TermCells, Cells: $1} }
+		{ $$ = &Term{Type: TermCells, Cells: $1} }
 
 label
 	: TOK_LC_NAME
-		{ $$ = Label{Type: E_LabelName, Name: $1} }
+		{ $$ = &Label{Type: E_LabelName, Name: $1} }
 	| '(' label TOK_ARROW label ')'
-		{ $$ = Label{Type: E_LabelRewrite, Rewrite: &LabelRewrite{LHS: $2, RHS: $4}} }
+		{ $$ = &Label{Type: E_LabelRewrite, Rewrite: LabelRewrite{LHS: $2, RHS: $4}} }
 
 term_list
 	: // empty
-		{ $$ = []Term{} }
+		{ $$ = []*Term{} }
 	| term
-		{ $$ = []Term{$1} }
+		{ $$ = []*Term{$1} }
 	| term_list ',' term
 		{ $$ = append($1, $3) }
 
@@ -115,7 +119,7 @@ cell
 			if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}
-			$$ = Cell{Name: $2, Body: &$4}
+			$$ = Cell{Name: $2, Body: $4}
 		}
 
 cells
