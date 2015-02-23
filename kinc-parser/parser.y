@@ -42,7 +42,8 @@ at ATerm
 
 // these apparently encode precedence, so be careful
 %token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE
-%token <str> TOK_ARROW TOK_KRA TOK_BEGIN_END
+%token <str> TOK_ARROW TOK_KRA 
+%token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
 %token <val> TOK_ERR
@@ -60,7 +61,7 @@ configuration
 		{ $$ = Configuration{Cell: $1} }
 
 ccell
-	: '<' TOK_LC_NAME '>' ccells TOK_BEGIN_END TOK_LC_NAME '>'
+	: '<' TOK_LC_NAME '>' ccells TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
@@ -120,7 +121,7 @@ term_list
 
 
 cell
-	: '<' TOK_LC_NAME '>' term TOK_BEGIN_END TOK_LC_NAME '>'
+	: '<' TOK_LC_NAME '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))

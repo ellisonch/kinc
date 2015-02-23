@@ -1,0 +1,33 @@
+/[ \t\r\n]/ { /* Skip blanks and tabs. */ } 
+/,/ { return ',' }
+/\(/ { return '(' }
+/\)/ { return ')' }
+/\[/ { return '[' }
+/\]/ { return ']' }
+/:/ { return ':' }
+/</ { return '<' }
+/\.\.\.<\// { return TOK_CELL_RIGHT_OPEN }
+/<\// { return TOK_CELL_RIGHT_CLOSED }
+/>\.\.\./ { return TOK_CELL_LEFT_OPEN }
+/>/ { return '>' }
+/=>/ { return TOK_ARROW }
+/~>/ { return TOK_KRA }
+/configuration/ { return TOK_CONFIGURATION }
+/rule/ { return TOK_RULE }
+/[a-z][a-zA-Z]*/ {
+	lval.str = string(yylex.Text())
+	return TOK_LC_NAME
+}
+/[A-Z][a-zA-Z]*/ {
+	lval.str = string(yylex.Text())
+	return TOK_UC_NAME
+}
+
+// 
+package kinc 
+// import "os"
+// import "strconv"
+// type yySymType KincSymType
+
+// /[0-9]*/ { lval.i64,_ = strconv.ParseInt(string(yylex.Text()), 10, 64); return TOK_INTEGER } 
+// /./ { return int(yylex.Text()[0]) }
