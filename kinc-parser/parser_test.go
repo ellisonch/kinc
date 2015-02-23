@@ -17,6 +17,9 @@ var tests = []struct {
 	{`configuration <k> </k> rule K`},
 	{`configuration <k> </k> rule X => Y`},
 	{`configuration <k> </k> rule <k> X => Y</k> <mem> Z </mem> `},
+	{`configuration <k> </k> rule <k> foo() </k> `},
+	{`configuration <k> </k> rule foo(X) `},
+	{`configuration <k> </k> rule <k> (x => q)(Z, Y) </k>  `},
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
@@ -37,8 +40,9 @@ func TestParser(t *testing.T) {
 		ret := KincParse(l)
 
 		if ret == 0 {
-			t.Logf("%s\n", Final.String())
-		} else { 
+			t.Logf("\n%s\n", Final.String())
+		} else {
+			t.Logf("%s\n", l.ReportError())
 			t.FailNow()
 		}
 	}

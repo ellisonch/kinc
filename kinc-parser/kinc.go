@@ -23,8 +23,8 @@ func (at *KincDefinition) String() string {
 	// return "---Error---"
 }
 
-func (c *Configuration) String() string {
-	return c.Cell.String()
+func (c Configuration) String() string {
+	return fmt.Sprintf("configuration %s", c.Cell.String())
 }
 
 func (c CCell) String() string {	
@@ -69,11 +69,11 @@ type Cell struct {
 }
 
 type Rule struct {
-	Term Term
+	Term *Term
 }
 
 func (r Rule) String() string {
-	return fmt.Sprintf("%v", r.Term)
+	return fmt.Sprintf("rule %s", r.Term.String())
 }
 
 func (rules Rules) String() string {	
@@ -94,6 +94,18 @@ type Term struct {
 	Appl *Appl
 }
 
+func (t *Term) String() string {
+	switch t.Type {
+		case TermError: return "Error"
+		case TermVariable: return t.Variable
+		case TermInt64: return "Int64"
+		case TermRewrite: return "Rewrite"
+		case TermAppl: return "Appl"
+		case TermCells: return "Cells"
+		default: return "Error"
+	}
+}
+
 type Appl struct {
 	Label *Label
 	Body []Term
@@ -107,12 +119,19 @@ type Rewrite struct {
 type Label struct {
 	Type LabelType
 	Name string
+	Rewrite *LabelRewrite
+}
+
+type LabelRewrite struct {
+	LHS Label
+	RHS Label
 }
 
 type LabelType int
 const (
-	LabelError = iota
-	LabelName
+	E_LabelError = iota
+	E_LabelName
+	E_LabelRewrite
 )
 
 type TermType int

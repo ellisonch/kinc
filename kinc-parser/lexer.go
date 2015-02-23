@@ -5,6 +5,7 @@ import "io"
 import "log"
 import "fmt"
 import "strconv"
+import "strings"
 
 func go_sucks_lexer() {
 	_ = fmt.Printf
@@ -140,6 +141,8 @@ func (l *KincLex) Lex(lval *KincSymType) int {
 			case r == ',': return ','
 			case r == '(': return '('
 			case r == ')': return ')'
+			case r == '[': return '['
+			case r == ']': return ']'
 			case r == ':': return ':'
 			case r == '<': {
 				r2, size, err := l.stream.ReadRune()
@@ -186,7 +189,11 @@ func (l *KincLex) Lex(lval *KincSymType) int {
 				if (ret == "rule") {
 					return TOK_RULE
 				}
-				return TOK_CONSTRUCTOR
+				if (strings.ToUpper(string(r)) == string(r)) {
+					return TOK_UC_NAME
+				} else {
+					return TOK_LC_NAME
+				}
 			}
 			case r >= '0' && r <= '9': return l.LexInt(r, lval)
 			default: return TOK_ERR
@@ -196,6 +203,10 @@ func (l *KincLex) Lex(lval *KincSymType) int {
 	}
 		
 	return TOK_ERR
+}
+
+func (l *KincLex) ReportError() string {
+	return fmt.Sprintf("Syntax error\n")
 }
 
 func (l *KincLex) Error(s string) {

@@ -40,13 +40,14 @@ at ATerm
 %type <label> label
 %type <term_list> term_list
 
-%token <str> TOK_CONSTRUCTOR TOK_STRING TOK_CONFIGURATION TOK_RULE
+// these apparently encode precedence, so be careful
+%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE
 %token <str> TOK_ARROW TOK_BEGIN_END
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
 %token <val> TOK_ERR
 
-%right TOK_ARROW
+%left TOK_ARROW
 
 %%
 final
@@ -59,7 +60,7 @@ configuration
 		{ $$ = Configuration{Cell: $1} }
 
 ccell
-	: '<' TOK_CONSTRUCTOR '>' ccells TOK_BEGIN_END TOK_CONSTRUCTOR '>'
+	: '<' TOK_LC_NAME '>' ccells TOK_BEGIN_END TOK_LC_NAME '>'
 		{
 			if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
@@ -81,10 +82,10 @@ rules
 
 rule
 	: TOK_RULE term
-		{ $$ = Rule{Term: $2} }
+		{ $$ = Rule{Term: &$2} }
 
 term
-	: TOK_CONSTRUCTOR
+	: TOK_UC_NAME
 		{ $$ = Term{Type: TermVariable, Variable: $1} }
 	| term TOK_ARROW term
 		{ $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &$1, RHS: &$3}} }
@@ -94,18 +95,22 @@ term
 		{ $$ = Term{Type: TermCells, Cells: $1} }
 
 label
-	: TOK_CONSTRUCTOR
-		{ $$ = Label{Type: LabelName, Name: $1} }
+	: TOK_LC_NAME
+		{ $$ = Label{Type: E_LabelName, Name: $1} }
+	| '(' label TOK_ARROW label ')'
+		{ $$ = Label{Type: E_LabelRewrite, Rewrite: &LabelRewrite{LHS: $2, RHS: $4}} }
 
 term_list
 	: // empty
 		{ $$ = []Term{} }
+	| term
+		{ $$ = []Term{$1} }
 	| term_list ',' term
 		{ $$ = append($1, $3) }
 
 
 cell
-	: '<' TOK_CONSTRUCTOR '>' term TOK_BEGIN_END TOK_CONSTRUCTOR '>'
+	: '<' TOK_LC_NAME '>' term TOK_BEGIN_END TOK_LC_NAME '>'
 		{
 			if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
