@@ -12,6 +12,7 @@
 *.out
 *.stats
 *.csv
+/kinc-parser/parser.go
 /imp/parser/aterm/parser.go
 gen_antlr/
 gen_java/
