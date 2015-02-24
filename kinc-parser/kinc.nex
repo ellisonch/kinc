@@ -1,6 +1,6 @@
 /[ \t\r\n]/ { /* Skip blanks and tabs. */ }
 
-/<[a-z][a-zA-Z]*/ {
+/<[a-z][_a-zA-Z-]*/ {
 	name := strings.TrimLeft(yylex.Text(), "<")
 	lval.str = name
 	if v, ok := CellTypes[name]; ok {
@@ -37,11 +37,12 @@
 /~>/ { return TOK_KRA }
 /configuration/ { return TOK_CONFIGURATION }
 /rule/ { return TOK_RULE }
-/[a-z][a-zA-Z]*/ {
+/when/ { return TOK_WHEN }
+/#?_?[a-z][_a-zA-Z-]*/ {
 	lval.str = string(yylex.Text())
 	return TOK_LC_NAME
 }
-/[A-Z][a-zA-Z]*/ {
+/#?_?[A-Z][_a-zA-Z-]*/ {
 	lval.str = string(yylex.Text())
 	return TOK_UC_NAME
 }

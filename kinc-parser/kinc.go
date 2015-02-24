@@ -117,10 +117,11 @@ func (r Map) String() string {
 
 type Rule struct {
 	Bag Bag
+	When *When
 }
 
 func (r Rule) String() string {
-	return r.Bag.String()
+	return r.Bag.String() + "\n" + r.When.String()
 }
 
 // func (rules Rules) String() string {	
@@ -279,6 +280,17 @@ type MapItem struct {
 	Type MapItemType
 	Variable Variable
 	Mapping Mapping
+}
+
+type When struct {
+	Term *Term
+}
+
+func (r *When) String() string {
+	if (r == nil) { 
+		return ""
+	}
+	return fmt.Sprintf("when %s", r.Term.String())
 }
 
 type Mapping struct {

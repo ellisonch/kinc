@@ -24,6 +24,7 @@ var Final KincDefinition
 	bag_item *BagItem
 	mymap Map
 	map_item *MapItem
+	when_clause *When
 }
 /*
 lst []ATerm
@@ -49,10 +50,11 @@ at ATerm
 %type <bag_item> bag_item
 %type <mymap> map
 %type <map_item> map_item
+%type <when_clause> when_clause
 // these apparently encode precedence, so be careful
 %token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
-%token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN
+%token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
 %token <val> TOK_ERR
@@ -110,8 +112,14 @@ rules
 		{ $$ = append($1, $2) }
 
 rule
-	: TOK_RULE bag
+	: TOK_RULE bag when_clause
+		{ $$ = Rule{Bag: $2, When: $3} }
+	| TOK_RULE bag
 		{ $$ = Rule{Bag: $2} }
+
+when_clause
+	: TOK_WHEN term
+		{ $$ = &When{Term: $2} }
 
 term
 	: term_variable

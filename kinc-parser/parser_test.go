@@ -30,6 +30,13 @@ var tests = []struct {
 	{`configuration <a> </a> rule <a> V </a> <b> V </b>`},
 	{`configuration <a type="map"> </a> rule <a> V </a>`},
 	{`configuration <a type="map"> </a> rule <a> X |-> Y </a>`},
+	{`configuration <a type="map"> </a> rule <a> Z X |-> Y </a>`},
+	{`configuration <a type="map"> </a> rule <a> Z X |-> Y </a>`},
+	{`configuration <foo-bar> </foo-bar>`},
+	{`configuration <a> </a> rule <a> plus(I1, I2) => #_plusInt_(I1, I2) </a>`},
+	{`configuration <a> </a> rule <a> div(I1, I2) => #_divInt_(I1, I2) </a> when #_notEqInt_(I2, I2)`},
+	  // rule I1 / I2 => I1 /Int I2  when I2 =/=Int 0
+// rule I1 + I2 => I1 +Int I2
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
@@ -83,25 +90,25 @@ func TestParser(t *testing.T) {
 	}
 }
 
-// func TestImp(t *testing.T) {
-// 	yyDebug = 1
+func TestImp(t *testing.T) {
+	yyDebug = 1
 
-// 	imp, err := os.Open("../imp/imp.kinc")
-// 	if (err != nil) {
-// 		t.Logf("Couldn't open file")
-// 		t.FailNow()
-// 	}
+	imp, err := os.Open("../imp/imp.kinc")
+	if (err != nil) {
+		t.Logf("Couldn't open file")
+		t.FailNow()
+	}
 
-// 	l := NewLexer(imp)
-// 	ret := yyParse(l)
+	l := NewLexer(imp)
+	ret := yyParse(l)
 
-// 	if ret == 0 {
-// 		t.Logf("\n%s\n", Final.String())
-// 	} else {
-// 		t.Logf("%s\n", "Error")
-// 		t.FailNow()
-// 	}
-// }
+	if ret == 0 {
+		t.Logf("\n%s\n", Final.String())
+	} else {
+		t.Logf("%s\n", "Error")
+		t.FailNow()
+	}
+}
 
 // func TestParser2(t *testing.T) {
 // 	ATermDebug = 1
