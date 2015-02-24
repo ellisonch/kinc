@@ -1,8 +1,8 @@
 %{
-package kinc
+package main
 
 import "fmt"
-var Final KincDefinition
+var Final Language
 %}
 
 %union {
@@ -64,7 +64,7 @@ at ATerm
 %%
 final
 	: TOK_CONFIGURATION configuration rules
-		{ Final = KincDefinition{Configuration: $2, Rules: $3} }
+		{ Final = Language{Configuration: $2, Rules: $3} }
 	;
 
 configuration

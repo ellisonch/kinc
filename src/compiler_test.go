@@ -1,4 +1,4 @@
-package kinc
+package main
 
 import "testing"
 import "strings"

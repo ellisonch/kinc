@@ -1,4 +1,4 @@
-package kinc
+package main
 
 var CellTypes map[string]string
 
@@ -13,7 +13,7 @@ type Node interface {
 	// 37		End() token.Pos // position of first character immediately after the node
 }
 
-type KincDefinition struct {
+type Language struct {
 	Configuration Configuration
 	Rules []Rule
 }
@@ -54,6 +54,19 @@ type Cell interface {
 	bagItemNode()
 	String() string
 }
+
+
+type Map []MapItem
+type Bag []BagItem
+
+// type CellContents interface {
+// 	Node
+// 	cellContentsNode()
+// 	String() string
+// }
+// func (*Bag) cellContentsNode() {}
+// func (*Map) cellContentsNode() {}
+// func (*Term) cellContentsNode() {}
 
 type BagCell struct {
 	Name string
@@ -98,9 +111,6 @@ type BagItem interface {
 
 
 func (*Variable) bagItemNode() {}
-
-type Map []MapItem
-type Bag []BagItem
 
 
 type Rule struct {

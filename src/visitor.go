@@ -1,4 +1,4 @@
-package kinc
+package main
 
 import "fmt"
 // KincDefinition
@@ -24,6 +24,12 @@ func Walk(v Visitor, node Node) {
 	// // (the order of the cases matches the order
 	// // of the corresponding node types in ast.go)
 	switch n := node.(type) {
+		case *Language:
+			Walk(v, n.Configuration)
+			for _, c := range n.Rules {
+				Walk(v, c)
+			}
+
 		// Comments and fields
 		// case *Comment:
 		// 	// nothing to do

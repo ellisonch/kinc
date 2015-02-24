@@ -48,7 +48,7 @@
 }
 
 // 
-package kinc
+package main
 
 // import "os"
 // import "strconv"

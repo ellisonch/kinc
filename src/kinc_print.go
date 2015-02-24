@@ -1,10 +1,10 @@
-package kinc
+package main
 
 import "fmt"
 import "strings"
 
 
-func (def *KincDefinition) String() string {
+func (def *Language) String() string {
 	children := ""
 	for _, rule := range def.Rules {
 		children += rule.String() + "\n"
@@ -26,7 +26,7 @@ func (c CCell) String() string {
 	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, children, c.Name)
 }
 
-func (a CellAttributes) String() string {	
+func (a CellAttributes) String() string {
 	children := []string{}
 	for k, v := range a.Table {
 		children = append(children, fmt.Sprintf("%s=\"%s\"", k, v))
