@@ -22,14 +22,6 @@ type Configuration struct {
 	Cell CCell
 }
 
-// type CellType int
-// const (
-// 	CellError = iota
-// 	CellComputation
-// 	CellMap
-// 	CellBag
-// )
-
 type CCell struct {
 	Name string
 	Attributes CellAttributes
@@ -59,6 +51,7 @@ func (*NameLabel) labelNode() {}
 type Cell interface {
 	Node
 	cellNode()
+	bagItemNode()
 	String() string
 }
 
@@ -72,15 +65,42 @@ type MapCell struct {
 }
 type ComputationCell struct {
 	Name string
-	Computation *Term
+	Computation Term
 }
 
 func (*BagCell) cellNode() {}
 func (*MapCell) cellNode() {}
 func (*ComputationCell) cellNode() {}
 
-type Map []*MapItem
-type Bag []*BagItem
+func (*BagCell) bagItemNode() {}
+func (*MapCell) bagItemNode() {}
+func (*ComputationCell) bagItemNode() {}
+
+type MapItem interface {
+	Node
+	mapItemNode()
+	String() string
+}
+
+type Mapping struct {
+	LHS Term
+	RHS Term
+}
+
+func (*Variable) mapItemNode() {}
+func (*Mapping) mapItemNode() {}
+
+type BagItem interface {
+	Node
+	bagItemNode()
+	String() string
+}
+
+
+func (*Variable) bagItemNode() {}
+
+type Map []MapItem
+type Bag []BagItem
 
 
 type Rule struct {
@@ -88,16 +108,26 @@ type Rule struct {
 	When *When
 }
 
-type Term struct {
-	Type TermType
-	Variable Variable
-	Int64 int64 
-	Rewrite Rewrite
-	Appl Appl
-	Kra Kra
-	Paren *Term
+type Term interface {
+	Node
+	termNode()
+	String() string
 }
 
+func (*Variable) termNode() {}
+// func (*Int64) termNode() {}
+func (*Rewrite) termNode() {}
+func (*Appl) termNode() {}
+func (*Kra) termNode() {}
+func (*Paren) termNode() {}
+
+// type Int64 struct {
+// 	Value int64
+// }
+
+type Paren struct {
+	Term Term
+}
 
 type Variable struct {
 	Name string
@@ -106,65 +136,21 @@ type Variable struct {
 
 type Appl struct {
 	Label Label
-	Body []*Term
+	Body []Term
 }
 
 type Kra struct {
-	LHS *Term
-	RHS *Term
+	LHS Term
+	RHS Term
 }
 
 type Rewrite struct {
-	LHS *Term
-	RHS *Term
-}
-
-
-
-
-type TermType int
-const (
-	TermError = iota
-	TermVariable
-	TermInt64
-	TermRewrite
-	TermAppl
-	TermKra
-	TermParen
-)
-
-type MapItemType int
-const (
-	MapError = iota
-	MapVariable
-	MapMapping
-)
-
-type BagItemType int
-const (
-	E_BagError = iota
-	E_BagCell
-	E_BagVariable
-)
-
-type BagItem struct {
-	Type BagItemType
-	Cell Cell
-	Variable Variable
-}
-
-type MapItem struct {
-	Type MapItemType
-	Variable Variable
-	Mapping Mapping
+	LHS Term
+	RHS Term
 }
 
 type When struct {
-	Term *Term
+	Term Term
 }
 
-type Mapping struct {
-	LHS *Term
-	RHS *Term
-}
 

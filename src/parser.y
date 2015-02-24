@@ -15,15 +15,15 @@ var Final KincDefinition
 	ccells []CCell
 	rule Rule
 	rules []Rule
-	term *Term
+	term Term
 	label Label
-	term_list []*Term
-	variable Variable
+	term_list []Term
+	variable *Variable
 	cell_attributes CellAttributes
 	bag Bag
-	bag_item *BagItem
+	bag_item BagItem
 	mymap Map
-	map_item *MapItem
+	map_item MapItem
 	when_clause *When
 }
 /*
@@ -123,41 +123,41 @@ when_clause
 
 term
 	: term_variable
-		{ $$ = &Term{Type: TermVariable, Variable: $1} }
+		{ $$ = $1 }
 	| term TOK_ARROW term
 		{
 			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
 			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
-			$$ = &Term{Type: TermRewrite, Rewrite: Rewrite{LHS: $1, RHS: $3}}
+			$$ = &Rewrite{LHS: $1, RHS: $3}
 		}
 	| term TOK_KRA term
 		{
 			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
 			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
-			$$ = &Term{Type: TermKra, Kra: Kra{LHS: $1, RHS: $3}}
+			$$ = &Kra{LHS: $1, RHS: $3}
 		}
 	| label '(' term_list ')'
-		{ $$ = &Term{Type: TermAppl, Appl: Appl{Label: $1, Body: $3}} }
+		{ $$ = &Appl{Label: $1, Body: $3} }
 	| '(' term ')'
-		{ $$ = &Term{Type: TermParen, Paren: $2} }
+		{ $$ = &Paren{Term: $2} }
 
 term_variable
 	: TOK_UC_NAME
-		{ $$ = Variable{Name: $1, Sort: "k"} }
+		{ $$ = &Variable{Name: $1, Sort: "k"} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
-		{ $$ = Variable{Name: $1, Sort: $3} }
+		{ $$ = &Variable{Name: $1, Sort: $3} }
 
 bag_variable
 	: TOK_UC_NAME
-		{ $$ = Variable{Name: $1, Sort: "bag"} }
+		{ $$ = &Variable{Name: $1, Sort: "bag"} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
-		{ $$ = Variable{Name: $1, Sort: $3} }		
+		{ $$ = &Variable{Name: $1, Sort: $3} }
 
 map_variable
 	: TOK_UC_NAME
-		{ $$ = Variable{Name: $1, Sort: "map"} }
+		{ $$ = &Variable{Name: $1, Sort: "map"} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
-		{ $$ = Variable{Name: $1, Sort: $3} }	
+		{ $$ = &Variable{Name: $1, Sort: $3} }	
 
 label
 	: TOK_LC_NAME
@@ -167,9 +167,9 @@ label
 
 term_list
 	: // empty
-		{ $$ = []*Term{} }
+		{ $$ = []Term{} }
 	| term
-		{ $$ = []*Term{$1} }
+		{ $$ = []Term{$1} }
 	| term_list ',' term
 		{ $$ = append($1, $3) }
 
@@ -181,9 +181,9 @@ bag
 
 bag_item
 	: cell
-		{ $$ = &BagItem{Type: E_BagCell, Cell: $1} }
+		{ $$ = $1 }
 	| bag_variable
-		{ $$ = &BagItem{Type: E_BagVariable, Variable: $1} }
+		{ $$ = $1 }
 
 map
 	: map_item
@@ -193,9 +193,9 @@ map
 
 map_item
 	: map_variable
-		{ $$ = &MapItem{Type: MapVariable, Variable: $1} }		
+		{ $$ = $1 }		
 	| term TOK_MAPS_TO term
-		{ $$ = &MapItem{Type: MapMapping, Mapping: Mapping{LHS: $1, RHS: $3}} }
+		{ $$ = &Mapping{LHS: $1, RHS: $3} }
 
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'

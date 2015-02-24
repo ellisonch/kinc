@@ -43,18 +43,6 @@ func (c *MapCell) String() string {
 func (c *ComputationCell) String() string {
 	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
 }
-// func (c *Cell) String() string {
-// 	return "CELL"
-// }
-// func (c Cell) String() string {
-// 	switch c.Type {
-// 		case CellError: return "Cell ERROR"
-// 		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
-// 		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
-// 		case CellMap: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
-// 		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
-// 	}	
-// }
 
 func (r Bag) String() string {
 	children := []string{}
@@ -71,36 +59,38 @@ func (r Map) String() string {
 	return strings.Join(children, " ")
 }
 
-func (t *Term) String() string {
-	switch t.Type {
-		case TermError: return "*Term Error"
-		case TermVariable: return t.Variable.String()
-		case TermInt64: return fmt.Sprintf("%d", t.Int64)
-		case TermRewrite: return t.Rewrite.String()
-		case TermAppl: return t.Appl.String()
-		case TermKra: return t.Kra.String()
-		// case TermCells: 
-		// 	children := ""
-		// 	for _, cell := range t.Cells {
-		// 		children += cell.String()
-		// 	}	
-		// 	return children
-		default: return "*Term Missing case"
-	}
+// func (t *Term) String() string {
+// 	switch t.Type {
+// 		case TermError: return "*Term Error"
+// 		case TermVariable: return t.Variable.String()
+// 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
+// 		case TermRewrite: return t.Rewrite.String()
+// 		case TermAppl: return t.Appl.String()
+// 		case TermKra: return t.Kra.String()
+// 		// case TermCells: 
+// 		// 	children := ""
+// 		// 	for _, cell := range t.Cells {
+// 		// 		children += cell.String()
+// 		// 	}	
+// 		// 	return children
+// 		default: return "*Term Missing case"
+// 	}
+// }
+
+func (rw *Paren) String() string {
+	return fmt.Sprintf("(%s)", rw.Term)
 }
 
 
-func (v Kra) String() string {
+func (v *Kra) String() string {
 	return fmt.Sprintf("%s ~> %s", v.LHS, v.RHS)
 }
 
-func (v Variable) String() string {
+func (v *Variable) String() string {
 	return fmt.Sprintf("%s:%s", v.Name, v.Sort)
 }
 
-
-
-func (a Appl) String() string {
+func (a *Appl) String() string {
 	children := []string{}
 	for _, arg := range a.Body {
 		children = append(children, arg.String())
@@ -109,7 +99,7 @@ func (a Appl) String() string {
 }
 
 
-func (r Rewrite) String() string {
+func (r *Rewrite) String() string {
 	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
 }
 
@@ -128,28 +118,19 @@ func (r *When) String() string {
 	return fmt.Sprintf("when %s", r.Term.String())
 }
 
+// func (rw *BagItem) String() string {
+// 	switch rw.Type {
+// 		case E_BagError: return "*BagItem ERROR"
+// 		case E_BagCell: return rw.Cell.String()
+// 		case E_BagVariable: return rw.Variable.String()
+// 		default: return "*BagItem Missing Case"
+// 	}
+// }
 
-func (r Mapping) String() string {
+func (r *Mapping) String() string {
 	return fmt.Sprintf("%s |-> %s", r.LHS.String(), r.RHS.String())
 }
 
-func (rw *BagItem) String() string {
-	switch rw.Type {
-		case E_BagError: return "*BagItem ERROR"
-		case E_BagCell: return rw.Cell.String()
-		case E_BagVariable: return rw.Variable.String()
-		default: return "*BagItem Missing Case"
-	}
-}
-
-func (rw *MapItem) String() string {
-	switch rw.Type {
-		case MapError: return "*MapItem ERROR"
-		case MapVariable: return rw.Variable.String()
-		case MapMapping: return rw.Mapping.String()
-		default: return "*MapItem Missing Case"
-	}
-}
 
 func (r Rule) String() string {
 	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())
