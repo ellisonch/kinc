@@ -186,6 +186,8 @@ map
 map_item
 	: map_variable
 		{ $$ = &MapItem{Type: MapVariable, Variable: $1} }		
+	| term TOK_MAPS_TO term
+		{ $$ = &MapItem{Type: MapMapping, Mapping: Mapping{LHS: $1, RHS: $3}} }
 
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'

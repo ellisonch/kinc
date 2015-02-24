@@ -259,6 +259,7 @@ type MapItemType int
 const (
 	MapError = iota
 	MapVariable
+	MapMapping
 )
 
 type BagItemType int
@@ -277,6 +278,16 @@ type BagItem struct {
 type MapItem struct {
 	Type MapItemType
 	Variable Variable
+	Mapping Mapping
+}
+
+type Mapping struct {
+	LHS *Term
+	RHS *Term
+}
+
+func (r Mapping) String() string {
+	return fmt.Sprintf("%s |-> %s", r.LHS.String(), r.RHS.String())
 }
 
 func (rw *BagItem) String() string {
@@ -292,6 +303,7 @@ func (rw *MapItem) String() string {
 	switch rw.Type {
 		case MapError: return "*MapItem ERROR"
 		case MapVariable: return rw.Variable.String()
+		case MapMapping: return rw.Mapping.String()
 		default: return "*MapItem Missing Case"
 	}
 }
