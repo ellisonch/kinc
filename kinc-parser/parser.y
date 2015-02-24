@@ -19,9 +19,9 @@ var Final KincDefinition
 	term *Term
 	label *Label
 	term_list []*Term
-	term_variable Variable
+	variable Variable
 	cell_attributes CellAttributes
-	bag []*BagItem
+	bag Bag
 	bag_item *BagItem
 }
 /*
@@ -43,7 +43,7 @@ at ATerm
 %type <term> term
 %type <label> label
 %type <term_list> term_list
-%type <term_variable> term_variable
+%type <variable> term_variable bag_variable
 %type <cell_attributes> cell_attributes
 %type <bag> bag
 %type <bag_item> bag_item
@@ -137,6 +137,12 @@ term_variable
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = Variable{Name: $1, Sort: $3} }
 
+bag_variable
+	: TOK_UC_NAME
+		{ $$ = Variable{Name: $1, Sort: "bag"} }
+	| TOK_UC_NAME ':' TOK_LC_NAME
+		{ $$ = Variable{Name: $1, Sort: $3} }		
+
 label
 	: TOK_LC_NAME
 		{ $$ = &Label{Type: E_LabelName, Name: $1} }
@@ -153,13 +159,15 @@ term_list
 
 bag
 	: bag_item
-		{ $$ = []*BagItem{$1} }
+		{ $$ = Bag{$1} }
 	| bag bag_item
 		{ $$ = append($1, $2) }
 
 bag_item
 	: cell
 		{ $$ = &BagItem{Type: BagCell, Cell: $1} }
+	| bag_variable
+		{ $$ = &BagItem{Type: BagVariable, Variable: $1} }
 
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
@@ -167,14 +175,14 @@ cell
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}*/
-			$$ = Cell{Name: $1, Body: $3}
+			$$ = Cell{Name: $1, Type: CellComputation, Computation: $3}
 		}
-	| TOK_CELL_BEGIN_BAG '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+	| TOK_CELL_BEGIN_BAG '>' bag TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}*/
-			$$ = Cell{Name: $1, Body: $3}
+			$$ = Cell{Name: $1, Type: CellBag, Bag: $3}
 		}
 
 cells

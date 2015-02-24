@@ -79,25 +79,39 @@ type CellAttributes struct {
 }
 
 type Cell struct {
+	Type CellType
 	Name string
 	// Type CellType
-	Body *Term
+	Computation *Term
+	Bag Bag
 }
 
 func (c Cell) String() string {
-	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Body.String(), c.Name)
+	switch c.Type {
+		case CellError: return "Cell ERROR"
+		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
+		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
+		case CellMap: return "CELLMAP"
+		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
+	}	
 }
 
-type Rule struct {
-	Bag []*BagItem
-}
+type Bag []*BagItem
 
-func (r Rule) String() string {
+func (r Bag) String() string {
 	children := []string{}
-	for _, b := range r.Bag {
+	for _, b := range r {
 		children = append(children, b.String())
 	}
 	return strings.Join(children, " ")
+}
+
+type Rule struct {
+	Bag Bag
+}
+
+func (r Rule) String() string {
+	return r.Bag.String()
 }
 
 // func (rules Rules) String() string {	
@@ -122,7 +136,7 @@ type Term struct {
 
 func (t *Term) String() string {
 	switch t.Type {
-		case TermError: return "Error"
+		case TermError: return "*Term Error"
 		case TermVariable: return t.Variable.String()
 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
 		case TermRewrite: return t.Rewrite.String()
@@ -134,7 +148,7 @@ func (t *Term) String() string {
 		// 		children += cell.String()
 		// 	}	
 		// 	return children
-		default: return "Error"
+		default: return "*Term Missing case"
 	}
 }
 
@@ -200,7 +214,7 @@ func (l *Label) String() string {
 	switch l.Type {
 		case E_LabelName: return l.Name
 		case E_LabelRewrite: return l.Rewrite.String()
-		default: return "ERROR"
+		default: return "*Label Missing Case"
 	}
 }
 
@@ -232,19 +246,26 @@ const (
 	TermParen
 )
 
-type BagType int
+type BagItemType int
 const (
 	BagError = iota
 	BagCell
+	BagVariable
 )
 
 type BagItem struct {
-	Type BagType
+	Type BagItemType
 	Cell Cell
+	Variable Variable
 }
 
 func (rw *BagItem) String() string {
-	return rw.Cell.String()
+	switch rw.Type {
+		case BagError: return "*BagItem ERROR"
+		case BagCell: return rw.Cell.String()
+		case BagVariable: return rw.Variable.String()
+		default: return "*BagItem Missing Case"
+	}
 }
 
 // type ATerm struct {
