@@ -35,8 +35,6 @@ var tests = []struct {
 	{`configuration <foo-bar> </foo-bar>`},
 	{`configuration <a> </a> rule <a> plus(I1, I2) => #_plusInt_(I1, I2) </a>`},
 	{`configuration <a> </a> rule <a> div(I1, I2) => #_divInt_(I1, I2) </a> when #_notEqInt_(I2, I2)`},
-	  // rule I1 / I2 => I1 /Int I2  when I2 =/=Int 0
-// rule I1 + I2 => I1 +Int I2
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`

@@ -121,7 +121,7 @@ type Rule struct {
 }
 
 func (r Rule) String() string {
-	return r.Bag.String() + "\n" + r.When.String()
+	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())
 }
 
 // func (rules Rules) String() string {	
