@@ -113,16 +113,10 @@ func (r Rewrite) String() string {
 	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
 }
 
-func (l *Label) String() string {
-	switch l.Type {
-		case E_LabelName: return l.Name
-		case E_LabelRewrite: return l.Rewrite.String()
-		default: return "*Label Missing Case"
-	}
+func (rw *NameLabel) String() string {
+	return fmt.Sprintf("%s", rw.Name)
 }
-
-
-func (rw *LabelRewrite) String() string {
+func (rw *RewriteLabel) String() string {
 	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
 }
 

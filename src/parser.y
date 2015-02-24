@@ -16,7 +16,7 @@ var Final KincDefinition
 	rule Rule
 	rules []Rule
 	term *Term
-	label *Label
+	label Label
 	term_list []*Term
 	variable Variable
 	cell_attributes CellAttributes
@@ -161,9 +161,9 @@ map_variable
 
 label
 	: TOK_LC_NAME
-		{ $$ = &Label{Type: E_LabelName, Name: $1} }
+		{ $$ = &NameLabel{Name: $1} }
 	| '(' label TOK_ARROW label ')'
-		{ $$ = &Label{Type: E_LabelRewrite, Rewrite: LabelRewrite{LHS: $2, RHS: $4}} }
+		{ $$ = &RewriteLabel{LHS: $2, RHS: $4} }
 
 term_list
 	: // empty

@@ -40,19 +40,27 @@ type CellAttributes struct {
 	Table map[string]string
 }
 
+type NameLabel struct {
+	Name string
+}
+
+type RewriteLabel struct {
+	LHS Label
+	RHS Label
+}
+type Label interface {
+	Node
+	labelNode()
+	String() string
+}
+func (*RewriteLabel) labelNode() {}
+func (*NameLabel) labelNode() {}
+
 type Cell interface {
 	Node
 	cellNode()
 	String() string
 }
-
-// type Cell struct {
-// 	Type CellType
-// 	Name string
-// 	Computation *Term
-// 	Bag Bag
-// 	Map Map
-// }
 
 type BagCell struct {
 	Name string
@@ -97,7 +105,7 @@ type Variable struct {
 }
 
 type Appl struct {
-	Label *Label
+	Label Label
 	Body []*Term
 }
 
@@ -112,24 +120,7 @@ type Rewrite struct {
 }
 
 
-type Label struct {
-	Type LabelType
-	Name string
-	Rewrite LabelRewrite
-}
 
-type LabelRewrite struct {
-	LHS *Label
-	RHS *Label
-}
-
-
-type LabelType int
-const (
-	E_LabelError = iota
-	E_LabelName
-	E_LabelRewrite
-)
 
 type TermType int
 const (
