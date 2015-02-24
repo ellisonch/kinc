@@ -9,12 +9,12 @@ var Final Language
 	i64 int64
 	str string
 	real float64	
-	config Configuration
+	config *Configuration
 	cell Cell
-	ccell CCell
-	ccells []CCell
-	rule Rule
-	rules []Rule
+	ccell *CCell
+	ccells []*CCell
+	rule *Rule
+	rules []*Rule
 	term Term
 	label Label
 	term_list []Term
@@ -69,7 +69,7 @@ final
 
 configuration
 	: ccell
-		{ $$ = Configuration{Cell: $1} }
+		{ $$ = &Configuration{Cell: $1} }
 
 ccell
 	: TOK_CELL_BEGIN_K cell_attributes '>' ccells TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
@@ -79,7 +79,7 @@ ccell
 			}
 			for k, v := range $2.Table {
 				if k == "type" {
-					fmt.Printf("%s has type %s\n", $1, v)
+					// fmt.Printf("%s has type %s\n", $1, v)
 					CellTypes[$1] = v
 				}
 			}
@@ -87,12 +87,12 @@ ccell
 				CellTypes[$1] = "k"
 			}
 
-			$$ = CCell{Name: $1, Attributes: $2, Children: $4}
+			$$ = &CCell{Name: $1, Attributes: $2, Children: $4}
 		}
 
 ccells
 	: // empty
-		{ $$ = []CCell{} }
+		{ $$ = []*CCell{} }
 	| ccells ccell
 		{ $$ = append($1, $2) }
 
@@ -107,15 +107,15 @@ cell_attributes
 
 rules
 	: // empty
-		{ $$ = []Rule{} }
+		{ $$ = []*Rule{} }
 	| rules rule
 		{ $$ = append($1, $2) }
 
 rule
 	: TOK_RULE bag when_clause
-		{ $$ = Rule{Bag: $2, When: $3} }
+		{ $$ = &Rule{Bag: $2, When: $3} }
 	| TOK_RULE bag
-		{ $$ = Rule{Bag: $2} }
+		{ $$ = &Rule{Bag: $2} }
 
 when_clause
 	: TOK_WHEN term

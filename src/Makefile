@@ -1,6 +1,6 @@
 .DELETE_ON_ERROR:
 
-DEPS=kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go
+DEPS=kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go pretty_print.go
 
 all: kinc.exe
 	./kinc.exe

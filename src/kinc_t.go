@@ -14,18 +14,18 @@ type Node interface {
 }
 
 type Language struct {
-	Configuration Configuration
-	Rules []Rule
+	Configuration *Configuration
+	Rules []*Rule
 }
 
 type Configuration struct {
-	Cell CCell
+	Cell *CCell
 }
 
 type CCell struct {
 	Name string
 	Attributes CellAttributes
-	Children []CCell
+	Children []*CCell
 }
 
 type CellAttributes struct {

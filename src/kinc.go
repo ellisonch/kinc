@@ -57,7 +57,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	s := lang.PrettyPrint()
 
-	fmt.Printf("%s\n", lang.String())
+	fmt.Printf("%s\n", s)
 	os.Exit(0)
 }

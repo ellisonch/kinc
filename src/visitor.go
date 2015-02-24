@@ -29,6 +29,33 @@ func Walk(v Visitor, node Node) {
 			for _, c := range n.Rules {
 				Walk(v, c)
 			}
+		case *Configuration:
+			Walk(v, n.Cell)
+
+		case *CCell:
+			for _, c := range n.Children {
+				Walk(v, c)
+			}
+
+		case *Rule:
+			Walk(v, n.Bag)
+			if (n.When != nil) {
+				Walk(v, n.When)
+			}
+
+		case Bag:
+			v.Visit(nil)
+
+		case *When:
+			Walk(v, n.Term)
+
+		case *Appl:
+			for _, c := range n.Body {
+				Walk(v, c)
+			}
+
+		case *Variable:
+			// nothing
 
 		// Comments and fields
 		// case *Comment:
@@ -52,7 +79,7 @@ func Walk(v Visitor, node Node) {
 		// 		Walk(v, n.Comment)
 		// 	}
 		default:
-			fmt.Printf("ast.Walk: unexpected node type %T", n)
+			fmt.Printf("ast.Walk: unexpected node type %T\n", n)
 			panic("ast.Walk")
 	}
 	v.Visit(nil)
