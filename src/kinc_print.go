@@ -34,15 +34,27 @@ func (a CellAttributes) String() string {
 	return strings.Join(children, " ")
 }
 
-func (c Cell) String() string {
-	switch c.Type {
-		case CellError: return "Cell ERROR"
-		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
-		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
-		case CellMap: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
-		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
-	}	
+func (c *BagCell) String() string {
+	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
 }
+func (c *MapCell) String() string {
+	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
+}
+func (c *ComputationCell) String() string {
+	return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
+}
+// func (c *Cell) String() string {
+// 	return "CELL"
+// }
+// func (c Cell) String() string {
+// 	switch c.Type {
+// 		case CellError: return "Cell ERROR"
+// 		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
+// 		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
+// 		case CellMap: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
+// 		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
+// 	}	
+// }
 
 func (r Bag) String() string {
 	children := []string{}
@@ -129,9 +141,9 @@ func (r Mapping) String() string {
 
 func (rw *BagItem) String() string {
 	switch rw.Type {
-		case BagError: return "*BagItem ERROR"
-		case BagCell: return rw.Cell.String()
-		case BagVariable: return rw.Variable.String()
+		case E_BagError: return "*BagItem ERROR"
+		case E_BagCell: return rw.Cell.String()
+		case E_BagVariable: return rw.Variable.String()
 		default: return "*BagItem Missing Case"
 	}
 }
@@ -143,4 +155,8 @@ func (rw *MapItem) String() string {
 		case MapMapping: return rw.Mapping.String()
 		default: return "*MapItem Missing Case"
 	}
+}
+
+func (r Rule) String() string {
+	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())
 }

@@ -1,44 +1,38 @@
 package kinc
 
-import "fmt"
-
 var CellTypes map[string]string
 
 func KincInit() {
 	CellTypes = make(map[string]string)
 }
 
+// --------------------------------------------
 
-
-type Rules []Rule
-
+type Node interface {
+	// 36		Pos() token.Pos // position of first character belonging to the node
+	// 37		End() token.Pos // position of first character immediately after the node
+}
 
 type KincDefinition struct {
-	// Int int64
 	Configuration Configuration
 	Rules []Rule
-}
-type Node interface {
-    // 36		Pos() token.Pos // position of first character belonging to the node
-    // 37		End() token.Pos // position of first character immediately after the node
 }
 
 type Configuration struct {
 	Cell CCell
 }
 
-type CellType int
-const (
-	CellError = iota
-	CellComputation
-	CellMap
-	CellBag
-)
+// type CellType int
+// const (
+// 	CellError = iota
+// 	CellComputation
+// 	CellMap
+// 	CellBag
+// )
 
 type CCell struct {
 	Name string
 	Attributes CellAttributes
-	// Type CellType
 	Children []CCell
 }
 
@@ -46,15 +40,36 @@ type CellAttributes struct {
 	Table map[string]string
 }
 
-type Cell struct {
-	Type CellType
-	Name string
-	// Type CellType
-	Computation *Term
-	Bag Bag
-	Map Map
+type Cell interface {
+	Node
+	cellNode()
+	String() string
 }
 
+// type Cell struct {
+// 	Type CellType
+// 	Name string
+// 	Computation *Term
+// 	Bag Bag
+// 	Map Map
+// }
+
+type BagCell struct {
+	Name string
+	Bag Bag
+}
+type MapCell struct {
+	Name string
+	Map Map
+}
+type ComputationCell struct {
+	Name string
+	Computation *Term
+}
+
+func (*BagCell) cellNode() {}
+func (*MapCell) cellNode() {}
+func (*ComputationCell) cellNode() {}
 
 type Map []*MapItem
 type Bag []*BagItem
@@ -65,17 +80,11 @@ type Rule struct {
 	When *When
 }
 
-func (r Rule) String() string {
-	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())
-}
-
-
 type Term struct {
 	Type TermType
 	Variable Variable
 	Int64 int64 
 	Rewrite Rewrite
-	// Cells []Cell
 	Appl Appl
 	Kra Kra
 	Paren *Term
@@ -129,7 +138,6 @@ const (
 	TermInt64
 	TermRewrite
 	TermAppl
-	// TermCells
 	TermKra
 	TermParen
 )
@@ -143,9 +151,9 @@ const (
 
 type BagItemType int
 const (
-	BagError = iota
-	BagCell
-	BagVariable
+	E_BagError = iota
+	E_BagCell
+	E_BagVariable
 )
 
 type BagItem struct {

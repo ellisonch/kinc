@@ -181,9 +181,9 @@ bag
 
 bag_item
 	: cell
-		{ $$ = &BagItem{Type: BagCell, Cell: $1} }
+		{ $$ = &BagItem{Type: E_BagCell, Cell: $1} }
 	| bag_variable
-		{ $$ = &BagItem{Type: BagVariable, Variable: $1} }
+		{ $$ = &BagItem{Type: E_BagVariable, Variable: $1} }
 
 map
 	: map_item
@@ -203,21 +203,21 @@ cell
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}*/
-			$$ = Cell{Name: $1, Type: CellComputation, Computation: $3}
+			$$ = &ComputationCell{Name: $1, Computation: $3}
 		}
 	| TOK_CELL_BEGIN_BAG '>' bag TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}*/
-			$$ = Cell{Name: $1, Type: CellBag, Bag: $3}
+			$$ = &BagCell{Name: $1, Bag: $3}
 		}
 	| TOK_CELL_BEGIN_MAP '>' map TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			/*if $2 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
 			}*/
-			$$ = Cell{Name: $1, Type: CellMap, Map: $3}
+			$$ = &MapCell{Name: $1, Map: $3}
 		}
 
 /*
