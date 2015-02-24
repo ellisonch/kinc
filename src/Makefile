@@ -2,8 +2,8 @@
 
 all: compiler-test
 
-compiler-test: compiler_test.go kinc_t.go parser.go kinc.nn.go  
-	go test -v compiler_test.go kinc_t.go parser.go kinc.nn.go
+compiler-test: compiler_test.go kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go
+	go test -v compiler_test.go kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go
 
 test: parser.go
 #	go build &&

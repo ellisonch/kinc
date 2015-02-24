@@ -1,7 +1,6 @@
 package kinc
 
 import "fmt"
-import "strings"
 
 var CellTypes map[string]string
 
@@ -9,51 +8,20 @@ func KincInit() {
 	CellTypes = make(map[string]string)
 }
 
+
+
 type Rules []Rule
+
 
 type KincDefinition struct {
 	// Int int64
 	Configuration Configuration
 	Rules []Rule
 }
-
-func (def *KincDefinition) String() string {
-	children := ""
-	for _, rule := range def.Rules {
-		children += rule.String() + "\n"
-		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
-	}
-	return fmt.Sprintf("%s\n%s", def.Configuration, children)
+type Node interface {
+    // 36		Pos() token.Pos // position of first character belonging to the node
+    // 37		End() token.Pos // position of first character immediately after the node
 }
-
-func (c Configuration) String() string {
-	return fmt.Sprintf("configuration %s", c.Cell.String())
-}
-
-func (c CCell) String() string {	
-	children := ""
-	for _, cell := range c.Children {
-		children += cell.String()
-		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
-	}	
-	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, children, c.Name)
-}
-
-func (a CellAttributes) String() string {	
-	children := []string{}
-	for k, v := range a.Table {
-		children = append(children, fmt.Sprintf("%s=\"%s\"", k, v))
-	}	
-	return strings.Join(children, " ")
-}
-
-// func (l CommaList) String() string {
-// 	ss := []string{}
-// 	for _, at := range l {
-// 		ss = append(ss, at.String())
-// 	}
-// 	return strings.Join(ss, ",")
-// }
 
 type Configuration struct {
 	Cell CCell
@@ -87,33 +55,10 @@ type Cell struct {
 	Map Map
 }
 
-func (c Cell) String() string {
-	switch c.Type {
-		case CellError: return "Cell ERROR"
-		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
-		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
-		case CellMap: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
-		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
-	}	
-}
 
 type Map []*MapItem
 type Bag []*BagItem
 
-func (r Bag) String() string {
-	children := []string{}
-	for _, b := range r {
-		children = append(children, b.String())
-	}
-	return strings.Join(children, " ")
-}
-func (r Map) String() string {
-	children := []string{}
-	for _, b := range r {
-		children = append(children, b.String())
-	}
-	return strings.Join(children, " ")
-}
 
 type Rule struct {
 	Bag Bag
@@ -124,14 +69,6 @@ func (r Rule) String() string {
 	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())
 }
 
-// func (rules Rules) String() string {	
-// 	children := "xxx"
-// 	for _, rule := range rules {
-// 		children += rule.String()
-// 		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
-// 	}	
-// 	return children
-// }
 
 type Term struct {
 	Type TermType
@@ -144,48 +81,15 @@ type Term struct {
 	Paren *Term
 }
 
-func (t *Term) String() string {
-	switch t.Type {
-		case TermError: return "*Term Error"
-		case TermVariable: return t.Variable.String()
-		case TermInt64: return fmt.Sprintf("%d", t.Int64)
-		case TermRewrite: return t.Rewrite.String()
-		case TermAppl: return t.Appl.String()
-		case TermKra: return t.Kra.String()
-		// case TermCells: 
-		// 	children := ""
-		// 	for _, cell := range t.Cells {
-		// 		children += cell.String()
-		// 	}	
-		// 	return children
-		default: return "*Term Missing case"
-	}
-}
 
 type Variable struct {
 	Name string
 	Sort string
 }
 
-func (v Kra) String() string {
-	return fmt.Sprintf("%s ~> %s", v.LHS, v.RHS)
-}
-
-func (v Variable) String() string {
-	return fmt.Sprintf("%s:%s", v.Name, v.Sort)
-}
-
 type Appl struct {
 	Label *Label
 	Body []*Term
-}
-
-func (a Appl) String() string {
-	children := []string{}
-	for _, arg := range a.Body {
-		children = append(children, arg.String())
-	}
-	return fmt.Sprintf("%s(%s)", a.Label, strings.Join(children, ","))
 }
 
 type Kra struct {
@@ -198,21 +102,6 @@ type Rewrite struct {
 	RHS *Term
 }
 
-func (r Rewrite) String() string {
-	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
-}
-
-// func (r *Rewrite) String2(x int) string {
-// 	fmt.Printf("Rewrite %d\n", x)
-// 	// return fmt.Sprintf("%s => %s", r.LHS.String(), "RHS")
-// 	return fmt.Sprintf("%p: %p => %s", r, r.LHS, r.RHS.String2(x+1))
-// }
-
-// func (r *Rewrite) Strin2() string {
-// 	fmt.Printf("Rewrite %d")
-// 	// return fmt.Sprintf("%s => %s", r.LHS.String(), "RHS")
-// 	return fmt.Sprintf("%p: %p => %s", r, r.LHS.String, r.RHS.String())
-// }
 
 type Label struct {
 	Type LabelType
@@ -220,22 +109,11 @@ type Label struct {
 	Rewrite LabelRewrite
 }
 
-func (l *Label) String() string {
-	switch l.Type {
-		case E_LabelName: return l.Name
-		case E_LabelRewrite: return l.Rewrite.String()
-		default: return "*Label Missing Case"
-	}
-}
-
 type LabelRewrite struct {
 	LHS *Label
 	RHS *Label
 }
 
-func (rw *LabelRewrite) String() string {
-	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
-}
 
 type LabelType int
 const (
@@ -286,69 +164,8 @@ type When struct {
 	Term *Term
 }
 
-func (r *When) String() string {
-	if (r == nil) { 
-		return ""
-	}
-	return fmt.Sprintf("when %s", r.Term.String())
-}
-
 type Mapping struct {
 	LHS *Term
 	RHS *Term
 }
 
-func (r Mapping) String() string {
-	return fmt.Sprintf("%s |-> %s", r.LHS.String(), r.RHS.String())
-}
-
-func (rw *BagItem) String() string {
-	switch rw.Type {
-		case BagError: return "*BagItem ERROR"
-		case BagCell: return rw.Cell.String()
-		case BagVariable: return rw.Variable.String()
-		default: return "*BagItem Missing Case"
-	}
-}
-
-func (rw *MapItem) String() string {
-	switch rw.Type {
-		case MapError: return "*MapItem ERROR"
-		case MapVariable: return rw.Variable.String()
-		case MapMapping: return rw.Mapping.String()
-		default: return "*MapItem Missing Case"
-	}
-}
-
-// type ATerm struct {
-// 	Type ATermType
-// 	Int int64
-// 	Real float64
-// 	Appl ATermAppl
-// 	List ATermList
-// }
-
-// type ATermAppl struct {
-// 	Name string
-// 	Args CommaList
-// }
-// type ATermList CommaList
-// type CommaList []ATerm
-
-// func (at *ATerm) String() string {
-// 	switch at.Type {
-// 		case Error: return "---Error---"
-// 		case Int: return fmt.Sprintf("%d", at.Int)
-// 		case Real: return fmt.Sprintf("%f", at.Real)
-// 		case Appl: return fmt.Sprintf("%s(%s)", at.Appl.Name, at.Appl.Args.String())
-// 		case List: return fmt.Sprintf("[%s]", CommaList(at.List).String())
-// 	}
-// 	return "---Error---"
-// }
-// func (l CommaList) String() string {
-// 	ss := []string{}
-// 	for _, at := range l {
-// 		ss = append(ss, at.String())
-// 	}
-// 	return strings.Join(ss, ",")
-// }
