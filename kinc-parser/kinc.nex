@@ -10,6 +10,9 @@
 		if v == "bag" {
 			return TOK_CELL_BEGIN_BAG
 		}
+		if v == "map" {
+			return TOK_CELL_BEGIN_MAP
+		}
 	}
 	return TOK_CELL_BEGIN_K
 }

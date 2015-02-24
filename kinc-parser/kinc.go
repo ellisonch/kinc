@@ -84,6 +84,7 @@ type Cell struct {
 	// Type CellType
 	Computation *Term
 	Bag Bag
+	Map Map
 }
 
 func (c Cell) String() string {
@@ -91,14 +92,22 @@ func (c Cell) String() string {
 		case CellError: return "Cell ERROR"
 		case CellComputation: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Computation.String(), c.Name)
 		case CellBag: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Bag.String(), c.Name)
-		case CellMap: return "CELLMAP"
+		case CellMap: return fmt.Sprintf("<%s>%s</%s>", c.Name, c.Map.String(), c.Name)
 		default: return fmt.Sprintf("Cell Missing Case: %v", c.Type)
 	}	
 }
 
+type Map []*MapItem
 type Bag []*BagItem
 
 func (r Bag) String() string {
+	children := []string{}
+	for _, b := range r {
+		children = append(children, b.String())
+	}
+	return strings.Join(children, " ")
+}
+func (r Map) String() string {
 	children := []string{}
 	for _, b := range r {
 		children = append(children, b.String())
@@ -246,6 +255,12 @@ const (
 	TermParen
 )
 
+type MapItemType int
+const (
+	MapError = iota
+	MapVariable
+)
+
 type BagItemType int
 const (
 	BagError = iota
@@ -259,12 +274,25 @@ type BagItem struct {
 	Variable Variable
 }
 
+type MapItem struct {
+	Type MapItemType
+	Variable Variable
+}
+
 func (rw *BagItem) String() string {
 	switch rw.Type {
 		case BagError: return "*BagItem ERROR"
 		case BagCell: return rw.Cell.String()
 		case BagVariable: return rw.Variable.String()
 		default: return "*BagItem Missing Case"
+	}
+}
+
+func (rw *MapItem) String() string {
+	switch rw.Type {
+		case MapError: return "*MapItem ERROR"
+		case MapVariable: return rw.Variable.String()
+		default: return "*MapItem Missing Case"
 	}
 }
 

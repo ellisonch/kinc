@@ -11,7 +11,6 @@ var Final KincDefinition
 	real float64	
 	config Configuration
 	cell Cell
-	cells []Cell
 	ccell CCell
 	ccells []CCell
 	rule Rule
@@ -23,6 +22,8 @@ var Final KincDefinition
 	cell_attributes CellAttributes
 	bag Bag
 	bag_item *BagItem
+	mymap Map
+	map_item *MapItem
 }
 /*
 lst []ATerm
@@ -35,7 +36,6 @@ at ATerm
 */
 %type <config> configuration
 %type <cell> cell
-%type <cells> cells
 %type <ccell> ccell
 %type <ccells> ccells
 %type <rules> rules
@@ -43,12 +43,14 @@ at ATerm
 %type <term> term
 %type <label> label
 %type <term_list> term_list
-%type <variable> term_variable bag_variable
+%type <variable> term_variable bag_variable map_variable
 %type <cell_attributes> cell_attributes
 %type <bag> bag
 %type <bag_item> bag_item
+%type <mymap> map
+%type <map_item> map_item
 // these apparently encode precedence, so be careful
-%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG
+%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN
 %token <i64> TOK_INTEGER 
@@ -143,6 +145,12 @@ bag_variable
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = Variable{Name: $1, Sort: $3} }		
 
+map_variable
+	: TOK_UC_NAME
+		{ $$ = Variable{Name: $1, Sort: "map"} }
+	| TOK_UC_NAME ':' TOK_LC_NAME
+		{ $$ = Variable{Name: $1, Sort: $3} }	
+
 label
 	: TOK_LC_NAME
 		{ $$ = &Label{Type: E_LabelName, Name: $1} }
@@ -169,6 +177,16 @@ bag_item
 	| bag_variable
 		{ $$ = &BagItem{Type: BagVariable, Variable: $1} }
 
+map
+	: map_item
+		{ $$ = Map{$1} }
+	| map map_item
+		{ $$ = append($1, $2) }
+
+map_item
+	: map_variable
+		{ $$ = &MapItem{Type: MapVariable, Variable: $1} }		
+
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
@@ -184,12 +202,13 @@ cell
 			}*/
 			$$ = Cell{Name: $1, Type: CellBag, Bag: $3}
 		}
-
-cells
-	: cell
-		{ $$ = []Cell{$1} }
-	| cells cell
-		{ $$ = append($1, $2) }
+	| TOK_CELL_BEGIN_MAP '>' map TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+		{
+			/*if $2 != $6 {
+				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
+			}*/
+			$$ = Cell{Name: $1, Type: CellMap, Map: $3}
+		}
 
 /*
 aterm

@@ -27,7 +27,8 @@ var tests = []struct {
 	{`configuration <a type="k"> </a>`},
 	{`configuration <a type="k"> </a> rule <a> V </a>`},
 	{`configuration <a type="bag"> </a> rule <a> V </a>`},
-	// {`configuration <a> </a> rule <a> V </a> <b> V </b>`},
+	{`configuration <a> </a> rule <a> V </a> <b> V </b>`},
+	{`configuration <a type="map"> </a> rule <a> V </a>`},
 };
 
 // var simpleProg3 string = `Plus(Int("4"), Call("f", [Mul(Int(5), Var("x"))]))`
