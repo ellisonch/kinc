@@ -9,35 +9,42 @@ func go_sucks_variable_types() {
 	_ = fmt.Printf
 }
 
-func (l *Rule) VariableTypes() (map[string]string, error) {
-	vis := new(variableTypes)
+func (l *Rule) CompleteVariableTypes() {
+	vis := new(getVariableTypes)
+	// fmt.Printf("Starting walk...")
 	Walk(vis, l)
 
-	ret := make(map[string]string)
+	types := make(map[string]string)
 
 	// fmt.Printf("\n%v\n%v\n", vis.explicitVariables, vis.implicitVariables)
 
 	for _, variable := range vis.explicitVariables {
-		if v, ok := ret[variable.Name]; ok {
+		if v, ok := types[variable.Name]; ok {
 			if v != variable.Sort {
 				log.Panicf("%s should have type %s in %s", variable, v, l)
 			}
 		}
-		ret[variable.Name] = variable.Sort
+		types[variable.Name] = variable.Sort
 	}
 	for _, variable := range vis.implicitVariables {
-		if _, ok := ret[variable.Name]; ok {
+		if _, ok := types[variable.Name]; ok {
 			continue
 		}
-		ret[variable.Name] = variable.Sort
+		types[variable.Name] = variable.Sort
 	}
 
-	return ret, nil
+	// fmt.Printf("%v\n", types)
+	svis := new(setVariableTypes)
+	svis.types = types
+	Walk(svis, l)
 }
 
-func (vis *variableTypes) VisitPre(node Node) Visitor {
+
+func (vis *getVariableTypes) VisitPre(node Node) Visitor {
+	// fmt.Printf("Visiting %s\n", node)
 	switch n := node.(type) {
 	case *Variable:
+		// fmt.Printf("Handling %s\n", n)
 		if n.Default {
 			vis.implicitVariables = append(vis.implicitVariables, n)
 		} else {
@@ -48,12 +55,32 @@ func (vis *variableTypes) VisitPre(node Node) Visitor {
 	return vis
 }
 
-func (vis *variableTypes) VisitPost(node Node) { }
+func (vis *getVariableTypes) VisitPost(node Node) { }
 
-type variableTypes struct {
+type getVariableTypes struct {
 	explicitVariables []*Variable
 	implicitVariables []*Variable
 	err error
+}
+
+
+func (vis *setVariableTypes) VisitPre(node Node) Visitor {
+	switch n := node.(type) {
+	case *Variable:
+		if sort, ok := vis.types[n.Name]; ok {
+			n.ActualSort = sort
+			// fmt.Printf("%s\n", n.String())	
+		} else {
+			log.Panicf("%v doesn't contain %s", vis.types, n.Name)
+		}		
+	}
+	return vis
+}
+
+func (vis *setVariableTypes) VisitPost(node Node) { }
+
+type setVariableTypes struct {
+	types map[string]string
 }
 
 

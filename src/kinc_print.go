@@ -70,6 +70,10 @@ func (v *Kra) String() string {
 }
 
 func (v *Variable) String() string {
+	if (v.ActualSort != "") {
+		return fmt.Sprintf("%s:%s", v.Name, v.ActualSort)
+	}
+
 	var sort string
 	if (v.Default) {
 		sort = ""

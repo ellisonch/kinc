@@ -51,6 +51,7 @@ func (*NameLabel) labelNode() {}
 type Cell interface {
 	Node
 	bagItemNode()
+	BuildBagChecks(*CheckHelper)
 	String() string
 }
 
@@ -92,6 +93,7 @@ type BagItem interface {
 	Node
 	bagItemNode()
 	String() string
+	BuildBagChecks(*CheckHelper)
 }
 
 func (*Variable) bagItemNode() {}
@@ -104,6 +106,7 @@ type Rule struct {
 type K interface {
 	Node
 	kNode()
+	BuildTopKChecks(*CheckHelper)
 	String() string
 }
 
@@ -121,6 +124,8 @@ type Variable struct {
 	Name string
 	Sort string
 	Default bool
+
+	ActualSort string
 }
 
 type Appl struct {

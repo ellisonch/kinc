@@ -17,9 +17,11 @@ type Visitor interface {
 // w.Visit(nil).
 //
 func Walk(v Visitor, node Node) {
-	if v = v.VisitPre(node); v == nil {
-		return
-	}
+	// if v = v.VisitPre(node); v == nil {
+	// 	return
+	// }
+	// fmt.Printf("Previsiting %s\n", node)
+	v.VisitPre(node)
 
 	// walk children
 	switch n := node.(type) {
@@ -77,6 +79,7 @@ func Walk(v Visitor, node Node) {
 			}
 
 		case *Variable:
+			// fmt.Printf("Var: %s\n", n)
 
 		default:
 			fmt.Printf("ast.Walk: unexpected node type %T\n", n)
