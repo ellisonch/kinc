@@ -8,7 +8,6 @@ func (def *Language) String() string {
 	children := ""
 	for _, rule := range def.Rules {
 		children += rule.String() + "\n"
-		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
 	}
 	return fmt.Sprintf("%s\n%s", def.Configuration, children)
 }
@@ -21,7 +20,6 @@ func (c CCell) String() string {
 	children := ""
 	for _, cell := range c.Children {
 		children += cell.String()
-		// return fmt.Sprintf("<%s> %s </%s>\n", c.Name, c.Children, c.Name)
 	}	
 	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, children, c.Name)
 }
@@ -59,28 +57,9 @@ func (r Map) String() string {
 	return strings.Join(children, " ")
 }
 
-// func (t *Term) String() string {
-// 	switch t.Type {
-// 		case TermError: return "*Term Error"
-// 		case TermVariable: return t.Variable.String()
-// 		case TermInt64: return fmt.Sprintf("%d", t.Int64)
-// 		case TermRewrite: return t.Rewrite.String()
-// 		case TermAppl: return t.Appl.String()
-// 		case TermKra: return t.Kra.String()
-// 		// case TermCells: 
-// 		// 	children := ""
-// 		// 	for _, cell := range t.Cells {
-// 		// 		children += cell.String()
-// 		// 	}	
-// 		// 	return children
-// 		default: return "*Term Missing case"
-// 	}
-// }
-
 func (rw *Paren) String() string {
 	return fmt.Sprintf("(%s)", rw.Body)
 }
-
 
 func (v *Kra) String() string {
 	children := []string{}
@@ -91,7 +70,13 @@ func (v *Kra) String() string {
 }
 
 func (v *Variable) String() string {
-	return fmt.Sprintf("%s:%s", v.Name, v.Sort)
+	var sort string
+	if (v.Default) {
+		sort = ""
+	} else {
+		sort = fmt.Sprintf(":%s", v.Sort)
+	}
+	return fmt.Sprintf("%s%s", v.Name, sort)
 }
 
 func (a *Appl) String() string {
@@ -122,19 +107,9 @@ func (r *When) String() string {
 	return fmt.Sprintf("when %s", r.Term.String())
 }
 
-// func (rw *BagItem) String() string {
-// 	switch rw.Type {
-// 		case E_BagError: return "*BagItem ERROR"
-// 		case E_BagCell: return rw.Cell.String()
-// 		case E_BagVariable: return rw.Variable.String()
-// 		default: return "*BagItem Missing Case"
-// 	}
-// }
-
 func (r *Mapping) String() string {
 	return fmt.Sprintf("%s |-> %s", r.LHS.String(), r.RHS.String())
 }
-
 
 func (r Rule) String() string {
 	return fmt.Sprintf("rule %s\n%s", r.Bag.String(), r.When.String())

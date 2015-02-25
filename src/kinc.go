@@ -57,8 +57,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := lang.PrettyPrint()
+	// s := lang.PrettyPrint()
 
-	fmt.Printf("%s\n", s)
+	for _, rule := range lang.Rules {
+		varTypes, _ := rule.VariableTypes()
+		fmt.Printf("%v\n", varTypes)
+	}
+
+	// fmt.Printf("%s\n", s)
 	os.Exit(0)
 }

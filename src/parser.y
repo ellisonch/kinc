@@ -149,19 +149,19 @@ kra
 
 term_variable
 	: TOK_UC_NAME
-		{ $$ = &Variable{Name: $1, Sort: "k"} }
+		{ $$ = &Variable{Name: $1, Sort: "k", Default: true} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = &Variable{Name: $1, Sort: $3} }
 
 bag_variable
 	: TOK_UC_NAME
-		{ $$ = &Variable{Name: $1, Sort: "bag"} }
+		{ $$ = &Variable{Name: $1, Sort: "bag", Default: true} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = &Variable{Name: $1, Sort: $3} }
 
 map_variable
 	: TOK_UC_NAME
-		{ $$ = &Variable{Name: $1, Sort: "map"} }
+		{ $$ = &Variable{Name: $1, Sort: "map", Default: true} }
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = &Variable{Name: $1, Sort: $3} }	
 

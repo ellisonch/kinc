@@ -33,7 +33,7 @@ var tests = []struct {
 	{`configuration <a type="map"> </a> rule <a> Z X |-> Y </a>`},
 	{`configuration <a type="map"> </a> rule <a> Z X |-> Y </a>`},
 	{`configuration <foo-bar> </foo-bar>`},
-	{`configuration <a> </a> rule <a> plus(I1, I2) => #_plusInt_(I1, I2) </a>`},
+	{`configuration <a> </a> rule <a> plus(I1:int, I2) => #_plusInt_(I1, I2) </a>`},
 	{`configuration <a> </a> rule <a> div(I1, I2) => #_divInt_(I1, I2) </a> when #_notEqInt_(I2, I2)`},
 	{`configuration <a type="k"> </a> rule <a> A ~> B ~> C => D ~> E</a>`},
 };

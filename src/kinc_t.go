@@ -120,6 +120,7 @@ type Paren struct {
 type Variable struct {
 	Name string
 	Sort string
+	Default bool
 }
 
 type Appl struct {
