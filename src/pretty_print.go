@@ -9,12 +9,20 @@ func (l *Language) PrettyPrint() string {
 	return pp.s
 }
 
-func (pp *prettyPrinter) Visit(node Node) Visitor {
+func (pp *prettyPrinter) VisitPre(node Node) Visitor {
 	switch n := node.(type) {
 	case *Variable:
 		pp.s += fmt.Sprintf("%s:%s", n.Name, n.Sort)
 	}
 	return pp
+}
+
+func (pp *prettyPrinter) VisitPost(node Node) {
+	// switch n := node.(type) {
+	// case *Variable:
+	// 	pp.s += fmt.Sprintf("%s:%s", n.Name, n.Sort)
+	// }
+	return
 }
 
 type prettyPrinter struct {

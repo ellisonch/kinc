@@ -6,7 +6,8 @@ import "fmt"
 // based on src/go/ast/walk.go
 
 type Visitor interface {
-	Visit(node Node) (w Visitor)
+	VisitPre(node Node) (w Visitor)
+	VisitPost(node Node)
 }
 
 // Walk traverses an AST in depth-first order: It starts by calling
@@ -16,7 +17,7 @@ type Visitor interface {
 // w.Visit(nil).
 //
 func Walk(v Visitor, node Node) {
-	if v = v.Visit(node); v == nil {
+	if v = v.VisitPre(node); v == nil {
 		return
 	}
 
@@ -38,13 +39,23 @@ func Walk(v Visitor, node Node) {
 			}
 
 		case *Rule:
+
 			Walk(v, n.Bag)
 			if (n.When != nil) {
 				Walk(v, n.When)
 			}
 
 		case Bag:
-			v.Visit(nil)
+			for _, c := range n {
+				Walk(v, c)
+			}
+
+		case *ComputationCell:
+			Walk(v, n.Computation)
+
+		// case *Kra:
+		// 	Walk(v, n.LHS)
+		// 	Walk(v, n.RHS)			
 
 		case *When:
 			Walk(v, n.Term)
@@ -82,5 +93,10 @@ func Walk(v Visitor, node Node) {
 			fmt.Printf("ast.Walk: unexpected node type %T\n", n)
 			panic("ast.Walk")
 	}
-	v.Visit(nil)
+	// if v = v.VisitPost(node); v == nil {
+	// 	return
+	// }
+	v.VisitPost(node)
+	
+	// v.Visit(nil)
 }
