@@ -50,23 +50,12 @@ func (*NameLabel) labelNode() {}
 
 type Cell interface {
 	Node
-	cellNode()
 	bagItemNode()
 	String() string
 }
 
-
 type Map []MapItem
 type Bag []BagItem
-
-// type CellContents interface {
-// 	Node
-// 	cellContentsNode()
-// 	String() string
-// }
-// func (*Bag) cellContentsNode() {}
-// func (*Map) cellContentsNode() {}
-// func (*Term) cellContentsNode() {}
 
 type BagCell struct {
 	Name string
@@ -80,10 +69,6 @@ type ComputationCell struct {
 	Name string
 	Computation K
 }
-
-func (*BagCell) cellNode() {}
-func (*MapCell) cellNode() {}
-func (*ComputationCell) cellNode() {}
 
 func (*BagCell) bagItemNode() {}
 func (*MapCell) bagItemNode() {}
@@ -109,9 +94,7 @@ type BagItem interface {
 	String() string
 }
 
-
 func (*Variable) bagItemNode() {}
-
 
 type Rule struct {
 	Bag Bag
@@ -125,15 +108,10 @@ type K interface {
 }
 
 func (*Variable) kNode() {}
-// func (*Int64) kNode() {}
 func (*Rewrite) kNode() {}
 func (*Appl) kNode() {}
 func (*Kra) kNode() {}
 func (*Paren) kNode() {}
-
-// type Int64 struct {
-// 	Value int64
-// }
 
 type Paren struct {
 	Body K

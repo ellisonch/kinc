@@ -27,6 +27,7 @@ func (pp *prettyPrinter) VisitPost(node Node) {
 
 type prettyPrinter struct {
 	s string
+	children []string
 }
 
 
