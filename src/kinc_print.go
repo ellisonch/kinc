@@ -78,12 +78,16 @@ func (r Map) String() string {
 // }
 
 func (rw *Paren) String() string {
-	return fmt.Sprintf("(%s)", rw.Term)
+	return fmt.Sprintf("(%s)", rw.Body)
 }
 
 
 func (v *Kra) String() string {
-	return fmt.Sprintf("%s ~> %s", v.LHS, v.RHS)
+	children := []string{}
+	for _, arg := range v.Children {
+		children = append(children, arg.String())
+	}
+	return fmt.Sprintf("(%s)", strings.Join(children, " ~> "))
 }
 
 func (v *Variable) String() string {
@@ -100,7 +104,7 @@ func (a *Appl) String() string {
 
 
 func (r *Rewrite) String() string {
-	return fmt.Sprintf("%s => %s", r.LHS.String(), r.RHS.String())
+	return fmt.Sprintf("(%s => %s)", r.LHS.String(), r.RHS.String())
 }
 
 func (rw *NameLabel) String() string {

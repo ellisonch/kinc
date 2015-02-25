@@ -11,9 +11,9 @@ kinc.exe: $(DEPS)
 # compiler-test: compiler_test.go kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go
 # 	go test -v compiler_test.go kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go
 
-# test: parser.go
-# #	go build &&
-# 	go test -v
+test: parser.go
+#	go build &&
+	go test -v
 
 parser.go y.output: kinc.nn.go parser.y kinc_t.go
 	go tool yacc -o="parser.go" -v="y.output" parser.y

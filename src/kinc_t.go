@@ -78,7 +78,7 @@ type MapCell struct {
 }
 type ComputationCell struct {
 	Name string
-	Computation Term
+	Computation K
 }
 
 func (*BagCell) cellNode() {}
@@ -96,8 +96,8 @@ type MapItem interface {
 }
 
 type Mapping struct {
-	LHS Term
-	RHS Term
+	LHS K
+	RHS K
 }
 
 func (*Variable) mapItemNode() {}
@@ -118,25 +118,25 @@ type Rule struct {
 	When *When
 }
 
-type Term interface {
+type K interface {
 	Node
-	termNode()
+	kNode()
 	String() string
 }
 
-func (*Variable) termNode() {}
-// func (*Int64) termNode() {}
-func (*Rewrite) termNode() {}
-func (*Appl) termNode() {}
-func (*Kra) termNode() {}
-func (*Paren) termNode() {}
+func (*Variable) kNode() {}
+// func (*Int64) kNode() {}
+func (*Rewrite) kNode() {}
+func (*Appl) kNode() {}
+func (*Kra) kNode() {}
+func (*Paren) kNode() {}
 
 // type Int64 struct {
 // 	Value int64
 // }
 
 type Paren struct {
-	Term Term
+	Body K
 }
 
 type Variable struct {
@@ -146,21 +146,20 @@ type Variable struct {
 
 type Appl struct {
 	Label Label
-	Body []Term
+	Body []K
 }
 
 type Kra struct {
-	LHS Term
-	RHS Term
+	Children []K
 }
 
 type Rewrite struct {
-	LHS Term
-	RHS Term
+	LHS K
+	RHS K
 }
 
 type When struct {
-	Term Term
+	Term K
 }
 
 

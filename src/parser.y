@@ -15,9 +15,9 @@ var Final Language
 	ccells []*CCell
 	rule *Rule
 	rules []*Rule
-	term Term
+	term K
 	label Label
-	term_list []Term
+	term_list []K
 	variable *Variable
 	cell_attributes CellAttributes
 	bag Bag
@@ -25,6 +25,7 @@ var Final Language
 	mymap Map
 	map_item MapItem
 	when_clause *When
+	kra []K
 }
 /*
 lst []ATerm
@@ -51,6 +52,7 @@ at ATerm
 %type <mymap> map
 %type <map_item> map_item
 %type <when_clause> when_clause
+%type <kra> kra
 // these apparently encode precedence, so be careful
 %token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
@@ -59,7 +61,9 @@ at ATerm
 %token <real> TOK_REAL
 %token <val> TOK_ERR
 
-%left TOK_ARROW TOK_KRA
+%left TOK_KRA
+%left TOK_ARROW
+
 
 %%
 final
@@ -122,7 +126,9 @@ when_clause
 		{ $$ = &When{Term: $2} }
 
 term
-	: term_variable
+	: kra
+		{ $$ = &Kra{Children: $1} }
+	| term_variable
 		{ $$ = $1 }
 	| term TOK_ARROW term
 		{
@@ -130,16 +136,16 @@ term
 			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
 			$$ = &Rewrite{LHS: $1, RHS: $3}
 		}
-	| term TOK_KRA term
-		{
-			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
-			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
-			$$ = &Kra{LHS: $1, RHS: $3}
-		}
 	| label '(' term_list ')'
 		{ $$ = &Appl{Label: $1, Body: $3} }
 	| '(' term ')'
-		{ $$ = &Paren{Term: $2} }
+		{ $$ = &Paren{Body: $2} }
+
+kra 
+	: term TOK_KRA term
+		{ $$ = []K{$1, $3} }
+	| kra TOK_KRA term
+		{ $$ = append($1, $3) }
 
 term_variable
 	: TOK_UC_NAME
@@ -167,9 +173,9 @@ label
 
 term_list
 	: // empty
-		{ $$ = []Term{} }
+		{ $$ = []K{} }
 	| term
-		{ $$ = []Term{$1} }
+		{ $$ = []K{$1} }
 	| term_list ',' term
 		{ $$ = append($1, $3) }
 
@@ -200,51 +206,24 @@ map_item
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
-			/*if $2 != $6 {
-				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
-			}*/
+			if $1 != $5 {
+				panic(fmt.Sprintf("cell %s isn't %s", $1, $5))
+			}
 			$$ = &ComputationCell{Name: $1, Computation: $3}
 		}
 	| TOK_CELL_BEGIN_BAG '>' bag TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
-			/*if $2 != $6 {
-				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
-			}*/
+			if $1 != $5 {
+				panic(fmt.Sprintf("cell %s isn't %s", $1, $5))
+			}
 			$$ = &BagCell{Name: $1, Bag: $3}
 		}
 	| TOK_CELL_BEGIN_MAP '>' map TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
-			/*if $2 != $6 {
-				panic(fmt.Sprintf("cell %s isn't %s", $2, $6))
-			}*/
+			if $1 != $5 {
+				panic(fmt.Sprintf("cell %s isn't %s", $1, $5))
+			}
 			$$ = &MapCell{Name: $1, Map: $3}
 		}
-
-/*
-aterm
-	: TOK_STRING
-		{ $$ = ATerm{Type: Appl, Appl: ATermAppl{$1, nil}} }
-	| TOK_INTEGER
-		{ $$ = ATerm{Type: Int, Int: $1} }
-	| TOK_REAL
-		{ $$ = ATerm{Type: Real, Real: $1} }
-	| TOK_CONSTRUCTOR '(' comma_list ')'
-		{ $$ = ATerm{Type: Appl, Appl: ATermAppl{$1, []ATerm($3)}} }
-	| TOK_CONSTRUCTOR
-		{ $$ = ATerm{Type: Appl, Appl: ATermAppl{$1, nil}} }
-	| '[' comma_list ']' 
-		{ $$ = ATerm{Type: List, List: ATermList($2)} }
-	;
-
-
-comma_list
-	: // empty 
-		{$$ = []ATerm{}}
-	| aterm
-		{$$ = []ATerm{$1}}
-	| comma_list ',' aterm
-		{$$ = append($1, $3)}
-	;
-*/
 
 %%

@@ -37,9 +37,12 @@ func Walk(v Visitor, node Node) {
 			for _, c := range n.Children {
 				Walk(v, c)
 			}
+		case *MapCell:
+			Walk(v, n.Map)
+		case *ComputationCell:
+			Walk(v, n.Computation)
 
 		case *Rule:
-
 			Walk(v, n.Bag)
 			if (n.When != nil) {
 				Walk(v, n.When)
@@ -49,13 +52,23 @@ func Walk(v Visitor, node Node) {
 			for _, c := range n {
 				Walk(v, c)
 			}
+		case Map:
+			for _, c := range n {
+				Walk(v, c)
+			}
 
-		case *ComputationCell:
-			Walk(v, n.Computation)
+		case *Mapping:
+			Walk(v, n.LHS)
+			Walk(v, n.RHS)
 
-		// case *Kra:
-		// 	Walk(v, n.LHS)
-		// 	Walk(v, n.RHS)			
+		case *Kra:
+			for _, c := range n.Children {
+				Walk(v, c)
+			}
+
+		case *Rewrite:
+			Walk(v, n.LHS)
+			Walk(v, n.RHS)
 
 		case *When:
 			Walk(v, n.Term)
