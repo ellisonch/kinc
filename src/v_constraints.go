@@ -143,12 +143,17 @@ func (n *Kra) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	panic("Don't handle BuildKChecks Kra yet")
 }
 func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
-	panic("Don't handle BuildKChecks Variable yet")
+	ref.addPositionEntry(i)
+	fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	// panic("Don't handle BuildKChecks Variable yet")
 }
 func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	n.LHS.BuildKChecks(ch, ref, i)
 
-	panic("Don't handle BuildKChecks Rewrite yet")
+	ref.addPositionEntry(i)
+	fmt.Printf("%s should be replaced with %s\n", ref.String(), n.RHS.String())
+
+	// panic("Don't handle BuildKChecks Rewrite yet")
 }
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
