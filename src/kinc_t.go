@@ -107,6 +107,7 @@ type K interface {
 	Node
 	kNode()
 	BuildTopKChecks(*CheckHelper)
+	BuildKChecks(*CheckHelper, Reference, int)
 	String() string
 }
 
