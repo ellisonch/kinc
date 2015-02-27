@@ -10,7 +10,34 @@ func go_sucks_constraints() {
 	_ = log.Ldate
 }
 
-type Check struct {
+type Check interface {
+	String() string	
+}
+type CheckNumArgs struct {
+	Loc Reference
+	Num int
+}
+type CheckLabel struct {
+	Loc Reference
+	Label Label
+}
+type CheckNumCellArgs struct {
+	Loc Reference
+	Num int
+	Exact bool
+}
+func (ch *CheckNumArgs) String() string {
+	return fmt.Sprintf("CheckNumArgs: %s must have %d arguments\n", ch.Loc.String(), ch.Num)
+}
+func (ch *CheckLabel) String() string {
+	return fmt.Sprintf("CheckLabel: %s must have the '%s label\n", ch.Loc.String(), ch.Label)
+}
+func (ch *CheckNumCellArgs) String() string {
+	if ch.Exact {
+		return fmt.Sprintf("CheckNumCellArgs: %s must have exactly %d things in it\n", ch.Loc.String(), ch.Num)
+	} else {
+		return fmt.Sprintf("CheckNumCellArgs: %s must have at least %d things in it\n", ch.Loc.String(), ch.Num)
+	}
 	
 }
 
@@ -20,17 +47,28 @@ type CheckHelper struct {
 	ref Reference
 }
 
+func (ch *CheckHelper) AddCheck(check Check) {
+	ch.checks = append(ch.checks, check)
+}
+
 func (n *Rule) BuildChecks() {
 	// vis := new(getChecks)
 	ch := &CheckHelper{}
 	// Walk(vis, l)
 	// ch.Parent = n
 
+	fmt.Printf("\n%s", n.String())
+
 	for _, bi := range n.Bag {
 		bi.BuildBagChecks(ch)
 	}
 
 	n.When.BuildChecks()
+
+	fmt.Printf("Checks:\n")
+	for _, checks := range ch.checks {
+		fmt.Printf(checks.String())
+	}
 
 	// for c := range vis.checks {
 	// fmt.Printf("%v\n", ch)
@@ -91,7 +129,7 @@ func (r *Reference) addPositionEntry(n int) {
 func (n ComputationCell) BuildBagChecks(ch *CheckHelper) {
 	// fmt.Printf("Building checks for comp cell %s\n", n)
 	_ = n.Name
-	fmt.Printf("%s\n", n.String())
+	// fmt.Printf("%s\n", n.String())
 	ch.ref.addCellEntry(n.Name)
 	// ch.ref.Ref = append(ch.ref.Ref, &RefPartCell{n.Name})
 	n.Computation.BuildTopKChecks(ch)
@@ -130,10 +168,11 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 	}
 	_ = allowMore
 
+	check := &CheckNumCellArgs{Loc: ch.ref, Num: len(n.Children)}
 	if (allowMore) {
-		fmt.Printf("%s must have at least %d things in it\n", ch.ref.String(), len(n.Children))
+		check.Exact = false
 	} else {
-		fmt.Printf("%s must have exactly %d things in it\n", ch.ref.String(), len(n.Children))
+		check.Exact = true
 	}
 	// ch.ref.addPositionEntry(0)
 	for i, v := range n.Children {
@@ -178,8 +217,11 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 }
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
-	fmt.Printf("%s must have the '%s label\n", ref.String(), n.Label.String())
-	fmt.Printf("%s must have %d arguments\n", ref.String(), len(n.Body))
+	// fmt.Printf("%s must have the '%s label\n", ref.String(), n.Label.String())
+	checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
+	ch.AddCheck(checkLabel)
+	checkArgs := &CheckNumArgs{Num: len(n.Body), Loc: ref}
+	ch.AddCheck(checkArgs)
 	for i, c := range n.Body {
 		c.BuildKChecks(ch, ref, i)
 	}
