@@ -22,6 +22,9 @@
 /\)/ { return ')' }
 /\[/ { return '[' }
 /\]/ { return ']' }
+/\{/ { return TOK_LBRACE }
+/\}/ { return TOK_RBRACE }
+
 /:/ { return ':' }
 /</ { return '<' }
 /"/ { return '"' }
@@ -52,6 +55,8 @@
 	return TOK_UC_NAME
 }
 
+/[0-9]*/ { lval.i64,_ = strconv.ParseInt(string(yylex.Text()), 10, 64); return TOK_INTEGER } 
+
 /\/\/[^\n]*/    { /* eat up one-line comments */ } 
 
 /./ {	
@@ -64,8 +69,8 @@ package main
 
 import "fmt"
 // import "os"
-// import "strconv"
+import "strconv"
 // type yySymType KincSymType
 
-// /[0-9]*/ { lval.i64,_ = strconv.ParseInt(string(yylex.Text()), 10, 64); return TOK_INTEGER } 
+
 // /./ { return int(yylex.Text()[0]) }

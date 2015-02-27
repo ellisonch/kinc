@@ -4,6 +4,7 @@ import "fmt"
 import "os"
 import "strings"
 import "errors"
+import "io"
 
 // import "./parser"
 // import "strings"
@@ -40,8 +41,8 @@ rule <k> block() => .K ~> K </k>
 // rule <k> not(B:bool) => #not(B) ~> K </k>
 // rule <k> and(#true(), B:bool) => B ~> K </k>
 
-func ParseString(s string) (Language, error) {
-	l := NewLexer(strings.NewReader(s))
+func ParseReader(r io.Reader) (*Language, error) {
+	l := NewLexer(r)
 	KincInit()
 	ret := yyParse(l)
 
@@ -52,6 +53,18 @@ func ParseString(s string) (Language, error) {
 	}
 }
 
+func ParseString(s string) (*Language, error) {
+	return ParseReader(strings.NewReader(s))	
+}
+
+func ParseFile(fname string) (*Language, error) {
+	f, err := os.Open(fname)
+	if (err != nil) {
+		return nil, err
+	}
+	return ParseReader(f)
+}
+
 func main() {
 	// fmt.Printf(prog)
 	// l := NewLexer(strings.NewReader(prog))
@@ -59,7 +72,8 @@ func main() {
 	// ret := yyParse(l)
 	// Final.String()
 
-	lang, err := ParseString(prog)
+	lang, err := ParseFile("../imp/imp.kinc")
+	// lang, err := ParseString(prog)
 	if err != nil {
 		fmt.Printf("Couldn't parse language: %s\n", err)
 		os.Exit(1)

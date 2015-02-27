@@ -45,11 +45,23 @@ type RewriteLabel struct {
 	LHS Label
 	RHS Label
 }
+type InjectLabelType int
+const (
+	E_inject_error InjectLabelType = iota
+	E_inject_integer
+)
+type InjectLabel struct {
+	Type InjectLabelType
+	Name string
+	Int int64
+}
 type Label interface {
 	Node
 	labelNode()
 	String() string
 }
+
+func (*InjectLabel) labelNode() {}
 func (*RewriteLabel) labelNode() {}
 func (*NameLabel) labelNode() {}
 

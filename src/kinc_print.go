@@ -109,6 +109,15 @@ func (rw *NameLabel) String() string {
 func (rw *RewriteLabel) String() string {
 	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
 }
+
+func (rw *InjectLabel) String() string {
+	switch rw.Type {
+		case E_inject_error: panic("Inject label error")
+		case E_inject_integer: return fmt.Sprintf("%s{%d}", rw.Name, rw.Int)
+		default: panic("Inject label missing case")
+	}
+}
+
 func (rw *RewriteMapItem) String() string {
 	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
 }

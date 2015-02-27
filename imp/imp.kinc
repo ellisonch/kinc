@@ -35,7 +35,7 @@ rule <k> while(B, S) => ifThenElse(B, S ~> while(B, S), .k) ~> K </k>
 
 rule 
 	<k> var(X) => .k ~> K </k>
-	<state> Rho:map .map => (X |-> X) </state>
+	<state> Rho:map .map => (X |-> #inttokl{0}()) </state>
 
 // rule
 //	<k> var{X,Xs => Xs} =>~> K </k>

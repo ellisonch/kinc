@@ -81,6 +81,16 @@ func Walk(v Visitor, node Node) {
 		case *Variable:
 			// fmt.Printf("Var: %s\n", n)
 
+		case *DotK:
+		case *DotMap:			
+
+		case *Paren:
+			Walk(v, n.Body)
+
+		case *RewriteMapItem:
+			Walk(v, n.LHS)
+			Walk(v, n.RHS)
+
 		default:
 			fmt.Printf("ast.Walk: unexpected node type %T\n", n)
 			panic("ast.Walk")

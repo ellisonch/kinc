@@ -39,7 +39,7 @@ func (n *Rule) BuildChecks() {
 
 func (n *When) BuildChecks() {
 	if (n == nil) {
-		fmt.Printf("No when clause")
+		fmt.Printf("No when clause\n")
 	} else {
 		fmt.Printf("checks on %s\n", n.String())
 	}
