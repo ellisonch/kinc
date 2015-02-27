@@ -54,8 +54,10 @@ at ATerm
 %type <when_clause> when_clause
 %type <kra> kra
 // these apparently encode precedence, so be careful
-%token <str> TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CONFIGURATION TOK_RULE TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
+%token <str> TOK_ERROR TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
+%token <str> TOK_MAPS_TO_PRE TOK_CONFIGURATION TOK_RULE
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO
+%token <str> TOK_DOT_K TOK_DOT_MAP TOK_DOT_BAG
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
@@ -140,6 +142,8 @@ term
 		{ $$ = &Appl{Label: $1, Body: $3} }
 	| '(' term ')'
 		{ $$ = &Paren{Body: $2} }
+	| TOK_DOT_K
+		{ $$ = &DotK{} }
 
 kra 
 	: term TOK_KRA term
@@ -199,9 +203,14 @@ map
 
 map_item
 	: map_variable
-		{ $$ = $1 }		
-	| term TOK_MAPS_TO term
-		{ $$ = &Mapping{LHS: $1, RHS: $3} }
+		{ $$ = $1 }
+	| TOK_DOT_MAP
+		{ $$ = &DotMap{} }
+	| '(' term TOK_MAPS_TO term ')'
+	// | TOK_MAPS_TO_PRE '(' term ',' term ')'
+		{ $$ = &Mapping{LHS: $2, RHS: $4} }
+	| map_item TOK_ARROW map_item
+	 	{ $$ = &RewriteMapItem{LHS: $1, RHS: $3} }
 
 cell
 	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'

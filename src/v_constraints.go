@@ -30,9 +30,19 @@ func (n *Rule) BuildChecks() {
 		bi.BuildBagChecks(ch)
 	}
 
+	n.When.BuildChecks()
+
 	// for c := range vis.checks {
 	// fmt.Printf("%v\n", ch)
 	// }
+}
+
+func (n *When) BuildChecks() {
+	if (n == nil) {
+		fmt.Printf("No when clause")
+	} else {
+		fmt.Printf("checks on %s\n", n.String())
+	}
 }
 
 type RefPart interface {
@@ -98,6 +108,9 @@ func (n *Variable) BuildBagChecks(ch *CheckHelper) {
 	panic("Don't handle Bag Variables yet")
 }
 //---------------------------------------------------------------
+func (n *DotK) BuildTopKChecks(ch *CheckHelper) {
+	panic("Don't handle BuildTopKChecks DotK yet")
+}
 func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 	if len(n.Children) == 0 {
 		panic("Didn't expect size 0 kra")
@@ -117,6 +130,11 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 	}
 	_ = allowMore
 
+	if (allowMore) {
+		fmt.Printf("%s must have at least %d things in it\n", ch.ref.String(), len(n.Children))
+	} else {
+		fmt.Printf("%s must have exactly %d things in it\n", ch.ref.String(), len(n.Children))
+	}
 	// ch.ref.addPositionEntry(0)
 	for i, v := range n.Children {
 		// ch.ref.setPositionEntry(i)
@@ -139,6 +157,9 @@ func (n *Paren) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks Paren yet")
 }
 //---------------------------------------------------------------
+func (n *DotK) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
+	panic("Don't handle BuildKChecks DotK yet")
+}
 func (n *Kra) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	panic("Don't handle BuildKChecks Kra yet")
 }
@@ -158,6 +179,7 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
 	fmt.Printf("%s must have the '%s label\n", ref.String(), n.Label.String())
+	fmt.Printf("%s must have %d arguments\n", ref.String(), len(n.Body))
 	for i, c := range n.Body {
 		c.BuildKChecks(ch, ref, i)
 	}

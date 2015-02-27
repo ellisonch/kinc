@@ -25,7 +25,11 @@
 /:/ { return ':' }
 /</ { return '<' }
 /"/ { return '"' }
-/|->/ { return TOK_MAPS_TO }
+/\|->/ { return TOK_MAPS_TO }
+
+/\.k/ { return TOK_DOT_K }
+/\.map/ { return TOK_DOT_MAP }
+/\.bag/ { return TOK_DOT_BAG }
 
 
 /\.\.\.<\// { return TOK_CELL_RIGHT_OPEN }
@@ -38,18 +42,27 @@
 /configuration/ { return TOK_CONFIGURATION }
 /rule/ { return TOK_RULE }
 /when/ { return TOK_WHEN }
-/#?_?[a-z][_a-zA-Z-]*/ {
+/mapsTo/ { return TOK_MAPS_TO_PRE }
+/#?_?[a-z][_a-zA-Z-]*[0-9]*/ {
 	lval.str = string(yylex.Text())
 	return TOK_LC_NAME
 }
-/#?_?[A-Z][_a-zA-Z-]*/ {
+/#?_?[A-Z][_a-zA-Z-]*[0-9]*/ {
 	lval.str = string(yylex.Text())
 	return TOK_UC_NAME
 }
 
+/\/\/[^\n]*/    { /* eat up one-line comments */ } 
+
+/./ {	
+	lval.str = string(yylex.Text())
+	fmt.Printf("Unexpected token %s", lval.str) 
+	return TOK_ERROR 
+}
 // 
 package main
 
+import "fmt"
 // import "os"
 // import "strconv"
 // type yySymType KincSymType

@@ -16,7 +16,15 @@ configuration
 	<state type="map"> </state>
 	<k type="computation"> </k>
 </t>
+rule
+	<k> div(I1:int, I2:int) => #divInt(I1, I2) ~> K </k>
+	when #notEqInt(I2, I2)
+
+rule <k> plus(I1:int, I2:int) => #plusInt(I1, I2) ~> K </k>
+rule <k> lte(I1:int, I2:int) => #lteInt(I1, I2) ~> K </k>
+rule <k> not(B:bool) => #not(B) ~> K </k>
 rule <k> and(#false(), Any) => #false() ~> K </k>
+rule <k> block() => .K ~> K </k>
 `
 
 // rule 

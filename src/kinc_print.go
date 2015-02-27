@@ -61,6 +61,13 @@ func (rw *Paren) String() string {
 	return fmt.Sprintf("(%s)", rw.Body)
 }
 
+func (v *DotK) String() string {
+	return ".k"
+}
+func (v *DotMap) String() string {
+	return ".map"
+}
+
 func (v *Kra) String() string {
 	children := []string{}
 	for _, arg := range v.Children {
@@ -102,6 +109,10 @@ func (rw *NameLabel) String() string {
 func (rw *RewriteLabel) String() string {
 	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
 }
+func (rw *RewriteMapItem) String() string {
+	return fmt.Sprintf("(%s => %s)", rw.LHS, rw.RHS)
+}
+
 
 
 func (r *When) String() string {

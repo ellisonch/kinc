@@ -6,7 +6,7 @@ configuration
 
 rule 
 	<k> X:id => I ~> K </k> 
-	<state> X |-> Y </state>
+	<state> (X |-> Y) </state>
 
 rule
 	<k> div(I1:int, I2:int) => #divInt(I1, I2) ~> K </k>
@@ -17,3 +17,29 @@ rule <k> lte(I1:int, I2:int) => #lteInt(I1, I2) ~> K </k>
 rule <k> not(B:bool) => #not(B) ~> K </k>
 rule <k> and(#true(), B:bool) => B ~> K </k>
 rule <k> and(#false(), Any) => #false() ~> K </k>
+
+rule <k> block() => .k ~> K </k>
+rule <k> block(S) => S ~> K </k>
+
+
+rule
+	<k> assign(X, I:int) => .k ~> K </k>
+	<state>S (X |-> (Any => I)) </state>
+
+rule <k> compose(S1, S2) => S1 ~> S2 ~> K </k>
+
+rule <k> ifThenElse(#true(), S, Any) => S ~> K </k>
+rule <k> ifThenElse(#false(), Any, S) => S ~> K </k>
+
+rule <k> while(B, S) => ifThenElse(B, S ~> while(B, S), .k) ~> K </k>
+
+rule 
+	<k> var(X) => .k ~> K </k>
+	<state> Rho:map .map => (X |-> X) </state>
+
+// rule
+//	<k> var{X,Xs => Xs} =>~> K </k>
+//	<state> Rho:map (.Map => X|->0) </state>
+// 	when notBool (X in keys(Rho))
+
+// rule <k> var .Ids; S => S ~> K </k>

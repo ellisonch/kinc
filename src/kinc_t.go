@@ -36,6 +36,11 @@ type NameLabel struct {
 	Name string
 }
 
+type RewriteMapItem struct {
+	LHS MapItem
+	RHS MapItem
+}
+
 type RewriteLabel struct {
 	LHS Label
 	RHS Label
@@ -88,6 +93,8 @@ type Mapping struct {
 
 func (*Variable) mapItemNode() {}
 func (*Mapping) mapItemNode() {}
+func (*DotMap) mapItemNode() {}
+func (*RewriteMapItem) mapItemNode() {}
 
 type BagItem interface {
 	Node
@@ -111,6 +118,10 @@ type K interface {
 	String() string
 }
 
+type DotK struct { }
+type DotMap struct { }
+
+func (*DotK) kNode() {}
 func (*Variable) kNode() {}
 func (*Rewrite) kNode() {}
 func (*Appl) kNode() {}
@@ -146,5 +157,4 @@ type Rewrite struct {
 type When struct {
 	Term K
 }
-
 
