@@ -10,45 +10,19 @@ func go_sucks_constraints() {
 	_ = log.Ldate
 }
 
-type Check interface {
-	String() string	
-}
-type CheckNumArgs struct {
-	Loc Reference
-	Num int
-}
-type CheckLabel struct {
-	Loc Reference
-	Label Label
-}
-type CheckNumCellArgs struct {
-	Loc Reference
-	Num int
-	Exact bool
-}
-func (ch *CheckNumArgs) String() string {
-	return fmt.Sprintf("CheckNumArgs: %s must have %d arguments\n", ch.Loc.String(), ch.Num)
-}
-func (ch *CheckLabel) String() string {
-	return fmt.Sprintf("CheckLabel: %s must have the '%s label\n", ch.Loc.String(), ch.Label)
-}
-func (ch *CheckNumCellArgs) String() string {
-	if ch.Exact {
-		return fmt.Sprintf("CheckNumCellArgs: %s must have exactly %d things in it\n", ch.Loc.String(), ch.Num)
-	} else {
-		return fmt.Sprintf("CheckNumCellArgs: %s must have at least %d things in it\n", ch.Loc.String(), ch.Num)
-	}
-	
-}
 
 type CheckHelper struct {
 	checks []Check
+	replacements []Replacement
 	// Parent Node
 	ref Reference
 }
 
-func (ch *CheckHelper) AddCheck(check Check) {
-	ch.checks = append(ch.checks, check)
+func (ch *CheckHelper) AddCheck(v Check) {
+	ch.checks = append(ch.checks, v)
+}
+func (ch *CheckHelper) AddReplacement(v Replacement) {
+	ch.replacements = append(ch.replacements, v)
 }
 
 func (n *Rule) BuildChecks() {
@@ -68,6 +42,10 @@ func (n *Rule) BuildChecks() {
 	fmt.Printf("Checks:\n")
 	for _, checks := range ch.checks {
 		fmt.Printf(checks.String())
+	}
+	fmt.Printf("Replacements:\n")
+	for _, replacement := range ch.replacements {
+		fmt.Printf(replacement.String())
 	}
 
 	// for c := range vis.checks {
@@ -211,7 +189,9 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	n.LHS.BuildKChecks(ch, ref, i)
 
 	ref.addPositionEntry(i)
-	fmt.Printf("%s should be replaced with %s\n", ref.String(), n.RHS.String())
+	rep := Replacement{Loc: ref, Result: n.RHS}
+	ch.AddReplacement(rep)
+	// fmt.Printf("%s should be replaced with %s\n", ref.String(), n.RHS.String())
 
 	// panic("Don't handle BuildKChecks Rewrite yet")
 }

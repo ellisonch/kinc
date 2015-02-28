@@ -9,6 +9,7 @@ func KincInit() {
 // --------------------------------------------
 
 type Node interface {
+	String() string
 	// 36		Pos() token.Pos // position of first character belonging to the node
 	// 37		End() token.Pos // position of first character immediately after the node
 }
@@ -58,7 +59,6 @@ type InjectLabel struct {
 type Label interface {
 	Node
 	labelNode()
-	String() string
 }
 
 func (*InjectLabel) labelNode() {}
@@ -69,7 +69,6 @@ type Cell interface {
 	Node
 	bagItemNode()
 	BuildBagChecks(*CheckHelper)
-	String() string
 }
 
 type Map []MapItem
@@ -95,7 +94,6 @@ func (*ComputationCell) bagItemNode() {}
 type MapItem interface {
 	Node
 	mapItemNode()
-	String() string
 }
 
 type Mapping struct {
@@ -111,7 +109,6 @@ func (*RewriteMapItem) mapItemNode() {}
 type BagItem interface {
 	Node
 	bagItemNode()
-	String() string
 	BuildBagChecks(*CheckHelper)
 }
 
@@ -127,7 +124,6 @@ type K interface {
 	kNode()
 	BuildTopKChecks(*CheckHelper)
 	BuildKChecks(*CheckHelper, Reference, int)
-	String() string
 }
 
 type DotK struct { }
