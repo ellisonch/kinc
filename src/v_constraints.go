@@ -14,6 +14,8 @@ func go_sucks_constraints() {
 type CheckHelper struct {
 	checks []Check
 	replacements []Replacement
+	bindings []Binding
+	when *When
 	// Parent Node
 	ref Reference
 }
@@ -23,6 +25,9 @@ func (ch *CheckHelper) AddCheck(v Check) {
 }
 func (ch *CheckHelper) AddReplacement(v Replacement) {
 	ch.replacements = append(ch.replacements, v)
+}
+func (ch *CheckHelper) AddBinding(v Binding) {
+	ch.bindings = append(ch.bindings, v)
 }
 
 func (n *Rule) BuildChecks() {
@@ -37,15 +42,27 @@ func (n *Rule) BuildChecks() {
 		bi.BuildBagChecks(ch)
 	}
 
-	n.When.BuildChecks()
+	// n.When.BuildChecks()
 
 	fmt.Printf("Checks:\n")
 	for _, checks := range ch.checks {
-		fmt.Printf(checks.String())
+		fmt.Printf("  %s", checks.String())
 	}
 	fmt.Printf("Replacements:\n")
 	for _, replacement := range ch.replacements {
-		fmt.Printf(replacement.String())
+		fmt.Printf("  %s", replacement.String())
+	}
+	fmt.Printf("Bindings:\n")
+	for _, binding := range ch.bindings {
+		fmt.Printf("  %s", binding.String())
+	}
+
+	ch.when = n.When
+
+	if (ch.when == nil) {
+		fmt.Printf("  When: No when clause\n")
+	} else {
+		fmt.Printf("  When: checks on %s\n", ch.when.String())
 	}
 
 	// for c := range vis.checks {
@@ -53,13 +70,13 @@ func (n *Rule) BuildChecks() {
 	// }
 }
 
-func (n *When) BuildChecks() {
-	if (n == nil) {
-		fmt.Printf("No when clause\n")
-	} else {
-		fmt.Printf("checks on %s\n", n.String())
-	}
-}
+// func (n *When) BuildChecks() {
+// 	if (n == nil) {
+// 		fmt.Printf("No when clause\n")
+// 	} else {
+// 		fmt.Printf("checks on %s\n", n.String())
+// 	}
+// }
 
 type RefPart interface {
 	refPart()
@@ -182,7 +199,9 @@ func (n *Kra) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 }
 func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
-	fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	// fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	binding := Binding{Loc: ref, Variable: n}
+	ch.AddBinding(binding)
 	// panic("Don't handle BuildKChecks Variable yet")
 }
 func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
