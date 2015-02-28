@@ -3,7 +3,7 @@ package main
 import "fmt"
 import "log"
 // import "errors"
-import "strings"
+// import "strings"
 
 func go_sucks_constraints() {
 	_ = fmt.Printf
@@ -78,52 +78,10 @@ func (n *Rule) BuildChecks() {
 // 	}
 // }
 
-type RefPart interface {
-	refPart()
-	String() string
-}
-type RefPartCell struct {
-	Name string
-}
-type RefPartPosition struct {
-	Offset int
-}
-
-func (*RefPartCell) refPart() {}
-func (*RefPartPosition) refPart() {}
-
-func (r *RefPartCell) String() string {
-	return r.Name
-}
-func (r *RefPartPosition) String() string {
-	return fmt.Sprintf("%d", r.Offset)
-}
-
-type Reference struct {
-	Ref []RefPart
-}
-
-func (r *Reference) String() string {
-	children := []string{}
-	for _, c := range r.Ref {
-		children = append(children, c.String())
-	}
-	return strings.Join(children, ".")
-}
-
-func (r *Reference) addCellEntry(s string) {
-	r.Ref = append(r.Ref, &RefPartCell{s})
-}
-func (r *Reference) addPositionEntry(n int) {
-	r.Ref = append(r.Ref, &RefPartPosition{n})
-}
-// func (r *Reference) setPositionEntry(n int) {
-// 	r.Ref[len(r.Ref)-1] = &RefPartPosition{n}
-// }
 
 func (n ComputationCell) BuildBagChecks(ch *CheckHelper) {
 	// fmt.Printf("Building checks for comp cell %s\n", n)
-	_ = n.Name
+	// _ = n.Name
 	// fmt.Printf("%s\n", n.String())
 	ch.ref.addCellEntry(n.Name)
 	// ch.ref.Ref = append(ch.ref.Ref, &RefPartCell{n.Name})
@@ -131,8 +89,54 @@ func (n ComputationCell) BuildBagChecks(ch *CheckHelper) {
 	// fmt.Printf("Building checks for comp cell %s\n", n)
 }
 func (n MapCell) BuildBagChecks(ch *CheckHelper) {
-	fmt.Printf("Building checks for map cell %s\n", n)
+	// fmt.Printf("Building checks for map cell %s\n", n)
+	ch.ref.addCellEntry(n.Name)
+	// _ = n.Name
+	for _, m := range n.Map {
+		m.BuildTopMapItemChecks(ch)
+	}
 }
+
+func (n *Variable) BuildTopMapItemChecks(ch *CheckHelper) {
+	// fmt.Printf("Building checks for map item %s\n", n)
+	// FIXME: should be binding and checking all this
+}
+func (n *Mapping) BuildTopMapItemChecks(ch *CheckHelper) {
+	fmt.Printf("Building checks for map item %s\n", n)
+}
+func (n *DotMap) BuildTopMapItemChecks(ch *CheckHelper) {
+	fmt.Printf("Building checks for map item %s\n", n)
+}
+func (n *RewriteMapItem) BuildTopMapItemChecks(ch *CheckHelper) {
+	// ref := ch.ref
+	// ref.addMapLookup(n.LHS)
+
+	// ref := n.LHS.GetReference(ch)
+
+	switch l := n.LHS.(type) {
+	case *Variable:
+		_ = l
+		// rep := Replacement{Loc: ref, Result: n.RHS}
+		// ch.AddReplacement(rep)
+		panic("Don't handle variable for GetReference")
+	case *Mapping: 
+		panic("Don't handle Mapping for GetReference")
+	case* DotMap:
+		switch r := n.RHS.(type) {
+		case *Mapping:
+			change := &MapAdd{Loc: ch.ref, Entry: r}	
+			ch.AddReplacement(change)
+		default: 
+			panic(fmt.Sprintf("Don't handle rewriting to %s in map", r.String()))
+		}
+	case* RewriteMapItem: 
+		panic("Don't handle RewriteMapItem for GetReference")
+	}
+
+	
+	// fmt.Printf("Building checks for map item %s\n", n)
+}
+
 
 func (n BagCell) BuildBagChecks(ch *CheckHelper) {
 	panic("Don't handle Bag Cells yet")
@@ -144,6 +148,8 @@ func (n *Variable) BuildBagChecks(ch *CheckHelper) {
 func (n *DotK) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks DotK yet")
 }
+
+// FIXME: probably should do something like start at beginning and describe "find a term matching foo, then all the terms between that and a term matching bar are bound to K"
 func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 	if len(n.Children) == 0 {
 		panic("Didn't expect size 0 kra")
@@ -157,7 +163,8 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 		case *Variable:
 			_ = c
 			allowMore = true
-			fmt.Printf("Ok, variable\n")
+			// fmt.Printf("Ok, variable\n")
+
 			n.Children = n.Children[:lasti]
 		}
 	}
@@ -169,6 +176,7 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 	} else {
 		check.Exact = true
 	}
+	ch.AddCheck(check)
 	// ch.ref.addPositionEntry(0)
 	for i, v := range n.Children {
 		// ch.ref.setPositionEntry(i)
@@ -208,7 +216,7 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	n.LHS.BuildKChecks(ch, ref, i)
 
 	ref.addPositionEntry(i)
-	rep := Replacement{Loc: ref, Result: n.RHS}
+	rep := &TermChange{Loc: ref, Result: n.RHS}
 	ch.AddReplacement(rep)
 	// fmt.Printf("%s should be replaced with %s\n", ref.String(), n.RHS.String())
 

@@ -94,6 +94,8 @@ func (*ComputationCell) bagItemNode() {}
 type MapItem interface {
 	Node
 	mapItemNode()
+	BuildTopMapItemChecks(ch *CheckHelper)
+	// GetReference(ch *CheckHelper) Reference
 }
 
 type Mapping struct {
