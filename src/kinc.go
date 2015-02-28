@@ -81,7 +81,13 @@ func main() {
 
 	for _, rule := range lang.Rules {
 		rule.CompleteVariableTypes()
-		rule.BuildChecks()
+
+		fmt.Printf("\nrule: %s", rule.String())
+		ch := rule.BuildChecks()
+		fmt.Printf(ch.String())
+		c := checksToC(ch)
+		fmt.Printf("Compilation:\n")
+		fmt.Printf(c.String())
 	}
 
 	// s := lang.PrettyPrint()

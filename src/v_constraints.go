@@ -20,6 +20,30 @@ type CheckHelper struct {
 	ref Reference
 }
 
+func (ch *CheckHelper) String() string {
+	s := ""
+	s += fmt.Sprintf("Checks:\n")
+	for _, checks := range ch.checks {
+		s += fmt.Sprintf("  %s", checks.String())
+	}
+	s += fmt.Sprintf("Replacements:\n")
+	for _, replacement := range ch.replacements {
+		s += fmt.Sprintf("  %s", replacement.String())
+	}
+	s += fmt.Sprintf("Bindings:\n")
+	for _, binding := range ch.bindings {
+		s += fmt.Sprintf("  %s", binding.String())
+	}
+
+	if (ch.when == nil) {
+		s += fmt.Sprintf("When:\n  No when clause\n")
+	} else {
+		s += fmt.Sprintf("When:\n  checks on %s\n", ch.when.String())
+	}
+
+	return s
+}
+
 func (ch *CheckHelper) AddCheck(v Check) {
 	ch.checks = append(ch.checks, v)
 }
@@ -30,41 +54,20 @@ func (ch *CheckHelper) AddBinding(v Binding) {
 	ch.bindings = append(ch.bindings, v)
 }
 
-func (n *Rule) BuildChecks() {
+func (n *Rule) BuildChecks() *CheckHelper {
 	// vis := new(getChecks)
 	ch := &CheckHelper{}
 	// Walk(vis, l)
 	// ch.Parent = n
 
-	fmt.Printf("\n%s", n.String())
-
 	for _, bi := range n.Bag {
 		bi.BuildBagChecks(ch)
 	}
 
+	ch.when = n.When
 	// n.When.BuildChecks()
 
-	fmt.Printf("Checks:\n")
-	for _, checks := range ch.checks {
-		fmt.Printf("  %s", checks.String())
-	}
-	fmt.Printf("Replacements:\n")
-	for _, replacement := range ch.replacements {
-		fmt.Printf("  %s", replacement.String())
-	}
-	fmt.Printf("Bindings:\n")
-	for _, binding := range ch.bindings {
-		fmt.Printf("  %s", binding.String())
-	}
-
-	ch.when = n.When
-
-	if (ch.when == nil) {
-		fmt.Printf("  When: No when clause\n")
-	} else {
-		fmt.Printf("  When: checks on %s\n", ch.when.String())
-	}
-
+	return ch
 	// for c := range vis.checks {
 	// fmt.Printf("%v\n", ch)
 	// }

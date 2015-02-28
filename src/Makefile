@@ -1,6 +1,6 @@
 .DELETE_ON_ERROR:
 
-DEPS=kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go pretty_print.go v_variable_types.go v_constraints.go checks.go replacements.go bindings.go reference.go
+DEPS=kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go pretty_print.go v_variable_types.go v_constraints.go checks.go replacements.go bindings.go reference.go compile.go
 
 all: kinc.exe
 	./kinc.exe
