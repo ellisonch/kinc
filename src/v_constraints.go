@@ -193,7 +193,7 @@ func (n *Variable) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks Variable yet")
 }
 func (n *Rewrite) BuildTopKChecks(ch *CheckHelper) {
-	panic("Don't handle BuildTopKChecks Rewrite yet")
+	n.BuildKChecks(ch, ch.ref, 0)
 }
 func (n *Appl) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks Appl yet")

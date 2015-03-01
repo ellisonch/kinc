@@ -72,7 +72,8 @@ func main() {
 	// ret := yyParse(l)
 	// Final.String()
 
-	lang, err := ParseFile("../imp/imp.kinc")
+	// lang, err := ParseFile("../imp/imp.kinc")
+	lang, err := ParseFile("../peano/peano.kinc")
 	// lang, err := ParseString(prog)
 	if err != nil {
 		fmt.Printf("Couldn't parse language: %s\n", err)
