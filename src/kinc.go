@@ -79,15 +79,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, rule := range lang.Rules {
+	for i, rule := range lang.Rules {
 		rule.CompleteVariableTypes()
 
 		fmt.Printf("\nrule: %s", rule.String())
 		ch := rule.BuildChecks()
 		fmt.Printf(ch.String())
-		c := checksToC(ch)
+		c := RuleToC(ch, rule, i)
 		fmt.Printf("Compilation:\n")
-		fmt.Printf(c.String())
+		fmt.Printf(c)
 	}
 
 	// s := lang.PrettyPrint()
@@ -95,6 +95,11 @@ func main() {
 	// fmt.Printf("%s\n", s)
 
 	os.Exit(0)
+}
+
+func RuleToC(ch *CheckHelper, r *Rule, i int) string {
+	c := checksToC(ch)
+	return fmt.Sprintf("/*\n%s\n*/\nint rule%d(Configuration* config) {\n%s\n}\n", r.String(), i, c)
 }
 
 

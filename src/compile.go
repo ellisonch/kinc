@@ -18,7 +18,35 @@ func checksToC(ch *CheckHelper) *C {
 		compileCheck(res, check)
 	}
 
+	for _, binding := range ch.bindings {
+		compileBinding(res, binding)
+	}
+
+	for _, replacement := range ch.replacements {
+		compileReplacement(res, replacement)
+	}
+
 	return res
+}
+
+func compileReplacement(c *C, replacement Replacement) {
+	// result = k_false();
+	// K* newTop = result;
+	// computation_set_elem(config->k, 0, newTop);
+	// switch n := replacement.(type) {
+	// case *TermChange:
+	// 	r := compileRef(n.Loc)
+	// 	v := compileTerm(n.Result)
+	// 	return fmt.Sprintf("computation_set_elem(
+	// case *MapAdd:
+	// 	panic("Don't handle mappadd")
+	// }
+}
+
+func compileBinding(c *C, binding Binding) {
+	r := compileRef(binding.Loc)
+	s := fmt.Sprintf("\tvariable_%s = %s;", binding.Variable.Name, r)
+	c.Checks = append(c.Checks, s)
 }
 
 func compileCheck(c *C, check Check) {
@@ -35,18 +63,20 @@ func compileCheck(c *C, check Check) {
 			} else {
 				comparison = "<"
 			}
-			s := fmt.Sprintf("if (k_length(config->k) %s %d) { return 1; }\n", comparison, n.Num)
+			s := fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }\n", comparison, n.Num)
 			c.Checks = append(c.Checks, s)
 		case *CheckLabel:
 			r := compileRef(n.Loc)
-			s := fmt.Sprintf("if (%s->label->type != e_symbol) { return 1; }\n", r)
+			s := fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
 			sym := n.Label
-			s += fmt.Sprintf("if (%s->label->symbol_val != %s) { return 1; }\n", r, sym)
+			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }\n", r, sym)
 			c.Checks = append(c.Checks, s)
 
 			
 		case *CheckNumArgs:
-			fmt.Printf("CheckNumArgs\n")
+			r := compileRef(n.Loc)
+			s := fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }\n", r, n.Num)
+			c.Checks = append(c.Checks, s)
 			
 		default: log.Panicf("Don't handle case %s", n)
 	}
