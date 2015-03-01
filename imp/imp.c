@@ -6,10 +6,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "k.h"
-#include "cells.h"
-#include "utils.h"
-#include "settings.h"
+#include "k_pub.h"
+
 #include "adopt.h"
 #include "test.h"
 

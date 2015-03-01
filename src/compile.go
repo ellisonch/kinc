@@ -26,7 +26,67 @@ func checksToC(ch *CheckHelper) *C {
 		compileReplacement(res, replacement)
 	}
 
+	if ch.when != nil {
+		panic("Not handling when")
+	}
+
 	return res
+}
+
+
+func (l *Language) Compile() string {
+	symbolMap := l.CompleteLabelSymbols()
+
+	cSymbols := []string{}
+	for v, k := range symbolMap {
+		cSymbols = append(cSymbols, fmt.Sprintf("#define symbol_%s %d", safeForC(v), k))
+	}
+
+	cConfig := compileConfiguration(l.Configuration)
+
+	cRules := []string{}
+	for i, rule := range l.Rules {
+		rule.CompleteVariableTypes()
+
+		// fmt.Printf("\nrule: %s", rule.String())
+		ch := rule.BuildChecks()
+		// ch.symbolMap = symbolMap
+		// fmt.Printf(ch.String())
+		c := RuleToC(ch, rule, i)
+		cRules = append(cRules, c)
+		// fmt.Printf("Compilation:\n")
+		// fmt.Printf(c)
+	}
+
+	ret := ""
+	ret += fmt.Sprintf("typedef struct {\n%s\n} Configuration;\n", strings.Join(cConfig, "\n"))
+	ret += strings.Join(cSymbols, "\n")
+	ret += "\n"
+	ret += strings.Join(cRules, "\n")
+	return ret
+}
+
+func compileConfiguration(config *Configuration) []string {
+	cConfig := []string{}
+// 	typedef struct {
+// 	StateCell* state;
+// 	ComputationCell* k;
+// } Configuration;
+	cell := config.Cell
+	if len(cell.Children) > 0 {
+		panic("Don't handle nested config cells yet")
+	}
+	if t, ok := cell.Attributes.Table["type"]; ok {
+		if t == "computation" {
+			s := fmt.Sprintf("\tComputationCell* %s;", cell.Name)
+			cConfig = append(cConfig, s)
+		} else {
+			panic("Only handle computation cells!")
+		}
+	} else {
+		panic("Cell needs a type attribute")
+	}
+	return cConfig
 }
 
 func compileReplacement(c *C, replacement Replacement) {
@@ -36,7 +96,7 @@ func compileReplacement(c *C, replacement Replacement) {
 	switch n := replacement.(type) {
 	case *TermChange:
 		// FIXME: this is horrible
-		fmt.Printf("%s\n", n.Loc.String())
+		// fmt.Printf("%s\n", n.Loc.String())
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
 		} else if len(n.Loc.Ref) == 1 {
@@ -45,9 +105,7 @@ func compileReplacement(c *C, replacement Replacement) {
 			myloc := n.Loc
 			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
 			r := compileRef(myloc)
-			fmt.Printf("x")
 			last := n.Loc.Ref[len(n.Loc.Ref)-1]
-			fmt.Printf("y")
 			// offset := compileRefPart(last, "", false)
 			offset := last.String()
 			_ = r

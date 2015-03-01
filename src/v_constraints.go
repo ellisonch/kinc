@@ -161,7 +161,7 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 
 	allowMore := false
 	lasti := len(n.Children) - 1
-	fmt.Printf("lasti: %d\n", lasti)
+	// fmt.Printf("lasti: %d\n", lasti)
 	if lasti > 0 {
 		switch c := n.Children[lasti].(type) {
 		case *Variable:
@@ -186,7 +186,7 @@ func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
 		// ch.ref.setPositionEntry(i)
 		v.BuildKChecks(ch, ch.ref, i)
 		// fmt.Printf("asdf\n")
-		fmt.Printf("%s\n", v.String())
+		// fmt.Printf("%s\n", v.String())
 	}
 	// panic("Don't handle BuildTopKChecks Kra yet")
 }
