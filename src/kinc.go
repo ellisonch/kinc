@@ -80,11 +80,22 @@ func main() {
 		os.Exit(1)
 	}
 
+
+	symbolMap := lang.CompleteLabelSymbols()
+
+	cSymbols := ""
+	for v, k := range symbolMap {
+		cSymbols += fmt.Sprintf("#define symbol_%s %d\n", v, k)
+	}
+
+	fmt.Printf(cSymbols)
+
 	for i, rule := range lang.Rules {
 		rule.CompleteVariableTypes()
 
 		fmt.Printf("\nrule: %s", rule.String())
 		ch := rule.BuildChecks()
+		// ch.symbolMap = symbolMap
 		fmt.Printf(ch.String())
 		c := RuleToC(ch, rule, i)
 		fmt.Printf("Compilation:\n")

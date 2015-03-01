@@ -18,6 +18,7 @@ type CheckHelper struct {
 	when *When
 	// Parent Node
 	ref Reference
+	// symbolMap map[string]int
 }
 
 func (ch *CheckHelper) String() string {

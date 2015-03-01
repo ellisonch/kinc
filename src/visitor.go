@@ -74,6 +74,7 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.Term)
 
 		case *Appl:
+			Walk(v, n.Label)
 			for _, c := range n.Body {
 				Walk(v, c)
 			}
@@ -90,6 +91,14 @@ func Walk(v Visitor, node Node) {
 		case *RewriteMapItem:
 			Walk(v, n.LHS)
 			Walk(v, n.RHS)
+
+		case *NameLabel:
+
+		case *RewriteLabel:
+			Walk(v, n.LHS)
+			Walk(v, n.RHS)
+
+		case *InjectLabel:
 
 		default:
 			fmt.Printf("ast.Walk: unexpected node type %T\n", n)
