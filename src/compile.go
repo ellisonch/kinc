@@ -33,14 +33,33 @@ func compileReplacement(c *C, replacement Replacement) {
 	// result = k_false();
 	// K* newTop = result;
 	// computation_set_elem(config->k, 0, newTop);
-	// switch n := replacement.(type) {
-	// case *TermChange:
-	// 	r := compileRef(n.Loc)
-	// 	v := compileTerm(n.Result)
-	// 	return fmt.Sprintf("computation_set_elem(
-	// case *MapAdd:
-	// 	panic("Don't handle mappadd")
-	// }
+	switch n := replacement.(type) {
+	case *TermChange:
+		// FIXME: this is horrible
+		fmt.Printf("%s\n", n.Loc.String())
+		if len(n.Loc.Ref) == 0 {
+			panic("Empty loc?")
+		} else if len(n.Loc.Ref) == 1 {
+			panic("Trying to change a cell?")
+		} else if len(n.Loc.Ref) == 2 {
+			myloc := n.Loc
+			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
+			r := compileRef(myloc)
+			fmt.Printf("x")
+			last := n.Loc.Ref[len(n.Loc.Ref)-1]
+			fmt.Printf("y")
+			// offset := compileRefPart(last, "", false)
+			offset := last.String()
+			_ = r
+			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, "term")
+			c.Checks = append(c.Checks, s)
+		} else {
+			panic("Trying to change a term?")
+		}
+	case *MapAdd:
+		panic("Don't handle mappadd")
+	}
+
 }
 
 func compileBinding(c *C, binding Binding) {

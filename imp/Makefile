@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-static -std=c11 -Wall -m64 -O3
 FILES = imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c -L./aparser -laterm 
-DEPENDS = imp.c k.h k.c k_types.h utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h inline_helper.h
+DEPENDS = imp.c k.h k.c k_types.h utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h
 # -DNDEBUG
 # -Wno-unused-function
 # -flto
