@@ -3,6 +3,7 @@ package main
 import "fmt"
 import "strings"
 import "log"
+import "sort"
 
 type C struct {
 	Checks []string
@@ -33,13 +34,43 @@ func checksToC(ch *CheckHelper) *C {
 	return res
 }
 
+type kvp struct {
+	k string
+	v int
+}
+type kvps []kvp
+
+func (a kvps) Len() int {
+	return len(a)
+}
+func (a kvps) Swap(i int, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a kvps) Less(i int, j int) bool {
+	return a[i].v < a[j].v
+}
+
+
+func RuleToC(ch *CheckHelper, r *Rule, i int) string {
+	c := checksToC(ch)
+	return fmt.Sprintf("/*\n%s\n*/\nint rule%d(Configuration* config) {\n%s\n\treturn 0;\n}\n", r.String(), i, c)
+}
+
 
 func (l *Language) Compile() string {
 	symbolMap := l.CompleteLabelSymbols()
 
 	cSymbols := []string{}
-	for v, k := range symbolMap {
-		cSymbols = append(cSymbols, fmt.Sprintf("#define symbol_%s %d", safeForC(v), k))
+	symbols := kvps{}
+	for k, v := range symbolMap {
+		cSymbols = append(cSymbols, fmt.Sprintf("#define symbol_%s %d", safeForC(k), v))
+		symbols = append(symbols, kvp{k, v})
+	}
+
+	sort.Sort(symbols)
+	orderedSymbolNames := []string{}
+	for _, el := range symbols {
+		orderedSymbolNames = append(orderedSymbolNames, fmt.Sprintf("\"%s\"", el.k))
 	}
 
 	cConfig := compileConfiguration(l.Configuration)
@@ -79,9 +110,22 @@ func (l *Language) Compile() string {
 	// FIXME hardcoded
 	ret += fmt.Sprintf("char* get_state_string(Configuration* config) {\n\treturn kCellToString(config->k);\n}\n") 
 	ret += "\n"
+	ret += fmt.Sprintf("char* givenLabels[] = {\n\t%s\n};\n", strings.Join(orderedSymbolNames, ",\n\t"))
 	ret += strings.Join(cSymbols, "\n")
 	ret += "\n"
+	ret += fmt.Sprintf("int num_labels() {\n\treturn %d;\n}\n", len(symbolMap))
+	ret += fmt.Sprintf("char** label_names() {\n\treturn &givenLabels[0];\n}\n")
 	ret += strings.Join(cRules, "\n")
+
+	ret += "void repl(Configuration* config) {\n"
+	ret += "\tint change;\n"
+	ret += "\tdo {\n"
+	ret += "\tchange = 0;\n"
+	for i := range cRules {
+		ret += fmt.Sprintf("\t\tif (rule%d(config) == 0) { change = 1; continue; }\n", i)
+	}
+	ret += "\t} while (change);\n"
+	ret += "}\n"
 
 	ret += dynamicInit()
 	return ret

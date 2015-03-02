@@ -58,8 +58,3 @@ func main() {
 
 	os.Exit(0)
 }
-
-func RuleToC(ch *CheckHelper, r *Rule, i int) string {
-	c := checksToC(ch)
-	return fmt.Sprintf("/*\n%s\n*/\nint rule%d(Configuration* config) {\n%s\n\treturn 0;\n}\n", r.String(), i, c)
-}

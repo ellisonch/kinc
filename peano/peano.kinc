@@ -3,7 +3,7 @@ configuration
 
 rule <k> lt(s(N), zero()) => #false() </k>
 rule <k> lt(s(N), s(M)) => lt(N, M) </k>
-rule <k> le(zero(), s(N)) => #true() </k>
+rule <k> lt(zero(), s(N)) => #true() </k>
 
 
 // rule <k> foo(kra(A, B), C) => A </k>
