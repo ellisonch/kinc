@@ -42,8 +42,16 @@ func main() {
 	// ret := yyParse(l)
 	// Final.String()
 
+	argsWithoutProg := os.Args[1:]
+	file := "../peano/peano.kinc"
+	if len(argsWithoutProg) == 1 {
+		file = argsWithoutProg[0]
+	} else {
+		panic("too many args")
+	}
+
 	// lang, err := ParseFile("../imp/imp.kinc")
-	lang, err := ParseFile("../peano/peano.kinc")
+	lang, err := ParseFile(file)
 	// lang, err := ParseString(prog)
 	if err != nil {
 		fmt.Printf("Couldn't parse language: %s\n", err)

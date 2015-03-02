@@ -1,0 +1,5 @@
+configuration
+	<k type="computation"> $PGM </k>
+
+rule <k> plus(s(N), M) => plus(N, s(M)) </k>
+rule <k> plus(zero(), N) => N </k>

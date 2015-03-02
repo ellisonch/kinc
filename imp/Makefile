@@ -25,8 +25,8 @@ lang: lang.exe
 lang.exe: Makefile $(NEWDEPENDS) lang.c
 	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
 
-lang.c: ../peano/peano.kinc kinc
-	../src/kinc.exe ../peano/peano.kinc > lang.c
+lang.c: ../testlang/testlang.kinc kinc
+	../src/kinc.exe ../testlang/testlang.kinc > lang.c
 
 kinc:
 	make -C ../src kinc.exe
