@@ -1,0 +1,35 @@
+Free state and counts to 0
+
+Why new so high
+
+Not really using cap
+
+What happens to labels
+
+Can args be part of K structure one less pointer
+-- yes, but then not flexible enough to deal with different kinds of lists
+
+Cap of powers od 2 only
+
+Pre in it garbage
+-- doesn't seem to help at n = 10000
+
+Function to turn cap into nth in series 1 2 4 8 12 16 20 etc
+
+Since usually there is garbage left, only if at sentinel at bottom of garbage
+
+If k had its own list pointer, could hold next k garbage and get next quick
+
+Alloc mem in blocks and don't free
+
+No sharing btw cells might help concurrency 
+
+DO NOT MUTATE PERMANANT TSTUFF
+
+get the k
+set its arguments
+init it
+
+
+
+need nicer way to rep config inside of c

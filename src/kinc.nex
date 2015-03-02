@@ -45,6 +45,7 @@
 /configuration/ { return TOK_CONFIGURATION }
 /rule/ { return TOK_RULE }
 /when/ { return TOK_WHEN }
+/syntax/ { return TOK_SYNTAX }
 /mapsTo/ { return TOK_MAPS_TO_PRE }
 /#?_?[a-z][_a-zA-Z-]*[0-9]*/ {
 	lval.str = string(yylex.Text())

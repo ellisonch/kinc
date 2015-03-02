@@ -16,7 +16,13 @@ type Node interface {
 
 type Language struct {
 	Configuration *Configuration
+	Syntax []*Subsort
 	Rules []*Rule
+}
+
+type Subsort struct {
+	Sort string
+	Subsort string
 }
 
 type Configuration struct {

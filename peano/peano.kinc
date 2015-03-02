@@ -1,12 +1,10 @@
 configuration
 	<k type="computation"> $PGM </k>
 
+syntax
+	s : int
+	zero : int
+
 rule <k> lt(s(N), zero()) => #false() </k>
 rule <k> lt(s(N), s(M)) => lt(N, M) </k>
 rule <k> lt(zero(), s(N)) => #true() </k>
-
-
-// rule <k> foo(kra(A, B), C) => A </k>
-
-// rule <k> plus(zero(), N) => N </k>
-// rule <k> plus(s(N), M) => s(plus(N, M)) </k>

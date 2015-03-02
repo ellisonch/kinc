@@ -14,6 +14,8 @@ var Final *Language
 	ccell *CCell
 	ccells []*CCell
 	ccellBody *CCellBody
+	syntax []*Subsort
+	subsort *Subsort
 	rule *Rule
 	rules []*Rule
 	term K
@@ -42,6 +44,8 @@ at ATerm
 %type <ccell> ccell
 %type <ccells> ccells
 %type <ccellBody> ccellBody
+%type <syntax> syntax syntax_rules
+%type <subsort> subsort
 %type <rules> rules
 %type <rule> rule
 %type <term> term
@@ -58,7 +62,7 @@ at ATerm
 %type <i64> integer
 // these apparently encode precedence, so be careful
 %token <str> TOK_ERROR TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
-%token <str> TOK_MAPS_TO_PRE TOK_CONFIGURATION TOK_RULE
+%token <str> TOK_MAPS_TO_PRE TOK_CONFIGURATION TOK_RULE TOK_SYNTAX
 %token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO TOK_LBRACE TOK_RBRACE
 %token <str> TOK_DOT_K TOK_DOT_MAP TOK_DOT_BAG
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN
@@ -72,8 +76,8 @@ at ATerm
 
 %%
 final
-	: TOK_CONFIGURATION configuration rules
-		{ Final = &Language{Configuration: $2, Rules: $3} }
+	: TOK_CONFIGURATION configuration syntax rules
+		{ Final = &Language{Configuration: $2, Syntax: $3, Rules: $4} }
 	;
 
 configuration
@@ -119,6 +123,21 @@ cell_attributes
 			$1.Table[$2] = $5
 			$$ = $1
 		}
+syntax
+	: // empty
+		{ $$ = []*Subsort{} }
+	| TOK_SYNTAX syntax_rules
+		{ $$ = $2 }
+
+syntax_rules
+	: // empty
+		{ $$ = []*Subsort{} }
+	| syntax_rules subsort
+		{ $$ = append($1, $2) }
+
+subsort
+	: TOK_LC_NAME ':' TOK_LC_NAME
+		{ $$ = &Subsort{Sort: $3, Subsort: $1} }
 
 rules
 	: // empty
