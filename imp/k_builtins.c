@@ -25,7 +25,7 @@ char* symbol_names[SYMBOLS_MAX] = {
 #define symbol_fake (SYMBOLS_MAX - 1)
 
 // FIXME: can do better than this
-int num_labels = 7;
+int _num_labels = 7;
 
 // int get_symbol(char* name) {
 // 	for (int i = 0; i < num_labels; i++) {
@@ -39,11 +39,11 @@ int num_labels = 7;
 
 void set_labels(int n, char* labels[static n]) {
 	assert(n >= 0);
-	assert(n + num_labels < SYMBOLS_MAX);
+	assert(n + _num_labels < SYMBOLS_MAX);
 
 	for (int i = 0; i < n; i++) {
 		symbol_names[i] = labels[i];
-		num_labels++;
+		_num_labels++;
 	}
 }
 

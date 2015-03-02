@@ -27,6 +27,13 @@ type CCell struct {
 	Name string
 	Attributes CellAttributes
 	Children []*CCell
+	Magic string
+}
+
+// temporary, gets put in above
+type CCellBody struct {
+	Children []*CCell
+	Magic string
 }
 
 type CellAttributes struct {

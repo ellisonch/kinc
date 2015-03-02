@@ -1,5 +1,5 @@
 configuration
-	<k type="computation"> </k>
+	<k type="computation"> $PMG </k>
 
 rule <k> lt(s(N), zero()) => #false() </k>
 rule <k> lt(s(N), s(M)) => lt(N, M) </k>

@@ -13,6 +13,7 @@ var Final *Language
 	cell Cell
 	ccell *CCell
 	ccells []*CCell
+	ccellBody *CCellBody
 	rule *Rule
 	rules []*Rule
 	term K
@@ -40,6 +41,7 @@ at ATerm
 %type <cell> cell
 %type <ccell> ccell
 %type <ccells> ccells
+%type <ccellBody> ccellBody
 %type <rules> rules
 %type <rule> rule
 %type <term> term
@@ -79,7 +81,7 @@ configuration
 		{ $$ = &Configuration{Cell: $1} }
 
 ccell
-	: TOK_CELL_BEGIN_K cell_attributes '>' ccells TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+	: TOK_CELL_BEGIN_K cell_attributes '>' ccellBody TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			if $1 != $6 {
 				panic(fmt.Sprintf("cell %s isn't %s", $1, $6))
@@ -94,8 +96,14 @@ ccell
 				CellTypes[$1] = "k"
 			}
 
-			$$ = &CCell{Name: $1, Attributes: $2, Children: $4}
+			$$ = &CCell{Name: $1, Attributes: $2, Children: $4.Children, Magic: $4.Magic}
 		}
+
+ccellBody
+	: ccells
+		{ $$ = &CCellBody{Children: $1} }
+	| TOK_UC_NAME
+		{ $$ = &CCellBody{Children: []*CCell{}, Magic: $1} }
 
 ccells
 	: // empty

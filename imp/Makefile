@@ -1,13 +1,27 @@
 CC=gcc
 CFLAGS=-static -std=c11 -Wall -m64 -O3
-FILES = imp.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c -L./aparser -laterm 
-DEPENDS = imp.c k.h k.c k_types.h utils.h utils.c settings.h cells.h cells.c k_labels.h k_labels.c k_builtins.h k_builtins.c adopt.h imp.h test.c test.h k_pub.h
+
+FILES = imp_bench.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
+LIBS = -L./aparser -laterm
+DEPENDS = $(FILES) imp_bench.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h test.h k_pub.h
+
+NEWFILES = imp.c lang_helper.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c
+NEWLIBS = -L./aparser -laterm
+NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h k_pub.h
+
 # -DNDEBUG
 # -Wno-unused-function
 # -flto
 # -pedantic
 
 # gdb --args ./imp.exe --test
+
+
+simp: imp-simp.exe
+	./imp-simp.exe programs/prog1.aterm
+
+imp-simp.exe: Makefile $(NEWDEPENDS)
+	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) -o imp-simp.exe
 
 build: imp.exe
 
@@ -30,22 +44,22 @@ run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 
 imp.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -g -flto $(FILES) -o imp.exe
+	$(CC) $(CFLAGS) -g -flto $(FILES) $(LIBS) -o imp.exe
 
 asm: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -S -g $(FILES)
 
 imp-O1.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -O1 -pg $(FILES) -o imp-O1.exe
+	$(CC) $(CFLAGS) -DNDEBUG -O1 -pg $(FILES) $(LIBS) -o imp-O1.exe
 
 imp-fast.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) -o imp-fast.exe
+	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) $(LIBS) -o imp-fast.exe
 
 imp-profile.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) -o imp-profile.exe	
+	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) $(LIBS) -o imp-profile.exe	
 
 imp-sleepy.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) -o imp-sleepy.exe	
+	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) $(LIBS) -o imp-sleepy.exe	
 
 imp-profile-O1.output: imp-O1.exe	
 	./imp-O1.exe --bench

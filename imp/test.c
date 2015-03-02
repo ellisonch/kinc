@@ -2,7 +2,7 @@
 #include <inttypes.h>
 #include <time.h>
 
-#include "imp.h"
+#include "imp_bench.h"
 #include "k.h"
 
 const char* p1 = "programs/prog1.aterm";

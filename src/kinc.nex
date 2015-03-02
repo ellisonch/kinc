@@ -50,7 +50,7 @@
 	lval.str = string(yylex.Text())
 	return TOK_LC_NAME
 }
-/#?_?[A-Z][_a-zA-Z-]*[0-9]*/ {
+/(#?|\$?)_?[A-Z][_a-zA-Z-]*[0-9]*/ {
 	lval.str = string(yylex.Text())
 	return TOK_UC_NAME
 }

@@ -43,6 +43,7 @@ func (l *Language) Compile() string {
 	}
 
 	cConfig := compileConfiguration(l.Configuration)
+	cnConfig := compileNewConfiguration(l.Configuration)
 
 	cRules := []string{}
 	for i, rule := range l.Rules {
@@ -60,18 +61,27 @@ func (l *Language) Compile() string {
 
 	ret := ""
 	ret += fmt.Sprintf("typedef struct {\n%s\n} Configuration;\n", strings.Join(cConfig, "\n"))
+	ret += strings.Join(cnConfig, "\n")
+	ret += "\n"
+	// FIXME hardcoded
+	ret += fmt.Sprintf("char* get_state_string(Configuration* config) {\n\treturn kCellToString(config->k);\n}\n") 
+	ret += "\n"
 	ret += strings.Join(cSymbols, "\n")
 	ret += "\n"
 	ret += strings.Join(cRules, "\n")
+
+	ret += dynamicInit()
 	return ret
+}
+
+func dynamicInit() string {
+	return `
+void k_language_init() { }
+	`
 }
 
 func compileConfiguration(config *Configuration) []string {
 	cConfig := []string{}
-// 	typedef struct {
-// 	StateCell* state;
-// 	ComputationCell* k;
-// } Configuration;
 	cell := config.Cell
 	if len(cell.Children) > 0 {
 		panic("Don't handle nested config cells yet")
@@ -86,6 +96,40 @@ func compileConfiguration(config *Configuration) []string {
 	} else {
 		panic("Cell needs a type attribute")
 	}
+	return cConfig
+}
+
+func compileNewConfiguration(config *Configuration) []string {
+	cConfig := []string{}
+	cConfig = append(cConfig, "Configuration* new_configuration(K* pgm) {")
+	cConfig = append(cConfig, "\tConfiguration* config = malloc(sizeof(Configuration));")
+
+	cell := config.Cell
+	if len(cell.Children) > 0 {
+		panic("Don't handle nested config cells yet")
+	}
+	var pgm string
+	if t, ok := cell.Attributes.Table["type"]; ok {
+		if t == "computation" {
+			if cell.Magic == "$PGM" {
+				pgm = fmt.Sprintf("config->%s", cell.Name)
+			}
+			s := fmt.Sprintf("\tconfig->%s = newComputationCell();", cell.Name)
+			cConfig = append(cConfig, s)
+		} else {
+			panic("Only handle computation cells!")
+		}
+	} else {
+		panic("Cell needs a type attribute")
+	}
+
+	if pgm != "" {
+		cConfig = append(cConfig, "\tcomputation_add_front(%s, pgm);")
+	}
+
+	cConfig = append(cConfig, "\treturn config;")
+	cConfig = append(cConfig, "}")
+
 	return cConfig
 }
 
