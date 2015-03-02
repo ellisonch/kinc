@@ -60,6 +60,19 @@ func (l *Language) Compile() string {
 	}
 
 	ret := ""
+
+	ret += `
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <inttypes.h>
+#include <string.h>
+#include <assert.h>
+
+#include "lang.h"
+`
+
 	ret += fmt.Sprintf("typedef struct {\n%s\n} Configuration;\n", strings.Join(cConfig, "\n"))
 	ret += strings.Join(cnConfig, "\n")
 	ret += "\n"

@@ -14,10 +14,7 @@ typedef struct Configuration {
 	ComputationCell* k;
 } Configuration;
 
-uint64_t rewrites;
-
-K* _skip;
-
+// uint64_t rewrites;
 
 char* givenLabels[] = {
 	"Assign",
@@ -226,7 +223,7 @@ void handleWhile(Configuration* config, K* top, int* change) {
 	K* guard = k_get_arg(top, 0);
 	K* body = k_get_arg(top, 1);
 	K* then = k_new(SymbolLabel(symbol_Statements), 2, body, top);
-	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, _skip);
+	K* theIf = k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)));
 	computation_set_elem(config->k, 0, theIf);
 
 	// follows
@@ -512,7 +509,7 @@ char* get_state_string(Configuration* config) {
 void repl(Configuration* config) {
 	int change = 1;
 	do {
-		rewrites++;
+		// rewrites++;
 		// if (rewrites % 1000 == 0) {
 		// 	double cap = garbage_get_capacity();
 		// 	fprintf(stderr, "%f\n", cap);
@@ -613,6 +610,4 @@ Configuration* new_configuration(K* pgm) {
 }
 
 void k_language_init() {
-	_skip = k_new_empty(SymbolLabel(symbol_Skip));
-	k_make_permanent(_skip);
 }
