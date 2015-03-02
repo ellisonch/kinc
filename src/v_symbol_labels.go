@@ -3,7 +3,7 @@ package main
 import "fmt"
 // import "log"
 // import "errors"
-// import "strings"
+import "strings"
 
 func go_sucks_symbol_labels() {
 	_ = fmt.Printf
@@ -31,10 +31,14 @@ func (vis *SymbolLabels) VisitPre(node Node) Visitor {
 	// fmt.Printf("Visiting %s\n", node)
 	switch n := node.(type) {
 	case *NameLabel:
-		if _, ok := vis.lookup[n.Name]; ok {
+		name := n.Name
+		if strings.HasPrefix(name, "#") {
+			return vis
+		}
+		if _, ok := vis.lookup[name]; ok {
 			break
 		}
-		vis.lookup[n.Name] = vis.next
+		vis.lookup[name] = vis.next
 		vis.next += 1
 	}
 	return vis

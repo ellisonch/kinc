@@ -11,11 +11,11 @@ int is_hole(const K* k);
 int is_true(const K* k);
 int is_false(const K* k);
 
-K* k_hole();
-K* k_true();
-K* k_false();
-K* k_int_zero();
-K* k_int_one();
+K* k_builtin_hole();
+K* k_builtin_true();
+K* k_builtin_false();
+K* k_builtin_int_zero();
+K* k_builtin_int_one();
 
 K* new_builtin_int(int64_t i);
 K* new_builtin_string(char* i);

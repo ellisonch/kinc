@@ -66,21 +66,21 @@ void k_init_builtins() {
 	k_make_permanent(_one);
 }
 
-K* k_hole() {
+K* k_builtin_hole() {
 	return _hole;
 }
 
-K* k_true() { 
+K* k_builtin_true() { 
 	return _true;
 }
-K* k_false() {
+K* k_builtin_false() {
 	return _false;
 }
 
-K* k_int_zero() {
+K* k_builtin_int_zero() {
 	return _zero;
 }
-K* k_int_one() {
+K* k_builtin_int_one() {
 	return _one;
 }
 

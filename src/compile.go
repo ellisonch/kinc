@@ -166,7 +166,8 @@ func compileReplacement(c *C, replacement Replacement) {
 			// offset := compileRefPart(last, "", false)
 			offset := last.String()
 			_ = r
-			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, "term")
+			rhs := compileTerm(n.Result)
+			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
 			panic("Trying to change a term?")
@@ -261,4 +262,52 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 			return fmt.Sprintf("%s(%s, %d)", fun, root, n.Offset)
 		default: panic(fmt.Sprintf("Don't handle compileRefHead case %s", n))
 	}
+}
+
+func compileTerm(n Node) string {
+	var mylabel string
+	builtin := false
+	// k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)))
+
+	switch n := n.(type) {
+	case *Appl:
+		label := n.Label
+		switch l := label.(type) {
+		case *NameLabel:
+			if strings.HasPrefix(l.Name, "#") {
+				builtin = true
+				mylabel = fmt.Sprintf("%s()", compileBuiltinLabel(l.Name))
+			} else {
+				mylabel = fmt.Sprintf("SymbolLabel(symbol_%s)", safeForC(l.Name))
+			}
+		case *InjectLabel:
+			panic("Not handling RHS inject label")
+		default: panic(fmt.Sprintf("Not handling RHS label %s", label))
+		}
+
+		args := []string{}
+		for _, arg := range n.Body {
+			args = append(args, compileTerm(arg))
+		}
+
+		if builtin {
+			if len(args) > 0 {
+				panic("not handling builtins with args yet")
+			}
+			return mylabel
+		} else if len(args) == 0 {
+			return fmt.Sprintf("k_new_empty(%s)", mylabel)
+		} else {
+			return fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(args), strings.Join(args, ", "))
+		}
+
+	case *Variable:
+		return fmt.Sprintf("variable_%s", n.Name)
+	default: panic(fmt.Sprintf("Do not handle case %s\n", n.String()))
+	}
+}
+
+func compileBuiltinLabel(s string) string {
+	s = strings.TrimPrefix(s, "#")
+	return fmt.Sprintf("k_builtin_%s", s)
 }

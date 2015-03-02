@@ -31,7 +31,7 @@ func ParseFile(fname string) (*Language, error) {
 }
 
 func safeForC(s string) string {
-	s = strings.Replace(s, "#", "_pound_", -1)
+	// s = strings.Replace(s, "#", "_pound_", -1)
 	return s
 }
 
