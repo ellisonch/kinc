@@ -5,9 +5,10 @@ FILES = imp_bench.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
 LIBS = -L./aparser -laterm
 DEPENDS = $(FILES) imp_bench.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h test.h k_pub.h
 
-NEWFILES = imp.c lang_helper.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c
+NEWFILES = lang_helper.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c
 NEWLIBS = -L./aparser -laterm
 NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h k_pub.h
+
 
 # -DNDEBUG
 # -Wno-unused-function
@@ -16,12 +17,25 @@ NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_label
 
 # gdb --args ./imp.exe --test
 
+all: simp
+
+
+lang: lang.exe
+
+lang.exe: Makefile $(NEWDEPENDS) lang.c
+	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
+
+lang.c: ../peano/peano.kinc kinc
+	../src/kinc.exe ../peano/peano.kinc > lang.c
+
+kinc:
+	make -C ../src kinc.exe
 
 simp: imp-simp.exe
 	./imp-simp.exe programs/prog1.aterm
 
 imp-simp.exe: Makefile $(NEWDEPENDS)
-	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) -o imp-simp.exe
+	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) imp.c -o imp-simp.exe
 
 build: imp.exe
 

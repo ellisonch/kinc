@@ -73,7 +73,7 @@ func (l *Language) Compile() string {
 #include "lang.h"
 `
 
-	ret += fmt.Sprintf("typedef struct {\n%s\n} Configuration;\n", strings.Join(cConfig, "\n"))
+	ret += fmt.Sprintf("struct Configuration {\n%s\n};\n", strings.Join(cConfig, "\n"))
 	ret += strings.Join(cnConfig, "\n")
 	ret += "\n"
 	// FIXME hardcoded
@@ -121,6 +121,7 @@ func compileNewConfiguration(config *Configuration) []string {
 	if len(cell.Children) > 0 {
 		panic("Don't handle nested config cells yet")
 	}
+	// fmt.Printf(cell.String())
 	var pgm string
 	if t, ok := cell.Attributes.Table["type"]; ok {
 		if t == "computation" {
@@ -137,7 +138,7 @@ func compileNewConfiguration(config *Configuration) []string {
 	}
 
 	if pgm != "" {
-		cConfig = append(cConfig, "\tcomputation_add_front(%s, pgm);")
+		cConfig = append(cConfig, fmt.Sprintf("\tcomputation_add_front(%s, pgm);", pgm))
 	}
 
 	cConfig = append(cConfig, "\treturn config;")
@@ -180,7 +181,7 @@ func compileReplacement(c *C, replacement Replacement) {
 
 func compileBinding(c *C, binding Binding) {
 	r := compileRef(binding.Loc)
-	s := fmt.Sprintf("\tvariable_%s = %s;", binding.Variable.Name, r)
+	s := fmt.Sprintf("\tK* variable_%s = %s;", binding.Variable.Name, r)
 	c.Checks = append(c.Checks, s)
 }
 
@@ -201,9 +202,13 @@ func compileCheck(c *C, check Check) {
 			s := fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }\n", comparison, n.Num)
 			c.Checks = append(c.Checks, s)
 		case *CheckLabel:
+			l, ok := n.Label.(*NameLabel)
+			if !ok {
+				panic("Expected NameLabel")
+			}
 			r := compileRef(n.Loc)
 			s := fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
-			sym := n.Label
+			sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
 			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }\n", r, sym)
 			c.Checks = append(c.Checks, s)
 

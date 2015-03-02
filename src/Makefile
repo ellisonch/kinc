@@ -2,7 +2,9 @@
 
 DEPS=kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go pretty_print.go v_variable_types.go v_symbol_labels.go v_constraints.go checks.go replacements.go bindings.go reference.go compile.go
 
-all: kinc.exe
+all: run
+
+run: kinc.exe
 	./kinc.exe
 
 kinc.exe: $(DEPS)

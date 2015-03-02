@@ -16,12 +16,19 @@ func (c Configuration) String() string {
 	return fmt.Sprintf("configuration %s", c.Cell.String())
 }
 
-func (c CCell) String() string {	
-	children := ""
-	for _, cell := range c.Children {
-		children += cell.String()
-	}	
-	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, children, c.Name)
+func (c CCell) String() string {
+	var inside string
+
+	if c.Magic == "" {
+		children := ""
+		for _, cell := range c.Children {
+			children += cell.String()
+		}
+		inside = children
+	} else {
+		inside = c.Magic
+	}
+	return fmt.Sprintf("<%s %s>%s</%s>", c.Name, c.Attributes, inside, c.Name)
 }
 
 func (a CellAttributes) String() string {
