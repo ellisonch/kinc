@@ -202,7 +202,7 @@ void handleVar(Configuration* config, K* top, int* change) {
 			printf("Applying 'var-something' rule\n");
 		}
 		*change = 1;
-		updateStore(config->state, k_get_arg(k_get_arg(top, 0), 0), k_int_zero());
+		updateStore(config->state, k_get_arg(k_get_arg(top, 0), 0), k_builtin_int_zero());
 		K* newTop = updateTrimArgs(top, 1, k_num_args(top));
 		computation_set_elem(config->k, 0, newTop);
 	}
@@ -219,7 +219,7 @@ void handleAssign(Configuration* config, K* top, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { 
@@ -258,7 +258,7 @@ void handleIf(Configuration* config, K* top, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, guard);
-		K* newTop = k_replace_arg(top, 0, guard, k_hole());
+		K* newTop = k_replace_arg(top, 0, guard, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (checkTypeSafety) {
@@ -292,7 +292,7 @@ void handleNot(Configuration* config, K* top, int* change) {
 		}
 		*change = 1;
 		computation_add_front(config->k, body);
-		K* newTop = k_replace_arg(top, 0, body, k_hole());
+		K* newTop = k_replace_arg(top, 0, body, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (checkTypeSafety) {
@@ -305,19 +305,19 @@ void handleNot(Configuration* config, K* top, int* change) {
 				printf("Applying 'not-false' rule\n");
 			}
 			*change = 1;
-			computation_set_elem(config->k, 0, k_true());
+			computation_set_elem(config->k, 0, k_builtin_true());
 
 			// follows
-			handleValue(config, k_true(), change);
+			handleValue(config, k_builtin_true(), change);
 		} else if (is_true(k_get_arg(k_get_arg(top, 0), 0))) {
 			if (printDebug) {
 				printf("Applying 'not-true' rule\n");
 			}
 			*change = 1;
-			computation_set_elem(config->k, 0, k_false());
+			computation_set_elem(config->k, 0, k_builtin_false());
 
 			// follows
-			handleValue(config, k_false(), change);
+			handleValue(config, k_builtin_false(), change);
 		}
 	}
 }
@@ -332,13 +332,13 @@ void handleLTE(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying '<=-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, k_hole());
+		K* newTop = k_replace_arg(top, 0, left, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '<=-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());	
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());	
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '<=' rule\n"); }
@@ -347,9 +347,9 @@ void handleLTE(Configuration* config, K* top, int* change) {
 		int64_t rightv = k_get_arg(right, 0)->label->i64_val;
 		K* new_head;
 		if (leftv <= rightv) {
-			new_head = k_true();
+			new_head = k_builtin_true();
 		} else {
-			new_head = k_false();
+			new_head = k_builtin_false();
 		}
 		computation_set_elem(config->k, 0, new_head);
 
@@ -367,13 +367,13 @@ void handlePlus(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying '+-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, k_hole());
+		K* newTop = k_replace_arg(top, 0, left, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '+-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '+' rule\n"); }
@@ -397,13 +397,13 @@ void handleMinus(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying '--heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, k_hole());
+		K* newTop = k_replace_arg(top, 0, left, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '--heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '-' rule\n"); }
@@ -427,13 +427,13 @@ void handleDiv(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying '/-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, k_hole());
+		K* newTop = k_replace_arg(top, 0, left, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '/-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '/' rule\n"); }
@@ -457,13 +457,13 @@ void handleAnd(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying '&&-heat-left' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, left);
-		K* newTop = k_replace_arg(top, 0, left, k_hole());
+		K* newTop = k_replace_arg(top, 0, left, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else if (!isValue(right)) {
 		if (printDebug) { printf("Applying '&&-heat-right' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, right);
-		K* newTop = k_replace_arg(top, 1, right, k_hole());
+		K* newTop = k_replace_arg(top, 1, right, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying '&&' rule\n"); }
@@ -471,9 +471,9 @@ void handleAnd(Configuration* config, K* top, int* change) {
 
 		K* result;
 		if (is_true(k_get_arg(left, 0)) && is_true(k_get_arg(right, 0))) {
-			result = k_true();
+			result = k_builtin_true();
 		} else {
-			result = k_false();
+			result = k_builtin_false();
 		}
 		K* newTop = result;
 		computation_set_elem(config->k, 0, newTop);
@@ -491,7 +491,7 @@ void handleNeg(Configuration* config, K* top, int* change) {
 		if (printDebug) { printf("Applying 'neg-heat' rule\n"); }
 		*change = 1;
 		computation_add_front(config->k, body);
-		K* newTop = k_replace_arg(top, 0, body, k_hole());
+		K* newTop = k_replace_arg(top, 0, body, k_builtin_hole());
 		computation_set_elem(config->k, 1, newTop);
 	} else {
 		if (printDebug) { printf("Applying 'neg' rule\n"); }
