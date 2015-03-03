@@ -212,6 +212,18 @@ func (n *Kra) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
 	// fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	if n.ActualSort != "k" {
+		if subs, ok := _subsortMap[n.ActualSort]; ok {
+			ck := &CheckSort{Loc: ref, Allowable: subs}
+			ch.AddCheck(ck)
+			// fmt.Printf("Subsorts of %s are %v\n", n.ActualSort, subs)
+		} else {
+			// fmt.Printf("No subsorts of %s found\n", n.ActualSort)
+			ck := &CheckSort{Loc: ref, Allowable: []string{n.ActualSort}}
+			ch.AddCheck(ck)
+		}
+		// panic(fmt.Sprintf("Only handle variable of sort k; saw: %s", n.ActualSort))
+	}
 	binding := Binding{Loc: ref, Variable: n}
 	ch.AddBinding(binding)
 	// panic("Don't handle BuildKChecks Variable yet")

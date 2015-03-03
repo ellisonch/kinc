@@ -43,10 +43,12 @@ func main() {
 	// Final.String()
 
 	argsWithoutProg := os.Args[1:]
-	file := "../peano/peano.kinc"
+	// file := "../peano/peano.kinc"
+	file := "../testlang/testlang.kinc"
+	
 	if len(argsWithoutProg) == 1 {
 		file = argsWithoutProg[0]
-	} else {
+	} else if len(argsWithoutProg) > 1 {
 		panic("too many args")
 	}
 

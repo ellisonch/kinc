@@ -56,9 +56,14 @@ func RuleToC(ch *CheckHelper, r *Rule, i int) string {
 	return fmt.Sprintf("/*\n%s\n*/\nint rule%d(Configuration* config) {\n%s\n\treturn 0;\n}\n", r.String(), i, c)
 }
 
+var _subsortMap map[string][]string
 
 func (l *Language) Compile() string {
 	symbolMap := l.CompleteLabelSymbols()
+	subsortMap := l.CompleteSubsorts()
+	_subsortMap = subsortMap
+
+	// fmt.Printf("%v\n", _subsortMap)
 
 	cSymbols := []string{}
 	symbols := kvps{}
@@ -255,12 +260,25 @@ func compileCheck(c *C, check Check) {
 			sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
 			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }\n", r, sym)
 			c.Checks = append(c.Checks, s)
-
 			
 		case *CheckNumArgs:
 			r := compileRef(n.Loc)
 			s := fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }\n", r, n.Num)
 			c.Checks = append(c.Checks, s)
+
+		case *CheckSort:
+			r := compileRef(n.Loc)
+			s1 := fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
+
+			cases := []string{}
+			for _, s := range n.Allowable {
+				this := fmt.Sprintf("(%s->label->symbol_val != symbol_%s)", r, safeForC(s))
+				cases = append(cases, this)
+			}
+
+			s2 := fmt.Sprintf("\tif (%s) { return 1; }\n", strings.Join(cases, " && "))
+			c.Checks = append(c.Checks, s1)
+			c.Checks = append(c.Checks, s2)
 			
 		default: log.Panicf("Don't handle case %s", n)
 	}

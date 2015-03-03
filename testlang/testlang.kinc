@@ -1,5 +1,11 @@
 configuration
 	<k type="computation"> $PGM </k>
 
-rule <k> plus(s(N), M) => plus(N, s(M)) </k>
+syntax
+	s : int
+	zero : int
+
+rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
+
+rule <k> plus(s(N), M:int) => plus(N, s(M)) </k>
 rule <k> plus(zero(), N) => N </k>

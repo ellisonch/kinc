@@ -18,6 +18,10 @@ type CheckNumCellArgs struct {
 	Num int
 	Exact bool
 }
+type CheckSort struct {
+	Loc Reference
+	Allowable []string
+}
 func (ch *CheckNumArgs) String() string {
 	return fmt.Sprintf("CheckNumArgs: %s must have %d arguments\n", ch.Loc.String(), ch.Num)
 }
@@ -30,5 +34,7 @@ func (ch *CheckNumCellArgs) String() string {
 	} else {
 		return fmt.Sprintf("CheckNumCellArgs: %s must have at least %d things in it\n", ch.Loc.String(), ch.Num)
 	}
-	
+}
+func (ch *CheckSort) String() string {
+	return fmt.Sprintf("CheckSort: %s must have the %v sort\n", ch.Loc.String(), ch.Allowable)
 }

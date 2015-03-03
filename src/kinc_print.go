@@ -5,15 +5,24 @@ import "strings"
 
 
 func (def *Language) String() string {
-	children := ""
-	for _, rule := range def.Rules {
-		children += rule.String() + "\n"
+	syntax := ""
+	for _, sub := range def.Syntax {
+		syntax += fmt.Sprintf("\t%s", sub.String())
 	}
-	return fmt.Sprintf("%s\n%s", def.Configuration, children)
+
+	rules := ""
+	for _, rule := range def.Rules {
+		rules += rule.String() + "\n"
+	}
+	return fmt.Sprintf("%s\n%s\n%s", def.Configuration, syntax, rules)
 }
 
 func (c Configuration) String() string {
 	return fmt.Sprintf("configuration %s", c.Cell.String())
+}
+
+func (n *Subsort) String() string {
+	return fmt.Sprintf("%s : %s", n.Subsort, n.Sort)
 }
 
 func (c CCell) String() string {

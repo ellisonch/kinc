@@ -27,6 +27,9 @@ func Walk(v Visitor, node Node) {
 	switch n := node.(type) {
 		case *Language:
 			Walk(v, n.Configuration)
+			for _, c := range n.Syntax {
+				Walk(v, c)
+			}
 			for _, c := range n.Rules {
 				Walk(v, c)
 			}
@@ -41,6 +44,8 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.Map)
 		case *ComputationCell:
 			Walk(v, n.Computation)
+
+		case *Subsort:
 
 		case *Rule:
 			Walk(v, n.Bag)
