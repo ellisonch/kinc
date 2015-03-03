@@ -24,7 +24,15 @@ typedef struct K {
 	KLabel* label;
 	struct ListK {
 		int cap;
-		int len;
+
+		// 0 1 2 3 
+		//   a b
+		// then pos_first = 1
+		// and pos_end = 3
+		// pos_first == pos_end => empty
+		
+		int pos_first;
+		int pos_end;
 		struct K** a;
 	} args;
 	int refs;

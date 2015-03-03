@@ -71,7 +71,9 @@ K* _k_acquire(int len, int cap) {
 		k->args.a = _mallocArgsA(cap);
 		k->args.cap = MAX_GARBAGE_ARG_LEN;
 	}
-	k->args.len = len;
+	// this is the only place that new k gets its first and end set
+	k->args.pos_first = 0;
+	k->args.pos_end = len;
 
 	assert(k != NULL);
 	assert(k_num_args(k) == len);
@@ -264,7 +266,7 @@ void Dec(K* k) {
 }
 
 K* copy(const K* oldK) {
-	K* k = k_new_array(oldK->label, k_num_args(oldK), oldK->args.a);
+	K* k = k_new_array(oldK->label, k_num_args(oldK), &oldK->args.a[oldK->args.pos_first]);
 	if (printDebug) {
 		char* sold = KToString(oldK);
 		char* snew = KToString(k);
@@ -367,21 +369,14 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 	}
 }
 
-// void k_remove_arg_head(K* k) {
-// 	assert(k != NULL);
-// 	assert(k_num_args(k) >= 1);
-
-// 	int top = k_get_arg(k, 0);
-// 	Dec(kCell->elements[top]);
-// 	kCell->next--;
-// }
-
 K* k_get_arg(const K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
 	assert(k_num_args(k) > i);
+	assert(k->args.pos_first + i < k->args.cap);
 
-	K* item = k->args.a[i];
+	// K* item = k->args.a[i];
+	K* item = k->args.a[k->args.pos_first + i];
 
 	assert(item != NULL);
 	assert(item->refs > 0);
@@ -392,7 +387,7 @@ int k_num_args(const K* k) {
 	assert(k != NULL);
 	// assert(k->args != NULL);
 
-	return k->args.len;
+	return k->args.pos_end - k->args.pos_first;
 }
 
 void k_set_label(K* k, KLabel* l) {
@@ -407,8 +402,10 @@ void _k_set_arg(K* k, int i, K* v) {
 	assert(i >= 0);
 	// assert(k->args != NULL);
 	assert(k_num_args(k) > i);
+	assert(k->args.pos_first + i < k->args.cap);
 
-	k->args.a[i] = v;
+	// k->args.a[i] = v;
+	k->args.a[k->args.pos_first + i] = v;
 }
 
 // updates an arg from a k to another k
@@ -444,28 +441,44 @@ K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
 	return k;
 }
 
+// returns a new k with args k[left] ... k[right-1]
 K* updateTrimArgs(K* k, int left, int right) {
+	assert(k != NULL);
+	assert(left >= 0);
+	assert(right <= k_num_args(k));
+
 	if (k->refs > 1) {
-		if (printDebug) { 
+		if (printDebug) {
 			printf("   Term is shared, need to copy\n");
 		}
 		k = copy(k);
 	}
 	for (int i = 0; i < left; i++) {
 		Dec(k_get_arg(k, i));
+		_k_set_arg(k, i, NULL); // for safety
 	}
 	for (int i = right; i < k_num_args(k); i++) {
 		Dec(k_get_arg(k, i));
+		_k_set_arg(k, i, NULL); // for safety
 	}
-	// TODO: inefficient
-	int newi = 0;
-	for (int i = left; i < right; i++) {
-		_k_set_arg(k, newi, k_get_arg(k, i)); 
-		newi++;
-	}
-	k->args.len = right - left;
-	// k.args = k.args[left:right];
+
+	int new_first = k->args.pos_first + left;
+	int new_end = k->args.pos_first + right;
+
+	k->args.pos_first = new_first;
+	k->args.pos_end = new_end;
+
 	return k;
+
+	// // TODO: inefficient
+	// int newi = 0;
+	// for (int i = left; i < right; i++) {
+	// 	_k_set_arg(k, newi, k_get_arg(k, i)); 
+	// 	newi++;
+	// }
+	// k->args.len = right - left;
+	// // k.args = k.args[left:right];
+	// return k;
 }
 
 void k_make_permanent(K* k) {
