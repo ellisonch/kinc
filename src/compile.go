@@ -215,15 +215,27 @@ func compileReplacement(c *C, replacement Replacement) {
 			last := n.Loc.Ref[len(n.Loc.Ref)-1]
 			// offset := compileRefPart(last, "", false)
 			offset := last.String()
-			_ = r
 			rhs := compileTerm(n.Result)
 			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
 			panic("Trying to change a term?")
 		}
+	case *LabelChange:
+		if len(n.Loc.Ref) == 0 {
+			panic("Empty loc?")
+		} else if len(n.Loc.Ref) == 1 {
+			panic("Trying to change a cell?")
+		} else if len(n.Loc.Ref) == 2 {
+			r := compileRef(n.Loc)
+			rhs := compileLabel(n.Result)
+			s := fmt.Sprintf("\tk_set_label(%s, %s);", r, rhs)
+			c.Checks = append(c.Checks, s)
+		} 
 	case *MapAdd:
 		panic("Don't handle mappadd")
+	default:
+		panic(fmt.Sprintf("Not handling compileReplacement case %s\n", n)) 
 	}
 
 }
@@ -331,33 +343,35 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 	}
 }
 
+func compileLabel(l Label) string {
+	switch l := l.(type) {
+	case *NameLabel:
+		if strings.HasPrefix(l.Name, "#") {
+			return fmt.Sprintf("%s()", compileBuiltinLabel(l.Name))
+		} else {
+			return fmt.Sprintf("SymbolLabel(symbol_%s)", safeForC(l.Name))
+		}
+	case *InjectLabel:
+		panic("Not handling RHS inject label")
+	default: panic(fmt.Sprintf("Not handling compileLabel label %s", l))
+	}
+}
+
+
 func compileTerm(n Node) string {
 	var mylabel string
-	builtin := false
 	// k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)))
 
 	switch n := n.(type) {
 	case *Appl:
-		label := n.Label
-		switch l := label.(type) {
-		case *NameLabel:
-			if strings.HasPrefix(l.Name, "#") {
-				builtin = true
-				mylabel = fmt.Sprintf("%s()", compileBuiltinLabel(l.Name))
-			} else {
-				mylabel = fmt.Sprintf("SymbolLabel(symbol_%s)", safeForC(l.Name))
-			}
-		case *InjectLabel:
-			panic("Not handling RHS inject label")
-		default: panic(fmt.Sprintf("Not handling RHS label %s", label))
-		}
+		mylabel = compileLabel(n.Label)
 
 		args := []string{}
 		for _, arg := range n.Body {
 			args = append(args, compileTerm(arg))
 		}
 
-		if builtin {
+		if n.Label.IsBuiltin() {
 			if len(args) > 0 {
 				panic("not handling builtins with args yet")
 			}

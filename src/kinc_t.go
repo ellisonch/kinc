@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 var CellTypes map[string]string
 
 func KincInit() {
@@ -72,6 +74,22 @@ type InjectLabel struct {
 type Label interface {
 	Node
 	labelNode()
+	BuildKChecks(*CheckHelper, Reference)
+	IsBuiltin() bool
+}
+
+
+func (l *NameLabel) IsBuiltin() bool {
+	if strings.HasPrefix(l.Name, "#") {
+		return true
+	}
+	return false
+}
+func (l *InjectLabel) IsBuiltin() bool {
+	return true
+}
+func (l *RewriteLabel) IsBuiltin() bool {
+	return l.LHS.IsBuiltin() || l.RHS.IsBuiltin()
 }
 
 func (*InjectLabel) labelNode() {}

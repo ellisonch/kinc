@@ -197,7 +197,10 @@ func (n *Rewrite) BuildTopKChecks(ch *CheckHelper) {
 	n.BuildKChecks(ch, ch.ref, 0)
 }
 func (n *Appl) BuildTopKChecks(ch *CheckHelper) {
-	panic("Don't handle BuildTopKChecks Appl yet")
+	check := &CheckNumCellArgs{Loc: ch.ref, Num: 1, Exact: true}
+	ch.AddCheck(check)
+	
+	n.BuildKChecks(ch, ch.ref, 0)
 }
 func (n *Paren) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks Paren yet")
@@ -241,8 +244,12 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
 	// fmt.Printf("%s must have the '%s label\n", ref.String(), n.Label.String())
-	checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
-	ch.AddCheck(checkLabel)
+
+	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
+	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
+	n.Label.BuildKChecks(ch, ref)
+
+	// ch.AddCheck(checkLabel)
 	checkArgs := &CheckNumArgs{Num: len(n.Body), Loc: ref}
 	ch.AddCheck(checkArgs)
 	for i, c := range n.Body {
@@ -252,6 +259,20 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 }
 func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	panic("Don't handle BuildKChecks Paren yet")
+}
+//---------------------------------------------------------------
+func (n *NameLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+	checkLabel := &CheckLabel{Loc: ref, Label: n}
+	ch.AddCheck(checkLabel)
+}
+func (n *InjectLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+	panic("Don't handle BuildKChecks InjectLabel yet")
+}
+func (n *RewriteLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+	checkLabel := &CheckLabel{Loc: ref, Label: n.LHS}
+	ch.AddCheck(checkLabel)
+	rep := &LabelChange{Loc: ref, Result: n.RHS}
+	ch.AddReplacement(rep)
 }
 //---------------------------------------------------------------
 // func (vis *getChecks) VisitPre(node Node) Visitor {

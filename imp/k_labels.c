@@ -11,6 +11,7 @@
 #include "utils.h"
 
 // TODO: strings are shared when copies are made
+// FIXME: labels probably shouldn't be freed at all, since they could be shared
 
 // TODO: fix this
 extern char* symbol_names[];

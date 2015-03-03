@@ -427,6 +427,13 @@ int k_num_args(const K* k) {
 	return k->args.len;
 }
 
+void k_set_label(K* k, KLabel* l) {
+	// KLabel* oldl = k->label;
+	k->label = l;
+	// FIXME: not recovering memory from old label
+	// dispose_label(oldl);
+}
+
 void _k_set_arg(K* k, int i, K* v) {
 	assert(k != NULL);
 	assert(i >= 0);
