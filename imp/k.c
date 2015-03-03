@@ -74,7 +74,7 @@ K* _k_acquire(int len, int cap) {
 	k->args.len = len;
 
 	assert(k != NULL);
-	assert(k->args.len == len);
+	assert(k_num_args(k) == len);
 	assert(k->args.cap >= cap);
 	return k;
 }
@@ -85,7 +85,7 @@ K* _k_fresh(KLabel* label, int len) {
 	
 	K* newK = _k_acquire(len, len);
 	assert(newK != NULL);
-	assert(newK->args.len >= len);
+	assert(k_num_args(newK) >= len);
 
 	newK->label = label;
 	newK->refs = 0;
@@ -129,21 +129,18 @@ K* k_new(KLabel* label, int count, ...) {
 }
 
 // TODO: leaks memory and is unsafe
-char* ListKToString(const ListK* args) {
+char* ListKToString(const K* k) {
+	assert(k != NULL);
 	char* ret;
-	if (args == NULL) {
-		return string_make_copy("");
-	}
 	ret = malloc(3000);
 	ret[0] = '\0';
 
-	// size_t len = strlen(ret);
-	for (int i = 0; i < args->len; i++) {
-		K* arg = args->a[i];
+	for (int i = 0; i < k_num_args(k); i++) {
+		K* arg = k_get_arg(k, i);
 		char* sk = KToString(arg);
 		strcat(ret, sk);
 		free(sk);
-		if (i < args->len - 1) {
+		if (i < k_num_args(k) - 1) {
 			strcat(ret, ", ");
 		}
 	}
@@ -158,7 +155,7 @@ char* KToString(const K* k) {
 		strcpy(s, "(null)");
 		return s;
 	}
-	char* sargs = ListKToString(&k->args);
+	char* sargs = ListKToString(k);
 	char* slabel = LabelToString(k->label);
 	if (printRefCounts) {
 		snprintf(s, 1000, "%s[%d](%s)", slabel, k->refs, sargs);
@@ -279,47 +276,6 @@ K* copy(const K* oldK) {
 	return k;
 }
 
-void counts_aux(const K* k, countentry **counts) {
-	countentry *find;
-	HASH_FIND_INT(*counts, &k, find);
-	if (find == NULL) {
-		countentry *new = malloc(sizeof(*new));
-	 	new->entry = k;
-	 	new->count = 1;
-	 	HASH_ADD_INT(*counts, entry, new);
-
-	 	for (int i = 0; i < k_num_args(k); i++) {
-			K* arg = k_get_arg(k, i);
-			counts_aux(arg, counts);
-		}
-	} else {
-		find->count++;
-		// printf("Adding one to %s's count\n", KToString(k));
-	}
-}
-
-countentry** counts(int len, const K** a) {
-	countentry** counts = malloc(sizeof(*counts));
-	*counts = NULL;
-
-	for (int i = 0; i < len; i++) {
-		const K* k = a[i];
-		counts_aux(k, counts);
-	}
-	
-	return counts;
-}
-
-void countentry_delete_all(countentry** counts) {
-	countentry *s;
-	countentry *tmp;
-
-	HASH_ITER(hh, *counts, s, tmp) {
-		HASH_DEL(*counts, s);  /* delete; users advances to next */
-		free(s);            /* optional- if you want to free  */
-	}
-}
-
 void dump_garbage_info() {
 	printf("-----Garbage Dump-----\n");
 	printf("\ncount_malloc_k: %d\n", count_malloc_k);
@@ -411,13 +367,25 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 	}
 }
 
+// void k_remove_arg_head(K* k) {
+// 	assert(k != NULL);
+// 	assert(k_num_args(k) >= 1);
+
+// 	int top = k_get_arg(k, 0);
+// 	Dec(kCell->elements[top]);
+// 	kCell->next--;
+// }
+
 K* k_get_arg(const K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
-	// assert(k->args != NULL);
-	assert(k->args.len > i);
+	assert(k_num_args(k) > i);
 
-	return k->args.a[i];
+	K* item = k->args.a[i];
+
+	assert(item != NULL);
+	assert(item->refs > 0);
+	return item;
 }
 
 int k_num_args(const K* k) {
@@ -438,7 +406,7 @@ void _k_set_arg(K* k, int i, K* v) {
 	assert(k != NULL);
 	assert(i >= 0);
 	// assert(k->args != NULL);
-	assert(k->args.len > i);
+	assert(k_num_args(k) > i);
 
 	k->args.a[i] = v;
 }

@@ -524,7 +524,7 @@ void repl(Configuration* config) {
 		if (k_length(config->k) == 0) {
 			break;
 		}
-		if (k_length(config->k) > MAX_K) {
+		if (k_length(config->k) >= 40) {
 			printf("%s", stateString(config->k, config->state));
 			printf("\n-----------------\n");
 			panic("Safety check!");

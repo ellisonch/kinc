@@ -7,6 +7,7 @@ typedef struct {
 	int capacity;
 	int next;
 	K *elements[];
+	// K* holder;
 } ComputationCell;
 
 typedef struct {

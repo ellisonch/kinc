@@ -16,8 +16,8 @@ int next = 0;
 
 ComputationCell* newComputationCell() {
 	ComputationCell* cell = malloc(sizeof(ComputationCell) + MAX_K * sizeof(K*)); // TODO: 1 too few?
-	cell->capacity = MAX_K;
-	cell->next = 0;
+	// cell->capacity = MAX_K;
+	// cell->next = 0;
 	return cell;
 }
 
@@ -31,15 +31,16 @@ StateCell* newStateCell() {
 }
 
 int k_length(const ComputationCell* cell) {
+	assert(cell != NULL);
 	return cell->next;
+	// return k_num_args(cell->holder);
 }
 
 K* k_get_item(const ComputationCell* cell, int i) {
+	// K* item = k_get_arg(cell->holder, i);
 	int spot = cell->next - 1 - i;
 	K* item = cell->elements[spot];
 
-	assert(item != NULL);
-	assert(item->refs >= 1);
 	return item;
 }
 
@@ -47,7 +48,7 @@ K* k_get_item(const ComputationCell* cell, int i) {
 char* kCellToString(const ComputationCell *kCell) {
 	char* s = malloc(10000);
 	strcpy(s, "k(\n");
-	for (int i = kCell->next - 1; i >= 0; i--) {
+	for (int i = k_length(kCell) - 1; i >= 0; i--) {
 		char* sk = KToString(kCell->elements[i]);
 		strcat(s, "  ~> ");
 		strcat(s, sk);
@@ -80,8 +81,10 @@ char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
 	return s;
 }
 
-void computation_remove_head(ComputationCell *kCell) {
-	assert(kCell->next >= 1);
+void computation_remove_head(ComputationCell *kCell) {\
+	// k_remove_arg_head(kCell->holder);
+	assert(kCell != NULL);
+	assert(k_length(kCell) >= 1);
 
 	int top = kCell->next - 1;
 	Dec(kCell->elements[top]);
@@ -148,6 +151,49 @@ void check(const ComputationCell *c, const StateCell* state) {
 	}
 }
 
+void counts_aux(const K* k, countentry **counts) {
+	countentry *find;
+	HASH_FIND_INT(*counts, &k, find);
+	if (find == NULL) {
+		countentry *new = malloc(sizeof(*new));
+	 	new->entry = k;
+	 	new->count = 1;
+	 	HASH_ADD_INT(*counts, entry, new);
+
+	 	for (int i = 0; i < k_num_args(k); i++) {
+			K* arg = k_get_arg(k, i);
+			counts_aux(arg, counts);
+		}
+	} else {
+		find->count++;
+		// printf("Adding one to %s's count\n", KToString(k));
+	}
+}
+
+countentry** counts(int len, const K** a) {
+	countentry** counts = malloc(sizeof(*counts));
+	*counts = NULL;
+
+	for (int i = 0; i < len; i++) {
+		const K* k = a[i];
+		counts_aux(k, counts);
+	}
+	
+	return counts;
+}
+
+void countentry_delete_all(countentry** counts) {
+	countentry *s;
+	countentry *tmp;
+
+	HASH_ITER(hh, *counts, s, tmp) {
+		HASH_DEL(*counts, s);  /* delete; users advances to next */
+		free(s);            /* optional- if you want to free  */
+	}
+}
+
+
+
 // TODO: unsafe
 void updateStore(StateCell* stateCell, K* keyK, K* value) {
 	keyK = k_get_arg(keyK, 0); // get rid of String() wrapper
@@ -189,7 +235,7 @@ K* get_result(const ComputationCell *kCell) {
 }
 
 void computation_cleanup(ComputationCell *kCell) {
-	while (kCell->next > 0) {
+	while (k_length(kCell) > 0) {
 		computation_remove_head(kCell);
 	}
 }
