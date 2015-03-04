@@ -482,15 +482,35 @@ K* updateTrimArgs(K* k, int left, int right) {
 	// return k;
 }
 
+// seems much faster
+// void _k_remove_first_arg(K* k) {
+// 	assert(k != NULL);
+// 	assert(k_num_args(k) > 0);
+// 	assert(k->refs == 1); // don't want this, but necessary for now
+
+// 	int old_length = k_num_args(k);
+
+// 	Dec(k_get_arg(k, 0));
+// 	_k_set_arg(k, 0, NULL); // for safety
+
+// 	int new_first = k->args.pos_first + 1;
+// 	k->args.pos_first = new_first;
+
+// 	assert(k_num_args(k) == old_length - 1);
+// }
+
 
 void k_remove_arg_head(K* k) {
 	assert(k != NULL);
 	assert(k_num_args(k) > 0);
+	assert(k->refs == 1); // don't want this, but necessary for now
 
-	// K* oldv = k_get_arg(k, 0);
+	// a nice safe way of doing this
 	K* newk = updateTrimArgs(k, 1, k_num_args(k));
 	assert(newk == k); // not really true, but true for a while
-	// Dec(oldv);
+
+	// faster, but specialized
+	// _k_remove_first_arg(k);
 }
 
 void k_set_arg(K* k, int i, K* v) {
@@ -498,6 +518,7 @@ void k_set_arg(K* k, int i, K* v) {
 	assert(v != NULL);
 	assert(i >= 0);
 	assert(i < k_num_args(k));
+	assert(k->refs == 1); // don't want this, but necessary for now
 
 	K* oldv = k_get_arg(k, i);
 	_k_set_arg(k, i, v);
@@ -507,6 +528,7 @@ void k_set_arg(K* k, int i, K* v) {
 
 void _k_grow_front_arg(K* k) {
 	assert(k != NULL);
+	assert(k->refs == 1); // don't want this, but necessary for now
 
 	if (k->args.pos_first > 0) {
 		k->args.pos_first--;
@@ -519,6 +541,7 @@ void _k_grow_front_arg(K* k) {
 void k_add_front_arg(K* k, K* v) {
 	assert(k != NULL);
 	assert(v != NULL);
+	assert(k->refs == 1); // don't want this, but necessary for now
 
 	_k_grow_front_arg(k);
 	_k_set_arg(k, 0, v);
