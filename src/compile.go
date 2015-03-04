@@ -53,7 +53,17 @@ func (a kvps) Less(i int, j int) bool {
 
 func RuleToC(ch *CheckHelper, r *Rule, i int) string {
 	c := checksToC(ch)
-	return fmt.Sprintf("/*\n%s\n*/\nint rule%d(Configuration* config) {\n%s\n\treturn 0;\n}\n", r.String(), i, c)
+	return fmt.Sprintf(`
+/*
+%s
+*/
+int rule%d(Configuration* config) {
+	if (printDebug) { printf("Attempting to apply rule%d\n"); }
+%s
+	if (printDebug) { printf("Applied rule%d, kcell is\n%%s\n", kCellToString(config->k)); }
+	return 0;
+}
+`, r.String(), i, i, c, i)
 }
 
 var _subsortMap map[string][]string
@@ -87,6 +97,10 @@ func (l *Language) Compile() string {
 
 		// fmt.Printf("\nrule: %s", rule.String())
 		ch := rule.BuildChecks()
+
+		// for _, check := range ch.checks {
+		// 	fmt.Printf("%s\n", check.String())
+		// }
 		// ch.symbolMap = symbolMap
 		// fmt.Printf(ch.String())
 		c := RuleToC(ch, rule, i)
@@ -213,13 +227,20 @@ func compileReplacement(c *C, replacement Replacement) {
 			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
 			r := compileRef(myloc)
 			last := n.Loc.Ref[len(n.Loc.Ref)-1]
-			// offset := compileRefPart(last, "", false)
 			offset := last.String()
 			rhs := compileTerm(n.Result)
 			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
-			panic("Trying to change a term?")
+			myloc := n.Loc
+			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
+			r := compileRef(myloc)
+			last := n.Loc.Ref[len(n.Loc.Ref)-1]
+			offset := last.String()
+			rhs := compileTerm(n.Result)
+			s := fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %s, %s);", r, offset, rhs)
+			c.Checks = append(c.Checks, s)
+			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
 	case *LabelChange:
 		if len(n.Loc.Ref) == 0 {
@@ -247,7 +268,6 @@ func compileBinding(c *C, binding Binding) {
 }
 
 func compileCheck(c *C, check Check) {
-
 	switch n := check.(type) {
 		case *CheckNumCellArgs:
 			// fmt.Printf("CheckNumCellArgs\n")
@@ -260,7 +280,8 @@ func compileCheck(c *C, check Check) {
 			} else {
 				comparison = "<"
 			}
-			s := fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }\n", comparison, n.Num)
+			s := fmt.Sprintf("\n\t// checking %s", n.String())
+			s += fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }", comparison, n.Num)
 			c.Checks = append(c.Checks, s)
 		case *CheckLabel:
 			l, ok := n.Label.(*NameLabel)
@@ -268,19 +289,22 @@ func compileCheck(c *C, check Check) {
 				panic("Expected NameLabel")
 			}
 			r := compileRef(n.Loc)
-			s := fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
+			s := fmt.Sprintf("\n\t// checking %s", n.String())
+			s += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
 			sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
-			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }\n", r, sym)
+			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }", r, sym)
 			c.Checks = append(c.Checks, s)
 			
 		case *CheckNumArgs:
 			r := compileRef(n.Loc)
-			s := fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }\n", r, n.Num)
+			s := fmt.Sprintf("\n\t// checking %s", n.String())
+			s += fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }", r, n.Num)
 			c.Checks = append(c.Checks, s)
 
 		case *CheckSort:
 			r := compileRef(n.Loc)
-			s1 := fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
+			s1 := fmt.Sprintf("\n\t// checking %s", n.String())
+			s1 += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }", r)
 
 			cases := []string{}
 			for _, s := range n.Allowable {

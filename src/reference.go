@@ -43,13 +43,23 @@ func (r *Reference) String() string {
 	return strings.Join(children, ".")
 }
 
+// FIXME arrggg, this is so dumb
 func (r *Reference) addCellEntry(s string) {
+	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))
+	copy(newSlice, r.Ref)
+	r.Ref = newSlice
 	r.Ref = append(r.Ref, &RefPartCell{s})
 }
 func (r *Reference) addPositionEntry(n int) {
+	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))
+	copy(newSlice, r.Ref)
+	r.Ref = newSlice
 	r.Ref = append(r.Ref, &RefPartPosition{n})
 }
 func (r *Reference) addMapLookup(k K) {
+	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))
+	copy(newSlice, r.Ref)
+	r.Ref = newSlice
 	r.Ref = append(r.Ref, &RefPartMapLookup{k})
 }
 // func (r *Reference) setPositionEntry(n int) {

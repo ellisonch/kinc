@@ -11,7 +11,7 @@
 // when printing k terms, print the ref counts as well
 #define printRefCounts 1
 
-#define printDebug 0
+#define printDebug 1
 
 // slow checks dealing with refcounting
 #define shouldCheck 0

@@ -372,6 +372,9 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 K* k_get_arg(const K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
+	if (k_num_args(k) <= i) {
+		printf("Trying to get %dth argument of %s\n", i, KToString(k));
+	}
 	assert(k_num_args(k) > i);
 	assert(k->args.pos_first + i < k->args.cap);
 

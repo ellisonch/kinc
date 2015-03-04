@@ -20,10 +20,12 @@ NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_label
 all: simp
 
 
-lang: lang.exe
+# lang: lang.exe
 
 lang.exe: Makefile $(NEWDEPENDS) lang.c
+	echo making lang.exe
 	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
+	echo made lang.exe
 
 lang.c: ../testlang/testlang.kinc kinc
 	../src/kinc.exe ../testlang/testlang.kinc > lang.c

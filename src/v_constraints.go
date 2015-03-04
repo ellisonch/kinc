@@ -215,6 +215,9 @@ func (n *Kra) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
 	// fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	if n.ActualSort == "listk" {
+		panic("Don't handle listk")
+	}
 	if n.ActualSort != "k" {
 		if subs, ok := _subsortMap[n.ActualSort]; ok {
 			ck := &CheckSort{Loc: ref, Allowable: subs}
@@ -243,7 +246,7 @@ func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 }
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
-	// fmt.Printf("%s must have the '%s label\n", ref.String(), n.Label.String())
+	// fmt.Printf("%s [%s] must have the '%s label\n", ref.String(), n.String(), n.Label.String())
 
 	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
 	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
@@ -255,6 +258,13 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	for i, c := range n.Body {
 		c.BuildKChecks(ch, ref, i)
 	}
+
+	// fmt.Printf("Checks for %s\n", n.String())
+	// for _, check := range ch.checks {
+	// 	fmt.Printf("%s", check.String())
+	// }
+	// fmt.Printf("\n")
+
 	// panic("Don't handle BuildKChecks Appl yet")
 }
 func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
@@ -263,6 +273,7 @@ func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 //---------------------------------------------------------------
 func (n *NameLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
 	checkLabel := &CheckLabel{Loc: ref, Label: n}
+	// fmt.Printf("adding NameLabel %s", checkLabel.String())
 	ch.AddCheck(checkLabel)
 }
 func (n *InjectLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
@@ -270,6 +281,7 @@ func (n *InjectLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
 }
 func (n *RewriteLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
 	checkLabel := &CheckLabel{Loc: ref, Label: n.LHS}
+	// fmt.Printf("adding RewriteLabel %s", checkLabel.String())
 	ch.AddCheck(checkLabel)
 	rep := &LabelChange{Loc: ref, Result: n.RHS}
 	ch.AddReplacement(rep)
