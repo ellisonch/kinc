@@ -16,8 +16,8 @@ int next = 0;
 
 ComputationCell* newComputationCell() {
 	ComputationCell* cell = malloc(sizeof(ComputationCell) + MAX_K * sizeof(K*)); // TODO: 1 too few?
-	// cell->capacity = MAX_K;
-	// cell->next = 0;
+	cell->capacity = MAX_K;
+	cell->next = 0;
 	return cell;
 }
 
@@ -92,7 +92,8 @@ void computation_remove_head(ComputationCell *kCell) {\
 }
 
 void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
-	assert(kCell->next >= pos + 1);
+	// assert(kCell->next >= pos + 1);
+	assert(k_length(kCell) > pos);
 
 	int elem = kCell->next - 1 - pos;
 	Inc(k);
@@ -102,7 +103,7 @@ void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
 
 void computation_add_front(ComputationCell *kCell, K* k) {
 	if (checkStackSize) {
-		if (kCell->next >= MAX_K) {
+		if (k_length(kCell) > 20) {
 			panic("Trying to add too many elements to the K Cell!");
 		}
 	}
@@ -228,8 +229,8 @@ K* state_get_item(const StateCell* stateCell, const K* i) {
 }
 
 K* get_result(const ComputationCell *kCell) {
-	if (kCell->next != 1) {
-		panic("Expected a single value on the K Cell, but instead have %d.  %s", kCell->next, kCellToString(kCell));
+	if (k_length(kCell) != 1) {
+		panic("Expected a single value on the K Cell, but instead have %d.  %s", k_length(kCell), kCellToString(kCell));
 	}
 	return k_get_item(kCell, 0);
 }
