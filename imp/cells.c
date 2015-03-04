@@ -18,7 +18,7 @@ ComputationCell* newComputationCell() {
 	if (printDebug) { 
 		printf("Creating new computation cell\n");
 	}
-	ComputationCell* cell = malloc(sizeof(ComputationCell) + sizeof(K*)); // TODO: 1 too few?
+	ComputationCell* cell = malloc(sizeof(*cell));
 	// cell->capacity = MAX_K;
 	// cell->next = 0;
 	cell->holder = k_new_empty(k_builtin_kra_label());
