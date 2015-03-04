@@ -611,7 +611,13 @@ Configuration* new_configuration(K* pgm) {
 	config->state = newStateCell();
 	config->k = newComputationCell();
 
+	if (printDebug) { 
+		printf("Setting up program\n");
+	}
 	computation_add_front(config->k, pgm);
+	if (printDebug) { 
+		printf("Program set up\n");
+	}
 	return config;
 }
 

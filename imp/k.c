@@ -72,8 +72,8 @@ K* _k_acquire(int len, int cap) {
 		k->args.cap = MAX_GARBAGE_ARG_LEN;
 	}
 	// this is the only place that new k gets its first and end set
-	k->args.pos_first = 0;
-	k->args.pos_end = len;
+	k->args.pos_first = 20;
+	k->args.pos_end = len + 20;
 
 	assert(k != NULL);
 	assert(k_num_args(k) == len);
@@ -468,6 +468,7 @@ K* updateTrimArgs(K* k, int left, int right) {
 	k->args.pos_first = new_first;
 	k->args.pos_end = new_end;
 
+	assert(k_num_args(k) == right - left);
 	return k;
 
 	// // TODO: inefficient
@@ -481,7 +482,52 @@ K* updateTrimArgs(K* k, int left, int right) {
 	// return k;
 }
 
+
+void k_remove_arg_head(K* k) {
+	assert(k != NULL);
+	assert(k_num_args(k) > 0);
+
+	// K* oldv = k_get_arg(k, 0);
+	K* newk = updateTrimArgs(k, 1, k_num_args(k));
+	assert(newk == k); // not really true, but true for a while
+	// Dec(oldv);
+}
+
+void k_set_arg(K* k, int i, K* v) {
+	assert(k != NULL);
+	assert(v != NULL);
+	assert(i >= 0);
+	assert(i < k_num_args(k));
+
+	K* oldv = k_get_arg(k, i);
+	_k_set_arg(k, i, v);
+	Inc(v);
+	Dec(oldv);
+}
+
+void _k_grow_front_arg(K* k) {
+	assert(k != NULL);
+
+	if (k->args.pos_first > 0) {
+		k->args.pos_first--;
+
+		return;
+	}
+	panic("Not enough room to grow!");
+}
+
+void k_add_front_arg(K* k, K* v) {
+	assert(k != NULL);
+	assert(v != NULL);
+
+	_k_grow_front_arg(k);
+	_k_set_arg(k, 0, v);
+	Inc(v);
+}
+
 void k_make_permanent(K* k) {
+	assert(k != NULL);
+
 	k->permanent = 1;
 }
 

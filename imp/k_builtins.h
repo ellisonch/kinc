@@ -11,6 +11,7 @@ int is_hole(const K* k);
 int is_true(const K* k);
 int is_false(const K* k);
 
+KLabel* k_builtin_kra_label();
 K* k_builtin_hole();
 K* k_builtin_true();
 K* k_builtin_false();

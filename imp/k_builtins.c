@@ -6,7 +6,8 @@
 #include "k.h"
 
 char* symbol_names[SYMBOLS_MAX] = {
-	[SYMBOLS_MAX - 7] =
+	[SYMBOLS_MAX - 8] =
+	"_kra",
 	"String",
 	"_hole",
 	"Bool",
@@ -16,6 +17,7 @@ char* symbol_names[SYMBOLS_MAX] = {
 	"_fake",
 };
 
+#define symbol_kra (SYMBOLS_MAX - 8)
 #define symbol_string (SYMBOLS_MAX - 7)
 #define symbol_hole (SYMBOLS_MAX - 6)
 #define symbol_bool (SYMBOLS_MAX - 5)
@@ -25,7 +27,7 @@ char* symbol_names[SYMBOLS_MAX] = {
 #define symbol_fake (SYMBOLS_MAX - 1)
 
 // FIXME: can do better than this
-int _num_labels = 7;
+int _num_labels = 8;
 
 // int get_symbol(char* name) {
 // 	for (int i = 0; i < num_labels; i++) {
@@ -66,6 +68,9 @@ void k_init_builtins() {
 	k_make_permanent(_one);
 }
 
+KLabel* k_builtin_kra_label() {
+	return SymbolLabel(symbol_kra);
+}
 K* k_builtin_hole() {
 	return _hole;
 }

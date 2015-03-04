@@ -15,9 +15,14 @@
 int next = 0;
 
 ComputationCell* newComputationCell() {
-	ComputationCell* cell = malloc(sizeof(ComputationCell) + MAX_K * sizeof(K*)); // TODO: 1 too few?
-	cell->capacity = MAX_K;
-	cell->next = 0;
+	if (printDebug) { 
+		printf("Creating new computation cell\n");
+	}
+	ComputationCell* cell = malloc(sizeof(ComputationCell) + sizeof(K*)); // TODO: 1 too few?
+	// cell->capacity = MAX_K;
+	// cell->next = 0;
+	cell->holder = k_new_empty(k_builtin_kra_label());
+	Inc(cell->holder);
 	return cell;
 }
 
@@ -32,14 +37,14 @@ StateCell* newStateCell() {
 
 int k_length(const ComputationCell* cell) {
 	assert(cell != NULL);
-	return cell->next;
-	// return k_num_args(cell->holder);
+	// return cell->next;
+	return k_num_args(cell->holder);
 }
 
 K* k_get_item(const ComputationCell* cell, int i) {
-	// K* item = k_get_arg(cell->holder, i);
-	int spot = cell->next - 1 - i;
-	K* item = cell->elements[spot];
+	K* item = k_get_arg(cell->holder, i);
+	// int spot = cell->next - 1 - i;
+	// K* item = cell->elements[spot];
 
 	return item;
 }
@@ -49,7 +54,7 @@ char* kCellToString(const ComputationCell *kCell) {
 	char* s = malloc(10000);
 	strcpy(s, "k(\n");
 	for (int i = k_length(kCell) - 1; i >= 0; i--) {
-		char* sk = KToString(kCell->elements[i]);
+		char* sk = KToString(k_get_item(kCell, i));
 		strcat(s, "  ~> ");
 		strcat(s, sk);
 		strcat(s, "\n");
@@ -81,35 +86,43 @@ char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
 	return s;
 }
 
-void computation_remove_head(ComputationCell *kCell) {\
-	// k_remove_arg_head(kCell->holder);
+void computation_remove_head(ComputationCell *kCell) {
 	assert(kCell != NULL);
-	assert(k_length(kCell) >= 1);
 
-	int top = kCell->next - 1;
-	Dec(kCell->elements[top]);
-	kCell->next--;
+	k_remove_arg_head(kCell->holder);
+	// assert(kCell != NULL);
+	// assert(k_length(kCell) >= 1);
+
+	// int top = kCell->next - 1;
+	// Dec(kCell->elements[top]);
+	// kCell->next--;
 }
 
 void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
-	// assert(kCell->next >= pos + 1);
+	assert(kCell != NULL);
 	assert(k_length(kCell) > pos);
 
-	int elem = kCell->next - 1 - pos;
-	Inc(k);
-	Dec(kCell->elements[elem]);
-	kCell->elements[elem] = k;
+	k_set_arg(kCell->holder, pos, k);
+
+	// int elem = kCell->next - 1 - pos;
+	// Inc(k);
+	// Dec(kCell->elements[elem]);
+	// kCell->elements[elem] = k;
 }
 
 void computation_add_front(ComputationCell *kCell, K* k) {
+	assert(kCell != NULL);
 	if (checkStackSize) {
 		if (k_length(kCell) > 20) {
 			panic("Trying to add too many elements to the K Cell!");
 		}
 	}
-	Inc(k);
-	kCell->elements[kCell->next] = k;
-	kCell->next++;
+
+	k_add_front_arg(kCell->holder, k);
+
+	// Inc(k);
+	// kCell->elements[kCell->next] = k;
+	// kCell->next++;
 }
 
 void check(const ComputationCell *c, const StateCell* state) {
@@ -117,8 +130,8 @@ void check(const ComputationCell *c, const StateCell* state) {
 	// allValues->cap = k_length(c) + 26;
 	int len = k_length(c);
 	const K** a = malloc(sizeof(K*) * (len + 26)); // FIXME unsafe
-	for (int i = 0; i < c->next; i++) {
-		a[i] = c->elements[i];
+	for (int i = 0; i < k_length(c); i++) {
+		a[i] = k_get_item(c, i);
 	}
 	// memcpy(allValues, c, sizeof(K*) * next);
 	for (int i = 0; i < MAX_STATE; i++) {
