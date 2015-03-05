@@ -158,9 +158,9 @@ when_clause
 		{ $$ = &When{Term: $2} }
 
 term
-	: kra
-		{ $$ = &Kra{Children: $1} }
-	| term_variable
+	// : kra
+	// 	{ $$ = &Kra{Children: $1} }
+	: term_variable
 		{ $$ = $1 }
 	| term TOK_ARROW term
 		{
@@ -219,13 +219,7 @@ term_list
 	// | '(' kraless_term_list TOK_ARROW kraless_term_list ')'
 	// 	{ $$ = $2 }
 	| term_list ',' term
-		{
-			// tll := $1
-			$1.Elements = append($1.Elements, $3)
-			// $$ = tll
-			// $$ = $1
-
-		}
+		{ $1.Children = append($1.Children, $3) }
 /*
 kraless_term_list
 	: // empty
@@ -271,7 +265,7 @@ map_item
 	 	{ $$ = &RewriteMapItem{LHS: $1, RHS: $3} }
 
 cell
-	: TOK_CELL_BEGIN_K '>' term TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
+	: TOK_CELL_BEGIN_K '>' term_list TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
 		{
 			if $1 != $5 {
 				panic(fmt.Sprintf("cell %s isn't %s", $1, $5))

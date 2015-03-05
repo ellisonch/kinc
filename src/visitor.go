@@ -83,7 +83,7 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.Body)
 
 		case *TermList:
-			for _, c := range n.Elements {
+			for _, c := range n.Children {
 				Walk(v, c)
 			}			
 

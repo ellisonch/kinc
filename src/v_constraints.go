@@ -154,9 +154,9 @@ func (n *DotK) BuildTopKChecks(ch *CheckHelper) {
 }
 
 // FIXME: probably should do something like start at beginning and describe "find a term matching foo, then all the terms between that and a term matching bar are bound to K"
-func (n *Kra) BuildTopKChecks(ch *CheckHelper) {
+func (n *TermList) BuildTopKChecks(ch *CheckHelper) {
 	if len(n.Children) == 0 {
-		panic("Didn't expect size 0 kra")
+		panic("Didn't expect size 0 TermList")
 	}
 
 	allowMore := false
@@ -259,14 +259,14 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 
 	countArgs := 0
 	sawList := false
-	for i, c := range n.Body.Elements {
+	for i, c := range n.Body.Children {
 		countArgs++
 		switch c := c.(type) {
 		case *Variable:
 			if c.ActualSort == "listk" {
 				countArgs--
 				sawList = true
-				if i != len(n.Body.Elements) - 1 {
+				if i != len(n.Body.Children) - 1 {
 					panic("Only handle a listk in the last position")
 				}
 				newref := ref

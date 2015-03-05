@@ -112,7 +112,7 @@ func (a *Appl) String() string {
 
 func (a *TermList) String() string {
 	children := []string{}
-	for _, arg := range a.Elements {
+	for _, arg := range a.Children {
 		children = append(children, arg.String())
 	}
 	return fmt.Sprintf("%s", strings.Join(children, ","))

@@ -428,7 +428,7 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// }
 
 		lists := []int{}
-		for i, arg := range n.Body.Elements {
+		for i, arg := range n.Body.Children {
 			argHelpers, argResult, childIsList := compileTermAux(arg, fmt.Sprintf("%s_%d", namePrefix, i))
 			if childIsList {
 				if len(lists) > 0 {
@@ -448,11 +448,11 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
 		if n.Label.IsBuiltin() {
-			if len(n.Body.Elements) > 0 {
+			if len(n.Body.Children) > 0 {
 				panic("not handling builtins with args yet")
 			}
 			result = mylabel
-		} else if len(n.Body.Elements) == 0 {
+		} else if len(n.Body.Children) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
 			if len(lists) > 1 {

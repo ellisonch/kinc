@@ -104,6 +104,7 @@ type Cell interface {
 
 type Map []MapItem
 type Bag []BagItem
+// type Computation 
 
 type BagCell struct {
 	Name string
@@ -115,7 +116,7 @@ type MapCell struct {
 }
 type ComputationCell struct {
 	Name string
-	Computation K
+	Computation *TermList
 }
 
 func (*BagCell) bagItemNode() {}
@@ -192,7 +193,7 @@ type Appl struct {
 // }
 
 type TermList struct {
-	Elements []K
+	Children []K
 }
 
 // type TermListRewrite struct {
