@@ -96,10 +96,23 @@ K* _k_fresh(KLabel* label, int len) {
 }
 
 K* k_new_empty(KLabel* label) {
-	return k_new_array(label, 0, NULL);
+	return k_new_from_array(label, 0, NULL);
 }
 
-K* k_new_array(KLabel* label, int count, K** a) {
+K* k_new_from_k_args(KLabel* label, K* v) {
+	K* k = _k_fresh(label, k_num_args(v));
+
+	for (int i = 0; i < k_num_args(k); i++) {
+		K* arg = k_get_arg(v, i);
+		assert(arg != NULL);
+		_k_set_arg(k, i, arg);
+		Inc(arg);
+	}
+
+	return k;
+}
+
+K* k_new_from_array(KLabel* label, int count, K** a) {
 	K* k = _k_fresh(label, count);
 
 	for (int i = 0; i < count; i++) {
@@ -119,9 +132,7 @@ K* k_new(KLabel* label, int count, ...) {
 	va_start(ap, count);
 	for (int i = 0; i < count; i++) {
 		K* arg = va_arg(ap, K*);
-		if (arg == NULL) {
- 			panic("Didn't expect NULL arg in k_new().  len: %d", count);
- 		}
+		assert(arg != NULL);
  		_k_set_arg(k, i, arg);
 		Inc(arg);
 	}
@@ -266,7 +277,7 @@ void Dec(K* k) {
 }
 
 K* copy(const K* oldK) {
-	K* k = k_new_array(oldK->label, k_num_args(oldK), &oldK->args.a[oldK->args.pos_first]);
+	K* k = k_new_from_array(oldK->label, k_num_args(oldK), &oldK->args.a[oldK->args.pos_first]);
 	if (printDebug) {
 		char* sold = KToString(oldK);
 		char* snew = KToString(k);
@@ -359,7 +370,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			int symbol = get_symbol(lh, at.appl.name);
 			K** a;
 			int count = aterm_list_to_args(at.appl.args, lh, hole, &a);
-			K* k = k_new_array(SymbolLabel(symbol), count, a);
+			K* k = k_new_from_array(SymbolLabel(symbol), count, a);
 			free(a);
 			return k;
 		}

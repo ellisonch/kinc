@@ -41,7 +41,8 @@ K* updateTrimArgs(K* k, int left, int right);
 
 K* k_new_empty(KLabel* label);
 K* k_new(KLabel* label, int count, ...);
-K* k_new_array(KLabel* label, int count, K** a);
+K* k_new_from_array(KLabel* label, int count, K** a);
+K* k_new_from_k_args(KLabel* label, K* k);
 
 void k_make_permanent(K* k);
 

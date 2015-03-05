@@ -8,6 +8,7 @@ type Check interface {
 type CheckNumArgs struct {
 	Loc Reference
 	Num int
+	Exact bool
 }
 type CheckLabel struct {
 	Loc Reference
@@ -23,7 +24,11 @@ type CheckSort struct {
 	Allowable []string
 }
 func (ch *CheckNumArgs) String() string {
-	return fmt.Sprintf("CheckNumArgs: %s must have %d arguments\n", ch.Loc.String(), ch.Num)
+	if ch.Exact {
+		return fmt.Sprintf("CheckNumArgs: %s must have %d arguments\n", ch.Loc.String(), ch.Num)
+	} else {
+		return fmt.Sprintf("CheckNumArgs: %s must have at least %d arguments\n", ch.Loc.String(), ch.Num)
+	}
 }
 func (ch *CheckLabel) String() string {
 	return fmt.Sprintf("CheckLabel: %s must have the '%s label\n", ch.Loc.String(), ch.Label)

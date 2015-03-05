@@ -307,7 +307,11 @@ func compileCheck(c *C, check Check) {
 		case *CheckNumArgs:
 			r := compileRef(n.Loc)
 			s := fmt.Sprintf("\n\t// checking %s", n.String())
-			s += fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }", r, n.Num)
+			if n.Exact {
+				s += fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }", r, n.Num)
+			} else {
+				s += fmt.Sprintf("\tif (k_num_args(%s) < %d) { return 1; }", r, n.Num)
+			}
 			c.Checks = append(c.Checks, s)
 
 		case *CheckSort:
@@ -416,14 +420,16 @@ func compileTermAux(n Node, depth int) (aux []string, result string, isList bool
 		// array := fmt.Sprintf("\tK** %s = malloc(1000 * sizeof(K*));\n", arrayName)
 		// helpers := []string{}
 		argNames := []string{}
-		haveList := false
+		// haveList := false
+		lists := []int{}
 		for i, arg := range n.Body {
 			argHelpers, argResult, childIsList := compileTermAux(arg, depth + 1)
 			if childIsList {
-				if haveList == true {
+				if len(lists) > 0 {
 					panic("Too many lists, only handling at most 1 now")
 				}
-				haveList = true
+				lists = append(lists, i)
+				// haveList = true
 			}
 			aux = append(aux, argHelpers...)
 			argName := fmt.Sprintf("arg_%d_%d", depth, i)
@@ -443,11 +449,25 @@ func compileTermAux(n Node, depth int) (aux []string, result string, isList bool
 		} else if len(n.Body) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
-			if haveList {
-				panic("not handling list yet")
+			if len(lists) > 1 {
+				panic("not handling multiple lists yet")
+			} else if len(lists) == 1 {
+				listName := argNames[lists[0]]
+				// fmt.Printf("list is %s\n", listName)
+				for i := lists[0] - 1; i >= 0; i-- {
+					panic("haven't handled prepending")
+					// fmt.Printf("prepending %d to %s\n", i, listName)
+				}
+				for i := lists[0] + 1; i < len(argNames); i++ {
+					panic("haven't handled appending")
+					// fmt.Printf("prepending %d to %s\n", i, listName)
+				}
+				result = fmt.Sprintf("k_new_from_k_args(%s, %s)", mylabel, listName)
+				// FIXME probably need a Dec here?
+			} else {
+				result = fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(argNames), strings.Join(argNames, ", "))
+				// result = fmt.Sprintf("k_new_array(%s, %d, arg_array)", mylabel, len(args))
 			}
-			result = fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(argNames), strings.Join(argNames, ", "))
-			// result = fmt.Sprintf("k_new_array(%s, %d, arg_array)", mylabel, len(args))
 		}
 
 	case *Variable:
