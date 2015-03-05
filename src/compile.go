@@ -396,7 +396,7 @@ func compileLabel(l Label) string {
 
 
 func compileTerm(n Node) (aux string, result string) {
-	a, r, _ := compileTermAux(n, 0)
+	a, r, _ := compileTermAux(n, "")
 	aux = strings.Join(a, "\n")
 	if len(a) > 0 {
 		aux += "\n"
@@ -405,7 +405,7 @@ func compileTerm(n Node) (aux string, result string) {
 	return
 }
 
-func compileTermAux(n Node, depth int) (aux []string, result string, isList bool) {
+func compileTermAux(n Node, namePrefix string) (aux []string, result string, isList bool) {
 	isList = false
 	var mylabel string
 	// k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)))
@@ -423,7 +423,7 @@ func compileTermAux(n Node, depth int) (aux []string, result string, isList bool
 		// haveList := false
 		lists := []int{}
 		for i, arg := range n.Body {
-			argHelpers, argResult, childIsList := compileTermAux(arg, depth + 1)
+			argHelpers, argResult, childIsList := compileTermAux(arg, fmt.Sprintf("%s_%d", namePrefix, i))
 			if childIsList {
 				if len(lists) > 0 {
 					panic("Too many lists, only handling at most 1 now")
@@ -432,7 +432,7 @@ func compileTermAux(n Node, depth int) (aux []string, result string, isList bool
 				// haveList = true
 			}
 			aux = append(aux, argHelpers...)
-			argName := fmt.Sprintf("arg_%d_%d", depth, i)
+			argName := fmt.Sprintf("arg%s_arg_%d", namePrefix, i)
 			aux = append(aux, fmt.Sprintf("\tK* %s = %s; // isList = %t", argName, argResult, childIsList))
 			argNames = append(argNames, fmt.Sprintf(argName))
 		}
@@ -475,7 +475,11 @@ func compileTermAux(n Node, depth int) (aux []string, result string, isList bool
 			isList = true//panic("Not yet compileTermAux listk")
 		} 
 		result = n.CompiledName()
-	default: panic(fmt.Sprintf("Do not handle case %s\n", n.String()))
+	case *Kra:
+		panic(fmt.Sprintf("Don't yet handle kra"))
+	case *Paren:
+		return compileTermAux(n.Body, namePrefix)
+	default: panic(fmt.Sprintf("compileTermAux(): Do not handle case %s\n", n.String()))
 	}
 	return
 }
