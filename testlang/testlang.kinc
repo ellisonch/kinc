@@ -13,16 +13,16 @@ syntax
 
 // rule <k> (s => z)(X:listk) </k>
 
-rule <k> plus(s(N), M:int) => plus(N, s(M)) </k>
-rule <k> plus(zero(), N) => N </k>
+rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
+rule <k> (plus(zero(), N) => N) </k>
 
-// rule <k> var(H, T:listk) => var(T) </k>
+// rule <k> (var(H, T:listk) => var(T)) </k>
 // rule <k> var(H, (T:listk => .listk) => var(T) </k>
 
 
 // rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
 
-// rule <k> z(a() => b()) </k>
+rule <k> z((a() => b())) </k>
 // rule <k> z(a() => (b(), c())) </k>
 
 

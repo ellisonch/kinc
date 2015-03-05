@@ -21,6 +21,7 @@ var Final *Language
 	term K
 	label Label
 	term_list *TermList
+	term_list_item TermListItem
 	// kraless_term_list *TermListList
 	variable *Variable
 	cell_attributes CellAttributes
@@ -52,6 +53,7 @@ at ATerm
 %type <term> term
 %type <label> label
 %type <term_list> term_list
+%type <term_list_item> term_list_item
 // %type <kraless_term_list> kraless_term_list
 %type <variable> term_variable bag_variable map_variable
 %type <cell_attributes> cell_attributes
@@ -162,12 +164,12 @@ term
 	// 	{ $$ = &Kra{Children: $1} }
 	: term_variable
 		{ $$ = $1 }
-	| term TOK_ARROW term
+	/*| term TOK_ARROW term
 		{
 			// fmt.Printf("Arrow(%s, %s)", &$1, &$3)
 			// $$ = Term{Type: TermRewrite, Rewrite: &Rewrite{LHS: &Term{Type: TermVariable, Variable: "foo"}, RHS: &$3}}  // &$1
 			$$ = &Rewrite{LHS: $1, RHS: $3}
-		}
+		}*/
 	| label '(' term_list ')'
 		{ $$ = &Appl{Label: $1, Body: $3} }
 	| '(' term ')'
@@ -213,13 +215,26 @@ integer
 
 term_list
 	: // empty
-		{ $$ = &TermList{[]K{}} }
-	| term
-		{ $$ = &TermList{[]K{$1}} }
-	// | '(' kraless_term_list TOK_ARROW kraless_term_list ')'
-	// 	{ $$ = $2 }
+		{ $$ = &TermList{[]TermListItem{}} }
+	| term_list_item
+		{ $$ = &TermList{[]TermListItem{$1}} }
+	| term_list ',' term_list_item
+		{ $1.Children = append($1.Children, $3) }
+	/*| term
+		{ $$ = &TermList{[]TermListItem{&TermListKItem{$1}}} }
+	| '(' term_list TOK_ARROW term_list ')'
+		// { $$ = $2 }
+		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
 	| term_list ',' term
 		{ $1.Children = append($1.Children, $3) }
+		*/
+term_list_item
+	: term
+		{ $$ = &TermListKItem{$1} }
+	| '(' term_list TOK_ARROW term_list ')'
+		// { $$ = $2 }
+		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
+
 /*
 kraless_term_list
 	: // empty

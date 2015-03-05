@@ -118,8 +118,12 @@ func (a *TermList) String() string {
 	return fmt.Sprintf("%s", strings.Join(children, ","))
 }
 
+func (a *TermListKItem) String() string {
+	return a.Item.String()
+}
 
-func (r *Rewrite) String() string {
+
+func (r *TermListRewrite) String() string {
 	return fmt.Sprintf("(%s => %s)", r.LHS.String(), r.RHS.String())
 }
 

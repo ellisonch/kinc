@@ -237,7 +237,7 @@ func compileReplacement(c *C, replacement Replacement) {
 			offset := n.Loc.Suffix()
 			helpers, rhs := compileTerm(n.Result)
 			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %d, %s);", r, offset, rhs)
+			s += fmt.Sprintf("\tk_set_arg(%s, %d, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
@@ -486,6 +486,11 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// compileTermAux(n.Body, namePrefix)
 	case *Paren:
 		return compileTermAux(n.Body, namePrefix)
+
+	case *TermListKItem:
+		return compileTermAux(n.Item, namePrefix)
+		// panic(fmt.Sprintf("Should not be compiling a TermListKItem, but are: %s", n.String()))
+
 	default: panic(fmt.Sprintf("compileTermAux(): Do not handle case %s\n", n.String()))
 	}
 	return

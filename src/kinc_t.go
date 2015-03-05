@@ -165,7 +165,7 @@ type DotMap struct { }
 
 func (*DotK) kNode() {}
 func (*Variable) kNode() {}
-func (*Rewrite) kNode() {}
+// func (*RewriteTermList) kNode() {}
 func (*Appl) kNode() {}
 func (*Kra) kNode() {}
 func (*Paren) kNode() {}
@@ -192,8 +192,14 @@ type Appl struct {
 // 	kTermList()
 // }
 
+type TermListItem interface{
+	Node
+	kTermListItem()
+	BuildKChecks(*CheckHelper, Reference, int)
+}
+
 type TermList struct {
-	Children []K
+	Children []TermListItem
 }
 
 // type TermListRewrite struct {
@@ -208,10 +214,16 @@ type Kra struct {
 	Children []K
 }
 
-type Rewrite struct {
-	LHS K
-	RHS K
+type TermListKItem struct {
+	Item K
 }
+type TermListRewrite struct {
+	LHS *TermList
+	RHS *TermList
+}
+
+func (*TermListKItem) kTermListItem() {}
+func (*TermListRewrite) kTermListItem() {}
 
 type When struct {
 	Term K

@@ -71,9 +71,12 @@ func Walk(v Visitor, node Node) {
 				Walk(v, c)
 			}
 
-		case *Rewrite:
+		case *TermListRewrite:
 			Walk(v, n.LHS)
 			Walk(v, n.RHS)
+
+		case *TermListKItem:
+			Walk(v, n.Item)
 
 		case *When:
 			Walk(v, n.Term)

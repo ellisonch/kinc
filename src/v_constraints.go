@@ -164,13 +164,19 @@ func (n *TermList) BuildTopKChecks(ch *CheckHelper) {
 	// fmt.Printf("lasti: %d\n", lasti)
 	if lasti > 0 {
 		switch c := n.Children[lasti].(type) {
-		case *Variable:
-			_ = c
-			allowMore = true
-			// fmt.Printf("Ok, variable\n")
+		case *TermListKItem: 
+			switch c := c.Item.(type) {
+			case *Variable:
+				_ = c
+				allowMore = true
+				// fmt.Printf("Ok, variable\n")
 
-			n.Children = n.Children[:lasti]
+				n.Children = n.Children[:lasti]
+			}
+		case *TermListRewrite: 
+			panic("BuildTopKChecks() Don't handle TermListRewrite")
 		}
+		
 	}
 	_ = allowMore
 
@@ -183,8 +189,14 @@ func (n *TermList) BuildTopKChecks(ch *CheckHelper) {
 	ch.AddCheck(check)
 	// ch.ref.addPositionEntry(0)
 	for i, v := range n.Children {
-		// ch.ref.setPositionEntry(i)
+		// switch c := v.(type) {
+		// case *TermListKItem: 
+		// 	c.Item.BuildKChecks(ch, ch.ref, i)
+		// case *TermListRewrite:
+		// 	panic("BuildTopKChecks() Don't handle TermListRewrite part 2")
+		// }
 		v.BuildKChecks(ch, ch.ref, i)
+		
 		// fmt.Printf("asdf\n")
 		// fmt.Printf("%s\n", v.String())
 	}
@@ -193,7 +205,7 @@ func (n *TermList) BuildTopKChecks(ch *CheckHelper) {
 func (n *Variable) BuildTopKChecks(ch *CheckHelper) {
 	panic("Don't handle BuildTopKChecks Variable yet")
 }
-func (n *Rewrite) BuildTopKChecks(ch *CheckHelper) {
+func (n *TermListRewrite) BuildTopKChecks(ch *CheckHelper) {
 	n.BuildKChecks(ch, ch.ref, 0)
 }
 func (n *Appl) BuildTopKChecks(ch *CheckHelper) {
@@ -234,15 +246,34 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ch.AddBinding(binding)
 	// panic("Don't handle BuildKChecks Variable yet")
 }
-func (n *Rewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
-	n.LHS.BuildKChecks(ch, ref, i)
+func (n *TermListRewrite) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
+	// panic("BuildKChecks(): Don't handle TermListRewrite yet")
+	for o, v := range n.LHS.Children {
+		var c *TermListKItem
+		var ok bool
+		if c, ok = v.(*TermListKItem); !ok {
+			panic("BuildKChecks(): Expect only a single rewrite per list for now")
+		}
+		c.Item.BuildKChecks(ch, ref, i + o)
+	}
+	if len(n.RHS.Children) == 0 {
+		panic("BuildKChecks() should have at least 1 rhs child")
+	}
+	if len(n.RHS.Children) > 1 {
+		panic("BuildKChecks() not yet handling rhs children == 1")
+	}
 
-	ref.addPositionEntry(i)
-	rep := &TermChange{Loc: ref, Result: n.RHS}
-	ch.AddReplacement(rep)
-	// fmt.Printf("%s should be replaced with %s\n", ref.String(), n.RHS.String())
-
-	// panic("Don't handle BuildKChecks Rewrite yet")
+	if rhs, ok := n.RHS.Children[0].(*TermListKItem); ok {
+		ref.addPositionEntry(i)
+		rep := &TermChange{Loc: ref, Result: rhs.Item} // FIXME hardcoded based on above check
+		// fmt.Printf(rep.String())
+		ch.AddReplacement(rep)
+	} else {
+		panic("BuildKChecks() no idea what's going on")
+	}
+}
+func (n *TermListKItem) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
+	n.Item.BuildKChecks(ch, ref, i)
 }
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
@@ -261,25 +292,32 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	sawList := false
 	for i, c := range n.Body.Children {
 		countArgs++
+
 		switch c := c.(type) {
-		case *Variable:
-			if c.ActualSort == "listk" {
-				countArgs--
-				sawList = true
-				if i != len(n.Body.Children) - 1 {
-					panic("Only handle a listk in the last position")
+		case *TermListKItem:
+			switch c := c.Item.(type) {
+			case *Variable:
+				if c.ActualSort == "listk" {
+					countArgs--
+					sawList = true
+					if i != len(n.Body.Children) - 1 {
+						panic("Only handle a listk in the last position")
+					}
+					newref := ref
+					newref.addPositionEntry(i)
+					binding := Binding{Loc: newref, Variable: c, EndList: true}
+					ch.AddBinding(binding)
+					// panic("Don't handle listk in appl body")
+				} else {
+					c.BuildKChecks(ch, ref, i)
 				}
-				newref := ref
-				newref.addPositionEntry(i)
-				binding := Binding{Loc: newref, Variable: c, EndList: true}
-				ch.AddBinding(binding)
-				// panic("Don't handle listk in appl body")
-			} else {
+			default:
 				c.BuildKChecks(ch, ref, i)
 			}
-		default:
-			c.BuildKChecks(ch, ref, i)
+		case *TermListRewrite:
+			panic("BuildKChecks(): Not handling  TermListRewrite")
 		}
+		
 		// c.BuildKChecks(ch, ref, i)
 	}
 
