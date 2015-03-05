@@ -214,6 +214,7 @@ func compileReplacement(c *C, replacement Replacement) {
 	// result = k_false();
 	// K* newTop = result;
 	// computation_set_elem(config->k, 0, newTop);
+	c.Checks = append(c.Checks, fmt.Sprintf("\n\t// %s", replacement.String()))
 	switch n := replacement.(type) {
 	case *TermChange:
 		// FIXME: this is horrible
@@ -226,15 +227,17 @@ func compileReplacement(c *C, replacement Replacement) {
 			myloc := n.Loc.Parent()
 			r := compileRef(myloc)
 			offset := n.Loc.Suffix()
-			rhs := compileTerm(n.Result)
-			s := fmt.Sprintf("\tcomputation_set_elem(%s, %d, %s);", r, offset, rhs)
+			helpers, rhs := compileTerm(n.Result)
+			s := fmt.Sprintf(helpers)
+			s += fmt.Sprintf("\tcomputation_set_elem(%s, %d, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
 			myloc := n.Loc.Parent()
 			r := compileRef(myloc)
 			offset := n.Loc.Suffix()
-			rhs := compileTerm(n.Result)
-			s := fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %d, %s);", r, offset, rhs)
+			helpers, rhs := compileTerm(n.Result)
+			s := fmt.Sprintf(helpers)
+			s += fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %d, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
@@ -388,34 +391,54 @@ func compileLabel(l Label) string {
 }
 
 
-func compileTerm(n Node) string {
+func compileTerm(n Node) (aux string, result string) {
+	a, r := compileTermAux(n, 0)
+	aux = strings.Join(a, "\n")
+	if len(a) > 0 {
+		aux += "\n"
+	}
+	result = r
+	return
+}
+
+func compileTermAux(n Node, depth int) (aux []string, result string) {
 	var mylabel string
 	// k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)))
+
+	aux = []string{}
 
 	switch n := n.(type) {
 	case *Appl:
 		mylabel = compileLabel(n.Label)
 
+		// helpers := []string{}
 		args := []string{}
-		for _, arg := range n.Body {
-			args = append(args, compileTerm(arg))
+		for i, arg := range n.Body {
+			argHelpers, argResult := compileTermAux(arg, depth + 1)
+			aux = append(aux, argHelpers...)
+			argName := fmt.Sprintf("arg_%d_%d", depth, i)
+			aux = append(aux, fmt.Sprintf("\tK* %s = %s;", argName, argResult))
+			args = append(args, fmt.Sprintf(argName))
 		}
+		// aux = append(aux, helpers)
 
 		if n.Label.IsBuiltin() {
-			if len(args) > 0 {
+			if len(n.Body) > 0 {
 				panic("not handling builtins with args yet")
 			}
-			return mylabel
-		} else if len(args) == 0 {
-			return fmt.Sprintf("k_new_empty(%s)", mylabel)
+			result = mylabel
+		} else if len(n.Body) == 0 {
+			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
-			return fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(args), strings.Join(args, ", "))
+			result = fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(args), strings.Join(args, ", "))
+			// result = fmt.Sprintf("k_new_array(%s, %d, arg_array)", mylabel, len(args))
 		}
 
 	case *Variable:
-		return fmt.Sprintf("variable_%s", n.Name)
+		result = fmt.Sprintf("variable_%s", n.Name)
 	default: panic(fmt.Sprintf("Do not handle case %s\n", n.String()))
 	}
+	return
 }
 
 func compileBuiltinLabel(s string) string {
