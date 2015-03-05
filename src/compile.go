@@ -421,8 +421,14 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// helpers := []string{}
 		argNames := []string{}
 		// haveList := false
+
+		// var body *TermListList
+		// if body, ok := n.Body.(TermListList); !ok {
+		// 	panic("compileTermAux() Only handling TermListList body")
+		// }
+
 		lists := []int{}
-		for i, arg := range n.Body {
+		for i, arg := range n.Body.Elements {
 			argHelpers, argResult, childIsList := compileTermAux(arg, fmt.Sprintf("%s_%d", namePrefix, i))
 			if childIsList {
 				if len(lists) > 0 {
@@ -442,11 +448,11 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
 		if n.Label.IsBuiltin() {
-			if len(n.Body) > 0 {
+			if len(n.Body.Elements) > 0 {
 				panic("not handling builtins with args yet")
 			}
 			result = mylabel
-		} else if len(n.Body) == 0 {
+		} else if len(n.Body.Elements) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
 			if len(lists) > 1 {
@@ -476,7 +482,8 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		} 
 		result = n.CompiledName()
 	case *Kra:
-		panic(fmt.Sprintf("Don't yet handle kra"))
+		panic(fmt.Sprintf("compileTermAux(): Don't yet handle kra"))
+		// compileTermAux(n.Body, namePrefix)
 	case *Paren:
 		return compileTermAux(n.Body, namePrefix)
 	default: panic(fmt.Sprintf("compileTermAux(): Do not handle case %s\n", n.String()))

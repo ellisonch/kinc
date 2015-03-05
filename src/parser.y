@@ -20,7 +20,8 @@ var Final *Language
 	rules []*Rule
 	term K
 	label Label
-	term_list []K
+	term_list *TermList
+	// kraless_term_list *TermListList
 	variable *Variable
 	cell_attributes CellAttributes
 	bag Bag
@@ -51,6 +52,7 @@ at ATerm
 %type <term> term
 %type <label> label
 %type <term_list> term_list
+// %type <kraless_term_list> kraless_term_list
 %type <variable> term_variable bag_variable map_variable
 %type <cell_attributes> cell_attributes
 %type <bag> bag
@@ -211,11 +213,33 @@ integer
 
 term_list
 	: // empty
-		{ $$ = []K{} }
+		{ $$ = &TermList{[]K{}} }
 	| term
-		{ $$ = []K{$1} }
+		{ $$ = &TermList{[]K{$1}} }
+	// | '(' kraless_term_list TOK_ARROW kraless_term_list ')'
+	// 	{ $$ = $2 }
 	| term_list ',' term
-		{ $$ = append($1, $3) }
+		{
+			// tll := $1
+			$1.Elements = append($1.Elements, $3)
+			// $$ = tll
+			// $$ = $1
+
+		}
+/*
+kraless_term_list
+	: // empty
+		{ $$ = &TermListList{[]K{}} }
+	| term
+		{ $$ = &TermListList{[]K{$1}} }
+	| kraless_term_list ',' term
+		{
+			// tll := $1
+			// tll.Elements = append(tll.Elements, $3)
+			// $$ = tll
+			$$ = $1
+		}
+*/
 
 bag
 	: bag_item

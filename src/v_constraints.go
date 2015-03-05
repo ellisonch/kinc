@@ -252,16 +252,21 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
 	n.Label.BuildKChecks(ch, ref)
 
+	// var body TermList
+	// if body, ok := n.Body.(TermListList); !ok {
+	// 	panic("BuildKChecks() only handling TermListList()")
+	// }
+
 	countArgs := 0
 	sawList := false
-	for i, c := range n.Body {
+	for i, c := range n.Body.Elements {
 		countArgs++
 		switch c := c.(type) {
 		case *Variable:
 			if c.ActualSort == "listk" {
 				countArgs--
 				sawList = true
-				if i != len(n.Body) - 1 {
+				if i != len(n.Body.Elements) - 1 {
 					panic("Only handle a listk in the last position")
 				}
 				newref := ref

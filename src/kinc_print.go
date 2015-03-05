@@ -107,11 +107,15 @@ func (v *Variable) String() string {
 }
 
 func (a *Appl) String() string {
+	return fmt.Sprintf("%s(%s)", a.Label, a.Body.String())
+}
+
+func (a *TermList) String() string {
 	children := []string{}
-	for _, arg := range a.Body {
+	for _, arg := range a.Elements {
 		children = append(children, arg.String())
 	}
-	return fmt.Sprintf("%s(%s)", a.Label, strings.Join(children, ","))
+	return fmt.Sprintf("%s", strings.Join(children, ","))
 }
 
 

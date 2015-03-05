@@ -183,8 +183,25 @@ type Variable struct {
 
 type Appl struct {
 	Label Label
-	Body []K
+	Body *TermList
 }
+
+// type TermList interface {
+// 	Node
+// 	kTermList()
+// }
+
+type TermList struct {
+	Elements []K
+}
+
+// type TermListRewrite struct {
+// 	LHS []K
+// 	RHS []K
+// }
+
+// func (*TermListList) kTermList() {}
+// func (*TermListRewrite) kTermList() {}
 
 type Kra struct {
 	Children []K

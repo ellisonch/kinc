@@ -5,8 +5,6 @@ syntax
 	s : int
 	zero : int
 
-// rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
-
 // rule <k> times(X:listk) => timesHelper(X) </k>
 // rule <k> var(H, T:listk) => var(T) </k>
 
@@ -22,9 +20,11 @@ rule <k> plus(zero(), N) => N </k>
 // rule <k> var(H, (T:listk => .listk) => var(T) </k>
 
 
-rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
+// rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
 
+// rule <k> z(a() => (b(), c())) </k>
 
+// rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
 
 // rule <k> a => (b ~> c) </k>
 // rule <k> a => kra(b, c) </k>

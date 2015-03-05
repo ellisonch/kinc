@@ -80,9 +80,12 @@ func Walk(v Visitor, node Node) {
 
 		case *Appl:
 			Walk(v, n.Label)
-			for _, c := range n.Body {
+			Walk(v, n.Body)
+
+		case *TermList:
+			for _, c := range n.Elements {
 				Walk(v, c)
-			}
+			}			
 
 		case *Variable:
 			// fmt.Printf("Var: %s\n", n)
