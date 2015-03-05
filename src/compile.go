@@ -223,22 +223,18 @@ func compileReplacement(c *C, replacement Replacement) {
 		} else if len(n.Loc.Ref) == 1 {
 			panic("Trying to change a cell?")
 		} else if len(n.Loc.Ref) == 2 {
-			myloc := n.Loc
-			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
+			myloc := n.Loc.Parent()
 			r := compileRef(myloc)
-			last := n.Loc.Ref[len(n.Loc.Ref)-1]
-			offset := last.String()
+			offset := n.Loc.Suffix()
 			rhs := compileTerm(n.Result)
-			s := fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset, rhs)
+			s := fmt.Sprintf("\tcomputation_set_elem(%s, %d, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
-			myloc := n.Loc
-			myloc.Ref = myloc.Ref[:len(n.Loc.Ref)-1]
+			myloc := n.Loc.Parent()
 			r := compileRef(myloc)
-			last := n.Loc.Ref[len(n.Loc.Ref)-1]
-			offset := last.String()
+			offset := n.Loc.Suffix()
 			rhs := compileTerm(n.Result)
-			s := fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %s, %s);", r, offset, rhs)
+			s := fmt.Sprintf("\t//foo\n\tk_set_arg(%s, %d, %s);", r, offset, rhs)
 			c.Checks = append(c.Checks, s)
 			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
@@ -262,8 +258,18 @@ func compileReplacement(c *C, replacement Replacement) {
 }
 
 func compileBinding(c *C, binding Binding) {
-	r := compileRef(binding.Loc)
-	s := fmt.Sprintf("\tK* variable_%s = %s;", binding.Variable.Name, r)
+	var s string
+	if binding.EndList {
+		// fmt.Printf("Don't handle binding for endlist: %s\n", binding.String())
+		// panic("")
+		r := compileRef(binding.Loc.Parent())
+
+		suffix := binding.Loc.Suffix()
+		s = fmt.Sprintf("\tK* variable_%s = k_remove_first_n_arg(%s, %d);", binding.Variable.Name, r, suffix)
+	} else {
+		r := compileRef(binding.Loc)
+		s = fmt.Sprintf("\tK* variable_%s = %s;", binding.Variable.Name, r)
+	}
 	c.Checks = append(c.Checks, s)
 }
 

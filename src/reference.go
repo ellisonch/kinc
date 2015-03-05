@@ -43,6 +43,29 @@ func (r *Reference) String() string {
 	return strings.Join(children, ".")
 }
 
+
+func (r *Reference) Parent() Reference {
+	if (len(r.Ref) < 2) {
+		panic(fmt.Sprintf("Trying to get parent of ref %s that's too small", r.String()))
+	}
+	ret := *r
+	ret.Ref = r.Ref[:len(r.Ref)-1]
+	return ret
+}
+func (r *Reference) Suffix() int {
+	if (len(r.Ref) < 2) {
+		panic(fmt.Sprintf("Trying to get suffix of ref %s that's too small", r.String()))
+	}
+	last := r.Ref[len(r.Ref)-1]
+	if l, ok := last.(*RefPartPosition); ok {
+		return l.Offset
+	} else {
+		panic(fmt.Sprintf("Trying to get suffix of %s that isn't a RefPartPosition", r.String()))
+	}
+}
+
+
+
 // FIXME arrggg, this is so dumb
 func (r *Reference) addCellEntry(s string) {
 	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))

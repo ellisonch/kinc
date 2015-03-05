@@ -7,16 +7,16 @@ syntax
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
 
-// rule <k> times(X:listK) => timesHelper(X) </k>
+// rule <k> times(X:listk) => timesHelper(X) </k>
 // rule <k> var(H, T:listk) => var(T) </k>
 
-rule <k> foo(plus(s(N), M:int) => plus(N, s(M))) </k>
-rule <k> foo(plus(zero(), N) => N) </k>
+// rule <k> foo(plus(s(N), M:int) => plus(N, s(M))) </k>
+// rule <k> foo(plus(zero(), N) => N) </k>
 
 // rule <k> (s => z)(X:listK) </k>
 
-// rule <k> plus(s(N), M:int) => plus(N, s(M)) </k>
-// rule <k> plus(zero(), N) => N </k>
+rule <k> plus(s(N), M:int) => plus(N, s(M)) </k>
+rule <k> plus(zero(), N) => N </k>
 
 
 // rule <k> a => (b ~> c) </k>

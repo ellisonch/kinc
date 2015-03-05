@@ -216,7 +216,7 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	ref.addPositionEntry(i)
 	// fmt.Printf("bind %s to %s\n", n.String(), ref.String())
 	if n.ActualSort == "listk" {
-		panic("Don't handle listk")
+		panic("Shouldn't be able to get here")
 	}
 	if n.ActualSort != "k" {
 		if subs, ok := _subsortMap[n.ActualSort]; ok {
@@ -252,12 +252,36 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, i int) {
 	// checkLabel := &CheckLabel{Loc: ref, Label: n.Label}
 	n.Label.BuildKChecks(ch, ref)
 
-	// ch.AddCheck(checkLabel)
 	checkArgs := &CheckNumArgs{Num: len(n.Body), Loc: ref}
 	ch.AddCheck(checkArgs)
+
 	for i, c := range n.Body {
-		c.BuildKChecks(ch, ref, i)
+		switch c := c.(type) {
+		case *Variable:
+			if c.ActualSort == "listk" {
+				if i != len(n.Body) - 1 {
+					panic("Only handle a listk in the last position")
+				}
+				newref := ref
+				newref.addPositionEntry(i)
+				binding := Binding{Loc: newref, Variable: c, EndList: true}
+				ch.AddBinding(binding)
+				// panic("Don't handle listk in appl body")
+			} else {
+				c.BuildKChecks(ch, ref, i)
+			}
+		default:
+			c.BuildKChecks(ch, ref, i)
+		}
+		// c.BuildKChecks(ch, ref, i)
 	}
+
+
+	// ch.AddCheck(checkLabel)
+	
+	// for i, c := range n.Body {
+	// 	c.BuildKChecks(ch, ref, i)
+	// }
 
 	// fmt.Printf("Checks for %s\n", n.String())
 	// for _, check := range ch.checks {

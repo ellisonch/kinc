@@ -28,6 +28,7 @@ char* KToString(const K* k);
 
 void k_init();
 
+K* k_remove_first_n_arg(K* k, int left);
 void k_remove_arg_head(K* k);
 void k_set_arg(K* k, int i, K* v);
 void k_add_front_arg(K* k, K* v);

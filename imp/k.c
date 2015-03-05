@@ -473,16 +473,33 @@ K* updateTrimArgs(K* k, int left, int right) {
 
 	assert(k_num_args(k) == right - left);
 	return k;
+}
 
-	// // TODO: inefficient
-	// int newi = 0;
-	// for (int i = left; i < right; i++) {
-	// 	_k_set_arg(k, newi, k_get_arg(k, i)); 
-	// 	newi++;
-	// }
-	// k->args.len = right - left;
-	// // k.args = k.args[left:right];
-	// return k;
+// returns a new k with args k[left] ... k[pos_end-1]
+K* k_remove_first_n_arg(K* k, int left) {
+	assert(k != NULL);
+	assert(left >= 0);
+
+	if (k->refs > 1) {
+		if (printDebug) {
+			printf("   Term is shared, need to copy\n");
+		}
+		k = copy(k);
+	}
+
+	int old_length = k_num_args(k);
+
+	for (int i = 0; i < left; i++) {
+		Dec(k_get_arg(k, i));
+		_k_set_arg(k, i, NULL); // for safety
+	}
+
+	int new_first = k->args.pos_first + left;
+
+	k->args.pos_first = new_first;
+
+	assert(k_num_args(k) == old_length - left);
+	return k;
 }
 
 // seems much faster
@@ -509,11 +526,14 @@ void k_remove_arg_head(K* k) {
 	assert(k->refs == 1); // don't want this, but necessary for now
 
 	// a nice safe way of doing this
-	K* newk = updateTrimArgs(k, 1, k_num_args(k));
-	assert(newk == k); // not really true, but true for a while
+	// K* newk = updateTrimArgs(k, 1, k_num_args(k));
+	// assert(newk == k); // not really true, but true for a while
 
 	// faster, but specialized
 	// _k_remove_first_arg(k);
+
+	K* newk = k_remove_first_n_arg(k, 1);
+	assert(newk == k); // not really true, but true for a while
 }
 
 void k_set_arg(K* k, int i, K* v) {
