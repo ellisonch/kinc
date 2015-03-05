@@ -268,10 +268,10 @@ func compileBinding(c *C, binding Binding) {
 		r := compileRef(binding.Loc.Parent())
 
 		suffix := binding.Loc.Suffix()
-		s = fmt.Sprintf("\tK* variable_%s = k_remove_first_n_arg(%s, %d);", binding.Variable.Name, r, suffix)
+		s = fmt.Sprintf("\tK* %s = k_remove_first_n_arg(%s, %d);", binding.Variable.CompiledName(), r, suffix)
 	} else {
 		r := compileRef(binding.Loc)
-		s = fmt.Sprintf("\tK* variable_%s = %s;", binding.Variable.Name, r)
+		s = fmt.Sprintf("\tK* %s = %s;", binding.Variable.CompiledName(), r)
 	}
 	c.Checks = append(c.Checks, s)
 }
@@ -392,7 +392,7 @@ func compileLabel(l Label) string {
 
 
 func compileTerm(n Node) (aux string, result string) {
-	a, r := compileTermAux(n, 0)
+	a, r, _ := compileTermAux(n, 0)
 	aux = strings.Join(a, "\n")
 	if len(a) > 0 {
 		aux += "\n"
@@ -401,7 +401,8 @@ func compileTerm(n Node) (aux string, result string) {
 	return
 }
 
-func compileTermAux(n Node, depth int) (aux []string, result string) {
+func compileTermAux(n Node, depth int) (aux []string, result string, isList bool) {
+	isList = false
 	var mylabel string
 	// k_new(SymbolLabel(symbol_If), 3, guard, then, k_new_empty(SymbolLabel(symbol_Skip)))
 
@@ -411,16 +412,28 @@ func compileTermAux(n Node, depth int) (aux []string, result string) {
 	case *Appl:
 		mylabel = compileLabel(n.Label)
 
+		// arrayName := fmt.Sprintf("array_%d", depth)
+		// array := fmt.Sprintf("\tK** %s = malloc(1000 * sizeof(K*));\n", arrayName)
 		// helpers := []string{}
-		args := []string{}
+		argNames := []string{}
+		haveList := false
 		for i, arg := range n.Body {
-			argHelpers, argResult := compileTermAux(arg, depth + 1)
+			argHelpers, argResult, childIsList := compileTermAux(arg, depth + 1)
+			if childIsList {
+				if haveList == true {
+					panic("Too many lists, only handling at most 1 now")
+				}
+				haveList = true
+			}
 			aux = append(aux, argHelpers...)
 			argName := fmt.Sprintf("arg_%d_%d", depth, i)
-			aux = append(aux, fmt.Sprintf("\tK* %s = %s;", argName, argResult))
-			args = append(args, fmt.Sprintf(argName))
+			aux = append(aux, fmt.Sprintf("\tK* %s = %s; // isList = %t", argName, argResult, childIsList))
+			argNames = append(argNames, fmt.Sprintf(argName))
 		}
 		// aux = append(aux, helpers)
+		// aux = append(aux, array)
+
+		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
 		if n.Label.IsBuiltin() {
 			if len(n.Body) > 0 {
@@ -430,15 +443,25 @@ func compileTermAux(n Node, depth int) (aux []string, result string) {
 		} else if len(n.Body) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
-			result = fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(args), strings.Join(args, ", "))
+			if haveList {
+				panic("not handling list yet")
+			}
+			result = fmt.Sprintf("k_new(%s, %d, %s)", mylabel, len(argNames), strings.Join(argNames, ", "))
 			// result = fmt.Sprintf("k_new_array(%s, %d, arg_array)", mylabel, len(args))
 		}
 
 	case *Variable:
-		result = fmt.Sprintf("variable_%s", n.Name)
+		if n.ActualSort == "listk" {
+			isList = true//panic("Not yet compileTermAux listk")
+		} 
+		result = n.CompiledName()
 	default: panic(fmt.Sprintf("Do not handle case %s\n", n.String()))
 	}
 	return
+}
+
+func (v *Variable) CompiledName() string {
+	return fmt.Sprintf("variable_%s", v.Name)
 }
 
 func compileBuiltinLabel(s string) string {

@@ -18,6 +18,8 @@ syntax
 rule <k> plus(s(N), M:int) => plus(N, s(M)) </k>
 rule <k> plus(zero(), N) => N </k>
 
+// rule <k> var(H, T:listk) => var(T) </k>
+
 
 // rule <k> a => (b ~> c) </k>
 // rule <k> a => kra(b, c) </k>
