@@ -9,9 +9,13 @@
 #define SYMBOLS_MAX 1024
 
 // when printing k terms, print the ref counts as well
-#define printRefCounts 1
+#ifndef printRefCounts
+	#define printRefCounts 1
+#endif
 
-#define printDebug 1
+#ifndef printDebug
+	#define printDebug 1
+#endif
 
 // slow checks dealing with refcounting
 #define shouldCheck 0

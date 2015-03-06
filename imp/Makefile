@@ -1,14 +1,14 @@
 CC=gcc
-CFLAGS=-static -std=c11 -Wall -m64 -O3
+CFLAGS=-static -std=c11 -Wall -m64 -O3 -DprintRefCounts=0 -DprintDebug=0
 
 FILES = imp_bench.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
 LIBS = -L./aparser -laterm
 DEPENDS = $(FILES) imp_bench.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h test.h k_pub.h
 
 NEWFILES = lang_helper.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c
+NEWHEADERS = lang.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h k_pub.h
 NEWLIBS = -L./aparser -laterm
-NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h k_pub.h
-
+NEWDEPENDS = $(NEWFILES) $(NEWHEADERS)
 
 # -DNDEBUG
 # -Wno-unused-function
@@ -19,6 +19,15 @@ NEWDEPENDS = $(NEWFILES) lang.h k.h k_types.h utils.h settings.h cells.h k_label
 
 all: simp
 
+
+
+# parser.tab.o lex.yy.o aterm.o: lex.yy.c parser.tab.c aterm.c aterm.h
+# 	gcc -c parser.tab.c lex.yy.c aterm.c
+
+*.o: $(NEWHEADERS) Makefile
+
+libkinc-safe.a: ${NEWFILES:.c=.o}
+	ar rcs libkinc-safe.a ${NEWFILES:.c=.o}
 
 # lang: lang.exe
 

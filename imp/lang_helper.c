@@ -101,11 +101,15 @@ int main(int argc, char* argv[]) {
 
 	while (adopt_parser_next(&opt, &parser)) {
 		if (opt.spec) {
-			printf("'%s' = ", opt.spec->name);
-			printf("'%s'\n", opt.value);
+			if (printDebug) {
+				printf("'%s' = ", opt.spec->name);
+				printf("'%s'\n", opt.value);
+			}
 			if (strcmp(opt.spec->name, "file") == 0) {
 				path = opt.value;
-				printf("Will load program file '%s'\n", path);
+				if (printDebug) {
+					printf("Will load program file '%s'\n", path);
+				}
 			}
 			if (strcmp(opt.spec->name, "input") == 0) {
 				upto = atoi(opt.value);
@@ -139,7 +143,9 @@ int main(int argc, char* argv[]) {
 	run(path, upto);
 	// printf("Result: %" PRId64 "\n", result);
 	
+	if (printDebug) {
 		dump_garbage_info();
+	}
 
 		// printf("\nrewrites: %" PRIu64 "\n", rewrites);
 	// }
