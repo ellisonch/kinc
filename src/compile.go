@@ -15,6 +15,8 @@ func (c *C) String() string {
 func checksToC(ch *CheckHelper) *C {
 	res := &C{}
 
+	sort.Sort(ch.checks)
+
 	for _, check := range ch.checks {
 		compileCheck(res, check)
 	}
@@ -278,20 +280,46 @@ func compileBinding(c *C, binding Binding) {
 
 func compileCheck(c *C, check Check) {
 	switch n := check.(type) {
-		case *CheckNumCellArgs:
-			// fmt.Printf("CheckNumCellArgs\n")
-			if n.Loc.String() != "k" {
-				panic("Only handle checking k length for now")
-			}
-			var comparison string
-			if (n.Exact) {
-				comparison = "!="
+		// case *CheckNumCellArgs:
+		// 	// fmt.Printf("CheckNumCellArgs\n")
+		// 	if n.Loc.String() != "k" {
+		// 		panic("Only handle checking k length for now")
+		// 	}
+		// 	var comparison string
+		// 	if (n.Exact) {
+		// 		comparison = "!="
+		// 	} else {
+		// 		comparison = "<"
+		// 	}
+		// 	s := fmt.Sprintf("\n\t// checking %s", n.String())
+		// 	s += fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }", comparison, n.Num)
+		// 	c.Checks = append(c.Checks, s)
+
+		case *CheckNumArgs:
+			if n.Loc.IsCell() {
+				if n.Loc.String() != "k" {
+					panic("Only handle checking k length for now")
+				}
+				var comparison string
+				if (n.Exact) {
+					comparison = "!="
+				} else {
+					comparison = "<"
+				}
+				s := fmt.Sprintf("\n\t// checking %s", n.String())
+				s += fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }", comparison, n.Num)
+				c.Checks = append(c.Checks, s)
 			} else {
-				comparison = "<"
+				r := compileRef(n.Loc)
+				s := fmt.Sprintf("\n\t// checking %s", n.String())
+				if n.Exact {
+					s += fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }", r, n.Num)
+				} else {
+					s += fmt.Sprintf("\tif (k_num_args(%s) < %d) { return 1; }", r, n.Num)
+				}
+				c.Checks = append(c.Checks, s)
 			}
-			s := fmt.Sprintf("\n\t// checking %s", n.String())
-			s += fmt.Sprintf("\tif (k_length(config->k) %s %d) { return 1; }", comparison, n.Num)
-			c.Checks = append(c.Checks, s)
+
 		case *CheckLabel:
 			l, ok := n.Label.(*NameLabel)
 			if !ok {
@@ -303,16 +331,7 @@ func compileCheck(c *C, check Check) {
 			sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
 			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }", r, sym)
 			c.Checks = append(c.Checks, s)
-			
-		case *CheckNumArgs:
-			r := compileRef(n.Loc)
-			s := fmt.Sprintf("\n\t// checking %s", n.String())
-			if n.Exact {
-				s += fmt.Sprintf("\tif (k_num_args(%s) != %d) { return 1; }", r, n.Num)
-			} else {
-				s += fmt.Sprintf("\tif (k_num_args(%s) < %d) { return 1; }", r, n.Num)
-			}
-			c.Checks = append(c.Checks, s)
+
 
 		case *CheckSort:
 			r := compileRef(n.Loc)

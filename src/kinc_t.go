@@ -156,7 +156,7 @@ type Rule struct {
 type K interface {
 	Node
 	kNode()
-	BuildTopKChecks(*CheckHelper)
+	// BuildTopKChecks(*CheckHelper)
 	BuildKChecks(*CheckHelper, Reference, int)
 }
 
