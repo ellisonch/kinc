@@ -84,13 +84,13 @@ func (v *DotMap) String() string {
 	return ".map"
 }
 
-func (v *Kra) String() string {
-	children := []string{}
-	for _, arg := range v.Children {
-		children = append(children, arg.String())
-	}
-	return fmt.Sprintf("(%s)", strings.Join(children, " ~> "))
-}
+// func (v *Kra) String() string {
+// 	children := []string{}
+// 	for _, arg := range v.Children {
+// 		children = append(children, arg.String())
+// 	}
+// 	return fmt.Sprintf("(%s)", strings.Join(children, " ~> "))
+// }
 
 func (v *Variable) String() string {
 	if (v.ActualSort != "") {

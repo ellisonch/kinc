@@ -500,9 +500,9 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 			isList = true//panic("Not yet compileTermAux listk")
 		} 
 		result = n.CompiledName()
-	case *Kra:
-		panic(fmt.Sprintf("compileTermAux(): Don't yet handle kra"))
-		// compileTermAux(n.Body, namePrefix)
+	// case *Kra:
+	// 	panic(fmt.Sprintf("compileTermAux(): Don't yet handle kra"))
+	// 	// compileTermAux(n.Body, namePrefix)
 	case *Paren:
 		return compileTermAux(n.Body, namePrefix)
 

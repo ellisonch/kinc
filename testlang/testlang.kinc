@@ -23,7 +23,7 @@ rule <k> (plus(zero(), N) => N) </k>
 // rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
 
 // rule <k> z((a() => b())) </k>
-// rule <k> z(a() => (b(), c())) </k>
+rule <k> z((a() => (b(), c()))) </k>
 
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>

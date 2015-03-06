@@ -30,7 +30,7 @@ var Final *Language
 	mymap Map
 	map_item MapItem
 	when_clause *When
-	kra []K
+	// kra []K
 }
 /*
 lst []ATerm
@@ -62,7 +62,7 @@ at ATerm
 %type <mymap> map
 %type <map_item> map_item
 %type <when_clause> when_clause
-%type <kra> kra
+// %type <kra> kra
 %type <i64> integer
 // these apparently encode precedence, so be careful
 %token <str> TOK_ERROR TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
@@ -177,11 +177,13 @@ term
 	| TOK_DOT_K
 		{ $$ = &DotK{} }
 
+/*
 kra 
 	: term TOK_KRA term
 		{ $$ = []K{$1, $3} }
 	| kra TOK_KRA term
 		{ $$ = append($1, $3) }
+*/
 
 term_variable
 	: TOK_UC_NAME
@@ -219,7 +221,15 @@ term_list
 	| term_list_item
 		{ $$ = &TermList{[]TermListItem{$1}} }
 	| term_list ',' term_list_item
-		{ $1.Children = append($1.Children, $3) }
+		{
+			$1.Children = append($1.Children, $3)
+			$$ = $1
+		}
+	| '(' term_list ',' term_list_item ')'
+		{ 
+			$2.Children = append($2.Children, $4)
+			$$ = $2
+		}
 	/*| term
 		{ $$ = &TermList{[]TermListItem{&TermListKItem{$1}}} }
 	| '(' term_list TOK_ARROW term_list ')'

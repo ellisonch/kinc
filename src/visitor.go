@@ -66,10 +66,10 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.LHS)
 			Walk(v, n.RHS)
 
-		case *Kra:
-			for _, c := range n.Children {
-				Walk(v, c)
-			}
+		// case *Kra:
+		// 	for _, c := range n.Children {
+		// 		Walk(v, c)
+		// 	}
 
 		case *TermListRewrite:
 			Walk(v, n.LHS)

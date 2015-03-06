@@ -1,1 +1,1 @@
-foo(plus(s(s(s(s(s(zero()))))), s(s(s(zero())))))
+z(plus(s(s(s(s(s(zero()))))), s(s(s(zero())))))

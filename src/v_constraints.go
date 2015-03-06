@@ -334,7 +334,7 @@ func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) {
 				panic("BuildKChecks() should have at least 1 rhs child")
 			}
 			if len(c.RHS.Children) > 1 {
-				panic("BuildKChecks() not yet handling rhs children == 1")
+				panic("BuildKChecks() not yet handling rhs children > 1")
 			}
 
 			if rhs, ok := c.RHS.Children[0].(*TermListKItem); ok {
