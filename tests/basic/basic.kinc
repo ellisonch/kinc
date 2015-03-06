@@ -12,7 +12,7 @@ rule <k> (containsList1(X:listk) => containsList2(X)) </k>
 rule <k> foo((plus(s(N), M:int) => plus(N, s(M)))) </k>
 rule <k> foo((plus(zero(), N) => N)) </k>
 
-rule <k> (s => z)(X:listk) </k>
+rule <k> (q => w)(X:listk) </k>
 
 rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
 rule <k> (plus(zero(), N) => N) </k>

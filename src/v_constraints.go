@@ -315,6 +315,7 @@ func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) {
 		case *TermListKItem:
 			isList := c.BuildChecksInList(ch, ref, i)
 			if isList {
+				sawList = true
 				countArgs--
 				if i != len(n.Children) - 1 {
 					panic("Only handle a listk in the last position")
