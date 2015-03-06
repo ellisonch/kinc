@@ -16,6 +16,8 @@ syntax
 rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
 rule <k> (plus(zero(), N) => N) </k>
 
+rule <k> foo((a() => (b(), c()))) </k>
+
 // rule <k> (var(H, T:listk) => var(T)) </k>
 // rule <k> var(H, (T:listk => .listk) => var(T) </k>
 
