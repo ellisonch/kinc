@@ -157,7 +157,7 @@ type K interface {
 	Node
 	kNode()
 	// BuildTopKChecks(*CheckHelper)
-	BuildKChecks(*CheckHelper, Reference, int)
+	BuildKChecks(*CheckHelper, Reference, Offset)
 }
 
 type DotK struct { }
@@ -195,7 +195,8 @@ type Appl struct {
 type TermListItem interface{
 	Node
 	kTermListItem()
-	BuildKChecks(*CheckHelper, Reference, int)
+	BuildKChecks(*CheckHelper, Reference, Offset)
+	BuildCheckTermListItem(*CheckHelper, Reference, Offset, Offset) TLChild
 }
 
 type TermList struct {

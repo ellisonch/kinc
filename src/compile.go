@@ -231,7 +231,7 @@ func compileReplacement(c *C, replacement Replacement) {
 			offset := n.Loc.Suffix()
 			helpers, rhs := compileTerm(n.Result)
 			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tcomputation_set_elem(%s, %d, %s);", r, offset, rhs)
+			s += fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset.String(), rhs)
 			c.Checks = append(c.Checks, s)
 		} else {
 			myloc := n.Loc.Parent()
@@ -239,7 +239,7 @@ func compileReplacement(c *C, replacement Replacement) {
 			offset := n.Loc.Suffix()
 			helpers, rhs := compileTerm(n.Result)
 			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tk_set_arg(%s, %d, %s);", r, offset, rhs)
+			s += fmt.Sprintf("\tk_set_arg(%s, %s, %s);", r, offset.String(), rhs)
 			c.Checks = append(c.Checks, s)
 			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
@@ -270,7 +270,7 @@ func compileBinding(c *C, binding Binding) {
 		r := compileRef(binding.Loc.Parent())
 
 		suffix := binding.Loc.Suffix()
-		s = fmt.Sprintf("\tK* %s = k_remove_first_n_arg(%s, %d);", binding.Variable.CompiledName(), r, suffix)
+		s = fmt.Sprintf("\tK* %s = k_remove_first_n_arg(%s, %s);", binding.Variable.CompiledName(), r, suffix.String())
 	} else {
 		r := compileRef(binding.Loc)
 		s = fmt.Sprintf("\tK* %s = %s;", binding.Variable.CompiledName(), r)
@@ -394,7 +394,7 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 			} else {
 				fun = "k_get_arg"
 			}
-			return fmt.Sprintf("%s(%s, %d)", fun, root, n.Offset)
+			return fmt.Sprintf("%s(%s, %s)", fun, root, n.Offset.String())
 		default: panic(fmt.Sprintf("Don't handle compileRefHead case %s", n))
 	}
 }

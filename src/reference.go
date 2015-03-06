@@ -3,6 +3,61 @@ package main
 import "fmt"
 import "strings"
 
+type Offset interface {
+	String() string
+	LessThan(Offset) bool
+	AddOne()
+	Copy() Offset
+}
+type KnownOffset struct {
+	Offset int
+}
+type UnknownOffset struct {
+	Offset string
+}
+
+func (this *KnownOffset) String() string {
+	return fmt.Sprintf("%d", this.Offset)
+}
+func (this *UnknownOffset) String() string {
+	return this.Offset
+}
+
+func (this *KnownOffset) AddOne() {
+	this.Offset++
+}
+func (this *UnknownOffset) AddOne() {
+	this.Offset += " + 1"
+}
+
+func (this *KnownOffset) Copy() Offset {
+	return &KnownOffset{this.Offset}
+}
+func (this *UnknownOffset) Copy() Offset {
+	return &UnknownOffset{this.Offset}
+}
+
+func (o1 KnownOffset) LessThan(o2 Offset) bool {
+	switch o2 := o2.(type) {
+	case *KnownOffset: 
+		return o1.Offset < o2.Offset
+	case *UnknownOffset:
+		return true
+	default:
+		return true
+	}
+}
+func (o1 UnknownOffset) LessThan(o2 Offset) bool {
+	switch o2 := o2.(type) {
+	case *KnownOffset: 
+		return false
+	case *UnknownOffset:
+		return o1.Offset < o2.Offset
+	default:
+		return false
+	}
+}
+
 type RefPart interface {
 	refPart()
 	String() string
@@ -12,7 +67,7 @@ type RefPartCell struct {
 	Name string
 }
 type RefPartPosition struct {
-	Offset int
+	Offset Offset
 }
 type RefPartMapLookup struct {
 	Key K
@@ -39,7 +94,7 @@ func (r1 *RefPartCell) Compare(r2 RefPart) int {
 func (r1 *RefPartPosition) Compare(r2 RefPart) int {
 	switch r2 := r2.(type) {
 	case *RefPartPosition:
-		if r1.Offset < r2.Offset {
+		if r1.Offset.LessThan(r2.Offset) {
 			return -1
 		} else if r1.Offset == r2.Offset {
 			return 0
@@ -57,7 +112,7 @@ func (r *RefPartCell) String() string {
 	return r.Name
 }
 func (r *RefPartPosition) String() string {
-	return fmt.Sprintf("%d", r.Offset)
+	return fmt.Sprintf("%s", r.Offset.String())
 }
 func (r *RefPartMapLookup) String() string {
 	return fmt.Sprintf("map[%s]", r.Key.String())
@@ -84,7 +139,7 @@ func (r *Reference) Parent() Reference {
 	ret.Ref = r.Ref[:len(r.Ref)-1]
 	return ret
 }
-func (r *Reference) Suffix() int {
+func (r *Reference) Suffix() Offset {
 	if (len(r.Ref) < 2) {
 		panic(fmt.Sprintf("Trying to get suffix of ref %s that's too small", r.String()))
 	}
@@ -140,10 +195,13 @@ func (r *Reference) addCellEntry(s string) {
 	r.Ref = append(r.Ref, &RefPartCell{s})
 }
 func (r *Reference) addPositionEntry(n int) {
+	r.addPositionOffsetEntry(&KnownOffset{n})
+}
+func (r *Reference) addPositionOffsetEntry(n Offset) {
 	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))
 	copy(newSlice, r.Ref)
 	r.Ref = newSlice
-	r.Ref = append(r.Ref, &RefPartPosition{n})
+	r.Ref = append(r.Ref, &RefPartPosition{n.Copy()})
 }
 func (r *Reference) addMapLookup(k K) {
 	newSlice := make([]RefPart, len(r.Ref), len(r.Ref))
