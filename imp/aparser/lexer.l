@@ -41,4 +41,11 @@
 "["	{ return '['; }
 "]"	{ return ']'; }
 
+[ \t\n\r] { }
+. { 
+	printf("Unknown character [%c]\n", yytext[0]);
+	yylval.c = yytext[0];
+	return TOK_ERR;
+}
+
 %%

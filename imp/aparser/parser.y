@@ -23,15 +23,16 @@ aterm final_term;
 	double real;
 	at_list* lst;
 	aterm at;
+	char c;
 }
 
 %type <at> aterm
 %type <lst> comma_list
 
-%token <str> TOK_CONSTRUCTOR TOK_STRING 
+%token <str> TOK_CONSTRUCTOR TOK_STRING
 %token <i64> TOK_I64
 %token <real> TOK_REAL
-%token <val> TOK_ERR
+%token <c> TOK_ERR
 %start final
 
 %%
@@ -50,14 +51,15 @@ aterm
 		// { $$ = ((aterm){ .type = AT_REAL, .real = $1 }); } // ATerm{Type: Real, Real: $1};
 	| TOK_CONSTRUCTOR '(' comma_list ')'
 		{
-			at_appl appl = { .name = $1, .args = $3 };
+			at_appl appl = { .name = $1, .args = $3 }; 
 			$$ = ((aterm){ .type = AT_APPL, .appl = appl }); 
 		} // ATerm{Type: Appl, Appl: ATermAppl{$1, []ATerm($3)}};  // FIXME at_appl
-	| TOK_CONSTRUCTOR
+	/*| TOK_CONSTRUCTOR
 		{ 
 			at_appl appl = { .name = $1, .args = NULL };
 			$$ = ((aterm){ .type = AT_APPL, .appl = appl }); 
 		} // ATerm{Type: Appl, Appl: ATermAppl{$1, nil}}; // FIXME 
+	*/
 	// | '[' comma_list ']' 
 		// { $$ = ((aterm){ .type = AT_LIST }); } // ATerm{Type: List, List: ATermList($2)};
 	;
