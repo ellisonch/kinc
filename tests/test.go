@@ -76,7 +76,8 @@ func main() {
 				passedTests++
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "Test \"%s\" doesn't have a results file\n")
+			fmt.Fprintf(os.Stderr, "Test \"%s\" doesn't have a results file\n", test)
+			os.Exit(1)
 		}
 	}
 
