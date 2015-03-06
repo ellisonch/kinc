@@ -60,7 +60,7 @@ void run(const char* path, int64_t upto) {
 	char* ss = get_state_string(config);
 
 	// char* ss = stateString(config->k, config->state);
-	printf("%s\n", ss);
+	printf("%s", ss);
 	free(ss);
 
 
