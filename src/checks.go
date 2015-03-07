@@ -27,6 +27,13 @@ type CheckNumArgs struct {
 	Num int
 	Exact bool
 }
+func NewCheckNumArgs (offset Offset, ref Reference, exact bool) *CheckNumArgs {
+	if ko, ok := offset.(*KnownOffset); ok {
+		return &CheckNumArgs{Num: ko.Offset, Loc: ref, Exact: exact}
+	}
+	panic("Can only call NewCheckNumArgs() with a known offset")
+}
+
 func (ck *CheckNumArgs) GetLoc() Reference {
 	return ck.Loc
 }

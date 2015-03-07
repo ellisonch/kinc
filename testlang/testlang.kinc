@@ -11,10 +11,12 @@ syntax
 // rule <k> foo(plus(s(N), M:int) => plus(N, s(M))) </k>
 // rule <k> foo(plus(zero(), N) => N) </k>
 
-// rule <k> (s => z)(X:listk) </k>
+// rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
+// rule <k> (plus(zero(), N) => N) </k>
 
-rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
-rule <k> (plus(zero(), N) => N) </k>
+
+rule <k> (s => z)(X:listk) </k>
+
 
 // rule <k> foo((a() => (b(), c()))) </k>
 
@@ -24,7 +26,7 @@ rule <k> (plus(zero(), N) => N) </k>
 
 // rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
 
-// rule <k> z((a() => b())) </k>
+rule <k> z((a() => b())) </k>
 // rule <k> z((a() => (b(), c()))) </k>
 
 

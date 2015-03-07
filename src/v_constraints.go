@@ -312,9 +312,15 @@ type TLChild struct {
 func (c *TermListKItem) BuildCheckTermListItem(ch *CheckHelper, ref Reference, lhsOffset Offset, rhsOffset Offset) TLChild {
 	// panic("need to update lhs and rhs")
 	isList := c.BuildChecksInList(ch, ref, lhsOffset)
+	// fmt.Printf("Checking item %s\n", c)
+	// fmt.Printf("Offset is %s\n", lhsOffset)
 	if !isList {
+		// fmt.Printf("Not a list\n")
 		lhsOffset.AddOne()
+	} else {
+		// fmt.Printf("It's a list!\n")
 	}
+	// fmt.Printf("Offset is %s\n", lhsOffset)
 	// if isList {
 	// 	// sawList = true
 	// 	// countArgs--
@@ -334,9 +340,12 @@ func (c *TermListRewrite) BuildCheckTermListItem(ch *CheckHelper, ref Reference,
 			panic("BuildKChecks(): Expect only a single rewrite per list for now")
 		}
 		// c.Item.BuildKChecks(ch, ref, i + o)
+		// fmt.Printf("Offset before call: %s", lhsOffset)
 		tlChild := c.BuildCheckTermListItem(ch, ref, lhsOffset, rhsOffset)
-		lhsOffset = tlChild.lhsOffset
-		rhsOffset = tlChild.rhsOffset
+		// fmt.Printf("Offset after call: %s", lhsOffset)
+		_ = tlChild
+		// lhsOffset = tlChild.lhsOffset
+		// rhsOffset = tlChild.rhsOffset
 	}
 	if len(c.RHS.Children) == 0 {
 		panic("BuildKChecks() should have at least 1 rhs child")
@@ -361,19 +370,25 @@ func (c *TermListRewrite) BuildCheckTermListItem(ch *CheckHelper, ref Reference,
 func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) {
 	// fmt.Printf("helper with ref %s\n", ref.String())
 	// countArgs := 0
-	// sawList := false
+	sawList := false
 
 	var lhsOffset Offset = &KnownOffset{0}
 	var rhsOffset Offset = &KnownOffset{0}
+	// fmt.Printf("Offset before call: %s", lhsOffset)
 	for _, c := range n.Children {
-		_ = c.BuildCheckTermListItem(ch, ref, lhsOffset, rhsOffset)
+		tlChild := c.BuildCheckTermListItem(ch, ref, lhsOffset, rhsOffset)
+		if tlChild.isList {
+			sawList = true
+		}
+		// fmt.Printf("Offset after call: %s", lhsOffset)
 		// lhsOffset = tlChild.lhsOffset
 		// rhsOffset = tlChild.rhsOffset
+
 	}
 
 	// FIXME: need some kind of check
 	// checkArgs := &CheckNumArgs{Num: countArgs, Loc: ref, Exact: !sawList}
-	checkArgs := &CheckNumArgs{Num: len(n.Children), Loc: ref, Exact: true}
+	checkArgs := NewCheckNumArgs(lhsOffset, ref, !sawList)		
 	ch.AddCheck(checkArgs)
 }
 
