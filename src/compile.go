@@ -224,7 +224,7 @@ func compileReplacement(c *C, replacement Replacement) {
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
 		} else if len(n.Loc.Ref) == 1 {
-			panic("Trying to change a cell?")
+			panic(fmt.Sprintf("Trying to change a cell? %s", replacement.String()))
 		} else if len(n.Loc.Ref) == 2 {
 			myloc := n.Loc.Parent()
 			r := compileRef(myloc)
