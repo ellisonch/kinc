@@ -318,6 +318,8 @@ func (c *TermListKItem) BuildCheckTermListItem(ch *CheckHelper, ref Reference, l
 		// fmt.Printf("Not a list\n")
 		lhsOffset.AddOne()
 	} else {
+		// FIXME: should update offset here
+		// lhsOffset.Add
 		// fmt.Printf("It's a list!\n")
 	}
 	// fmt.Printf("Offset is %s\n", lhsOffset)
@@ -366,6 +368,17 @@ func (c *TermListRewrite) BuildCheckTermListItem(ch *CheckHelper, ref Reference,
 
 	return TLChild{}
 }
+
+/*
+(a => b), c, d
+a, (b => c), c
+a, b, (c => d)
+(((a, b) => c), d)
+
+((a, List) => c, d, e)
+
+
+*/
 
 func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) {
 	// fmt.Printf("helper with ref %s\n", ref.String())
