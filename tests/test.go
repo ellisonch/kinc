@@ -14,10 +14,12 @@ func runTest(testName string, fileName string, expected []byte) (passed bool) {
 	cmd := exec.Command(program, fullpath)
 	// cmd.Stdin = strings.NewReader("some input")
 	var out bytes.Buffer
+	var errBytes bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &errBytes
 	err := cmd.Run()
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Error running command (%s %s): %s\n%s\n", program, fullpath, err, errBytes.String()))
 	}
 
 	expectedNoCR := bytes.Replace(expected, []byte{'\r'}, []byte{}, -1)
@@ -73,14 +75,14 @@ func main() {
 	passedTests := 0
 
 	for _, test := range tests {
-		if expected, ok := results[test]; ok {
-			validTests++
-			if runTest(dirname, test, expected) {
-				passedTests++
-			}
-		} else {
+		validTests++
+		expected := []byte(fmt.Sprintf("Test \"%s\" doesn't have a results file\n", test))
+		var ok bool
+		if expected, ok = results[test]; !ok {
 			fmt.Fprintf(os.Stderr, "Test \"%s\" doesn't have a results file\n", test)
-			os.Exit(1)
+		}
+		if runTest(dirname, test, expected) {
+			passedTests++
 		}
 	}
 
