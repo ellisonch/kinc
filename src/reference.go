@@ -6,53 +6,57 @@ import "strings"
 type Offset interface {
 	String() string
 	LessThan(Offset) bool
-	AddOne()
+	// AddOne()
 	Copy() Offset
 }
 type KnownOffset struct {
 	Offset int
 }
-type UnknownOffset struct {
-	Offset string
+type LengthOffset struct {
+	Loc Reference
 }
 
 func (this *KnownOffset) String() string {
 	return fmt.Sprintf("%d", this.Offset)
 }
-func (this *UnknownOffset) String() string {
-	return this.Offset
+func (this *LengthOffset) String() string {
+	return fmt.Sprintf("len_at(%s)", this.Loc.String())
 }
 
-func (this *KnownOffset) AddOne() {
-	this.Offset++
-}
-func (this *UnknownOffset) AddOne() {
-	this.Offset += " + 1"
-}
+// func (this *KnownOffset) AddOne() {
+// 	this.Offset++
+// }
+// func (this *UnknownOffset) AddOne() {
+// 	this.Offset += " + 1"
+// }
 
 func (this *KnownOffset) Copy() Offset {
 	return &KnownOffset{this.Offset}
 }
-func (this *UnknownOffset) Copy() Offset {
-	return &UnknownOffset{this.Offset}
+func (this *LengthOffset) Copy() Offset {
+	return &LengthOffset{this.Loc}
 }
 
 func (o1 KnownOffset) LessThan(o2 Offset) bool {
 	switch o2 := o2.(type) {
 	case *KnownOffset: 
 		return o1.Offset < o2.Offset
-	case *UnknownOffset:
+	case *LengthOffset:
 		return true
 	default:
 		return true
 	}
 }
-func (o1 UnknownOffset) LessThan(o2 Offset) bool {
+func (o1 LengthOffset) LessThan(o2 Offset) bool {
 	switch o2 := o2.(type) {
 	case *KnownOffset: 
 		return false
-	case *UnknownOffset:
-		return o1.Offset < o2.Offset
+	case *LengthOffset:
+		if o1.Loc.Compare(o2.Loc) < 0 {
+			return true
+		} else {
+			return false
+		}
 	default:
 		return false
 	}
@@ -120,6 +124,14 @@ func (r *RefPartMapLookup) String() string {
 
 type Reference struct {
 	Ref []RefPart
+}
+
+func (r *Reference) RefersToCellContents() bool {
+	if len(r.Ref) == 2 {
+		return true
+	} else {
+		return false
+	}
 }
 
 func (r *Reference) String() string {

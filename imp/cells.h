@@ -30,6 +30,7 @@ void updateStore(StateCell* stateCell, K* keyK, K* value);
 void check(const ComputationCell *c, const StateCell* state);
 void computation_remove_head(ComputationCell *kCell);
 void computation_set_elem(ComputationCell *kCell, int pos, K* k);
+void computation_insert_elems(ComputationCell *kCell, int pos, int count, ...);
 void computation_add_front(ComputationCell *kCell, K* k);
 void computation_cleanup(ComputationCell *kCell);
 

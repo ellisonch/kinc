@@ -33,6 +33,8 @@ void k_remove_arg_head(K* k);
 void k_set_arg(K* k, int i, K* v);
 void k_add_front_arg(K* k, K* v);
 
+K* k_insert_elems(K* k, int pos, int count, ...);
+K* k_insert_elems_vararg(K* k, int pos, int count, va_list elems);
 void k_set_label(K* k, KLabel* label);
 K* k_get_arg(const K* k, int i);
 int k_num_args(const K* k);

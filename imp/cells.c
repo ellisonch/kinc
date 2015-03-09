@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "k.h"
 #include "settings.h"
@@ -108,6 +109,14 @@ void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
 	// Inc(k);
 	// Dec(kCell->elements[elem]);
 	// kCell->elements[elem] = k;
+}
+
+void computation_insert_elems(ComputationCell *kCell, int pos, int count, ...) {
+	va_list elems;
+	va_start(elems, count);
+
+	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, count, elems);
+	va_end(elems);
 }
 
 void computation_add_front(ComputationCell *kCell, K* k) {

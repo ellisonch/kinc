@@ -253,7 +253,7 @@ func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool 
 	return false
 }
 func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool {
-	panic("Don't handle BuildKChecks Paren yet")
+	return n.Body.BuildKChecks(ch, ref, offset)
 }
 // func (n *TermListRewrite) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool {
 // 	panic("TermListRewrite.BuildKChecks(): Shouldn't get here")
@@ -389,32 +389,51 @@ func (n *TermListKItem) collectItemInfo(ch *CheckHelper, ref Reference, offset O
 func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset Offset) bool {
 	// fmt.Printf("collectItemInfo TermListRewrite: %s\n", n.String())
 
-	hasList := n.LHS.BuildKChecksTermListHelper(ch, ref)
+	hasList, offsetCount := n.LHS.BuildKChecksTermListHelper(ch, ref)
+
+	rhs := []K{}
+	// rhs := n.RHS.BuildRHS
 
 	if len(n.RHS.Children) == 0 {
-		panic("BuildKChecks() should have at least 1 rhs child")
+		panic("TermListRewrite.collectItemInfo() should have at least 1 rhs child")
 	}
-	if len(n.RHS.Children) > 1 {
-		panic("BuildKChecks() not yet handling rhs children > 1")
+	// if len(n.RHS.Children) > 1 {
+	// 	panic("BuildKChecks() not yet handling rhs children > 1")
+	// }
+
+	for _, rhsElem := range n.RHS.Children {
+		if rhsElem, ok := rhsElem.(*TermListKItem); ok {
+			// myRef := ref
+			//offset.AddOne()
+			rhs = append(rhs, rhsElem.Item)
+		} else {
+			panic("There seems to be a rewrite on the RHS of another rewrite")
+		}
 	}
-	if rhs, ok := n.RHS.Children[0].(*TermListKItem); ok {
-		myRef := ref
-		myRef.addPositionOffsetEntry(offset)
-		rep := &TermChange{Loc: myRef, Result: rhs.Item} // FIXME hardcoded based on above check
-		// fmt.Printf(rep.String())
-		ch.AddReplacement(rep)
-	} else {
-		panic("BuildKChecks() no idea what's going on")
-	}
+
+
+	ref.addPositionOffsetEntry(offset)
+	rep := &TermChange{Loc: ref, OverwriteCount: offsetCount, Result: rhs} // FIXME hardcoded based on above check
+	// fmt.Printf(rep.String())
+	ch.AddReplacement(rep)
+
+	// if rhs, ok := n.RHS.Children[0].(*TermListKItem); ok {
+	// 	myRef := ref
+	// 	myRef.addPositionOffsetEntry(offset)
+	// 	rep := &TermChange{Loc: myRef, Result: rhs.Item} // FIXME hardcoded based on above check
+	// 	// fmt.Printf(rep.String())
+	// 	ch.AddReplacement(rep)
+	// } else {
+	// 	panic("BuildKChecks() no idea what's going on")
+	// }
 
 	return hasList
 }
 
-func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) bool {
+func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) (bool, Offset) {
 	lasti := len(n.Children) - 1
 	hasList := false
 	for i, c := range n.Children {
-
 		isList := c.collectItemInfo(ch, ref, &KnownOffset{i})
 		if isList {
 			hasList = true
@@ -431,7 +450,14 @@ func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) bo
 	checkArgs := NewCheckNumArgs(&KnownOffset{numArgs}, ref, !hasList)		
 	ch.AddCheck(checkArgs)
 
-	return hasList
+	var offsetCount Offset
+	if !hasList {
+		offsetCount = &KnownOffset{numArgs}
+	} else {
+		offsetCount = &LengthOffset{ref}
+	}
+
+	return hasList, offsetCount
 }
 //---------------------------------------------------------------
 // func (vis *getChecks) VisitPre(node Node) Visitor {

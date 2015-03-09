@@ -15,7 +15,7 @@ syntax
 // rule <k> (plus(zero(), N) => N) </k>
 
 
-rule <k> (s => z)(X:listk) </k>
+// rule <k> (s => z)(X:listk) </k>
 
 
 // rule <k> foo((a() => (b(), c()))) </k>
@@ -26,9 +26,12 @@ rule <k> (s => z)(X:listk) </k>
 
 // rule <k> holder(plus(N, plus(A, B))) => holder(plus(A, B), plus_hole2(N)) </k>
 
-rule <k> z((a() => b())) </k>
+// rule <k> z((a() => b())) </k>
 // rule <k> z((a() => (b(), c()))) </k>
 
+rule <k> (test2(a(), b(), T:listk) => (a(), T)) </k>
+rule <k> (test3(a(), b(), c(), d(), e(), f()) => test3()) </k>
+rule <k> (test4(((a(), T:listk) => b()))) </k>
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
 

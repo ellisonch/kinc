@@ -3,6 +3,8 @@
 
 
 #define panic(...) (_panic(__func__, __FILE__, __LINE__, __VA_ARGS__))
+// #define _assert(x) if (!(x)) panic()
+// 
 
 _Noreturn void _panic(const char* func, const char* file, int line, const char* format, ...);
 char* string_make_copy(const char* s);

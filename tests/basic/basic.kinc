@@ -8,6 +8,7 @@ syntax
 rule <k> (test1(a(), T:listk) => T) </k>
 // rule <k> (test2(a(), b(), T:listk) => a(), T) </k>
 rule <k> (test2(a()) => test2(b())) </k> // just a fake rule to add the symbol
+// rule <k> test3((a() => (b(), c())), d()) </k>
 
 rule <k> (crazy(a(), b(), c(), d(), e()) => a()) </k>
 

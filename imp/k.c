@@ -15,7 +15,9 @@
 
 extern void k_language_init(); // FIXME
 
+// TODO: should have a private header
 void _k_set_arg(K* k, int i, K* v);
+K* _copy_if_necessary(K* k);
 
 int garbage_k_next = 0;
 K* garbage_k[MAX_GARBAGE_KEPT];
@@ -437,12 +439,8 @@ K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
 		free(sold);
 		free(snew);
 	}
-	if (k->refs > 1) {
-		if (printDebug) {
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(k);
-	}
+	k = _copy_if_necessary(k);
+
 	Inc(nv);
 	_k_set_arg(k, arg, nv);
 	if (printDebug) {
@@ -461,12 +459,8 @@ K* updateTrimArgs(K* k, int left, int right) {
 	assert(left >= 0);
 	assert(right <= k_num_args(k));
 
-	if (k->refs > 1) {
-		if (printDebug) {
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(k);
-	}
+	k = _copy_if_necessary(k);
+
 	for (int i = 0; i < left; i++) {
 		Dec(k_get_arg(k, i));
 		_k_set_arg(k, i, NULL); // for safety
@@ -491,12 +485,7 @@ K* k_remove_first_n_arg(K* k, int left) {
 	assert(k != NULL);
 	assert(left >= 0);
 
-	if (k->refs > 1) {
-		if (printDebug) {
-			printf("   Term is shared, need to copy\n");
-		}
-		k = copy(k);
-	}
+	k = _copy_if_necessary(k);
 
 	int old_length = k_num_args(k);
 
@@ -530,6 +519,63 @@ K* k_remove_first_n_arg(K* k, int left) {
 // 	assert(k_num_args(k) == old_length - 1);
 // }
 
+K* _copy_if_necessary(K* k) {
+	if (k->refs > 1) {
+		if (printDebug) {
+			printf("   Term is shared, need to copy\n");
+		}
+		k = copy(k);
+	}
+	return k;
+}
+
+K* _k_insert_space(K* k, int pos, int count) {
+	assert(k != NULL);
+
+	k = _copy_if_necessary(k);
+
+	panic("not inserting space yet");
+}
+
+
+K* _k_grow_front_arg(K* k) {
+	assert(k != NULL);
+	assert(k->refs == 1); // don't want this, but necessary for now
+
+	if (k->args.pos_first > 0) {
+		k->args.pos_first--;
+
+		return;
+	}
+	panic("Not enough room to grow!");
+}
+
+
+K* k_insert_elems(K* k, int pos, int count, ...) {
+	va_list elems;
+	va_start(elems, count);
+
+	k_insert_elems_vararg(k, pos, count, elems);
+	va_end(elems);
+}
+
+K* k_insert_elems_vararg(K* k, int pos, int count, va_list elems) {
+	assert(k != NULL);
+	assert(k_num_args(k) >= pos);
+
+// need to write this
+// need to make sure i figure out how many spaces are to be overwritten as well as added
+
+	k = _k_insert_space(k, pos, count);
+	for (int i = 0; i < count; i++) {
+		K* arg = va_arg(elems, K*);
+		assert(arg != NULL);
+ 		_k_set_arg(k, pos + i, arg);
+
+		Inc(arg);
+	}
+	// va_end(ap);
+}
 
 void k_remove_arg_head(K* k) {
 	assert(k != NULL);
@@ -558,18 +604,6 @@ void k_set_arg(K* k, int i, K* v) {
 	_k_set_arg(k, i, v);
 	Inc(v);
 	Dec(oldv);
-}
-
-void _k_grow_front_arg(K* k) {
-	assert(k != NULL);
-	assert(k->refs == 1); // don't want this, but necessary for now
-
-	if (k->args.pos_first > 0) {
-		k->args.pos_first--;
-
-		return;
-	}
-	panic("Not enough room to grow!");
 }
 
 void k_add_front_arg(K* k, K* v) {

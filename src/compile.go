@@ -225,24 +225,46 @@ func compileReplacement(c *C, replacement Replacement) {
 			panic("Empty loc?")
 		} else if len(n.Loc.Ref) == 1 {
 			panic(fmt.Sprintf("Trying to change a cell? %s", replacement.String()))
-		} else if len(n.Loc.Ref) == 2 {
-			myloc := n.Loc.Parent()
-			r := compileRef(myloc)
-			offset := n.Loc.Suffix()
-			helpers, rhs := compileTerm(n.Result)
-			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tcomputation_set_elem(%s, %s, %s);", r, offset.String(), rhs)
-			c.Checks = append(c.Checks, s)
-		} else {
-			myloc := n.Loc.Parent()
-			r := compileRef(myloc)
-			offset := n.Loc.Suffix()
-			helpers, rhs := compileTerm(n.Result)
-			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tk_set_arg(%s, %s, %s);", r, offset.String(), rhs)
-			c.Checks = append(c.Checks, s)
-			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
 		}
+
+		var repFunction string
+		var extraArg string
+		// top of a cell
+		if n.Loc.RefersToCellContents() {
+			if len(n.Result) > 1 {
+				repFunction = "computation_insert_elems"
+				extraArg = fmt.Sprintf(", %d", len(n.Result))
+			} else {
+				repFunction = "computation_set_elem"
+			}
+		} else {
+			if len(n.Result) > 1 {
+				repFunction = "k_insert_arg"
+				extraArg = fmt.Sprintf(", %d", len(n.Result))
+			} else {
+				repFunction = "k_set_arg"
+			}
+		}
+		myloc := n.Loc.Parent()
+		r := compileRef(myloc)
+		offset := n.Loc.Suffix()
+		// if len(n.Result) > 1 {
+		// 	panic("not handling rhs > 1 just yet")
+		// }
+
+		howMany := compileOffset(n.OverwriteCount)
+
+		allHelpers := ""
+		allRHS := []string{}
+		for _, term := range n.Result {
+			helpers, rhs := compileTerm(term)	
+			allHelpers += helpers
+			allRHS = append(allRHS, rhs)
+		}
+		
+		s := fmt.Sprintf(allHelpers)
+		s += fmt.Sprintf("\t%s(%s, %s, %s%s, %s);", repFunction, r, offset.String(), howMany, extraArg, strings.Join(allRHS, ", "))
+		c.Checks = append(c.Checks, s)
 	case *LabelChange:
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
@@ -349,6 +371,20 @@ func compileCheck(c *C, check Check) {
 			c.Checks = append(c.Checks, s2)
 			
 		default: log.Panicf("Don't handle case %s", n)
+	}
+}
+
+func compileOffset(o Offset) string {
+	switch o := o.(type) {
+	case *KnownOffset:
+		return fmt.Sprintf("%d", o.Offset)
+	case *LengthOffset:
+		if o.Loc.RefersToCellContents() {
+			return fmt.Sprintf("k_length(%s)", compileRef(o.Loc))
+		} else {
+			return fmt.Sprintf("k_num_args(%s)", compileRef(o.Loc))
+		}
+	default: panic("Don't handle whatever other case in compileOffset()")
 	}
 }
 
