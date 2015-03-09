@@ -28,10 +28,10 @@ void state_cleanup(StateCell *stateCell);
 void updateStore(StateCell* stateCell, K* keyK, K* value);
 
 void check(const ComputationCell *c, const StateCell* state);
-K* computation_remove_first_n_arg(ComputationCell *kCell, int left);
+K* computation_without_first_n_arg(ComputationCell *kCell, int left);
 void computation_remove_head(ComputationCell *kCell);
 void computation_set_elem(ComputationCell *kCell, int pos, K* k);
-void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCount, int count, ...);
+void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCount, int actualResultCount, int varargCount, ...);
 void computation_add_front(ComputationCell *kCell, K* k);
 void computation_cleanup(ComputationCell *kCell);
 

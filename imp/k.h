@@ -28,13 +28,13 @@ char* KToString(const K* k);
 
 void k_init();
 
-K* k_remove_first_n_arg(K* k, int left);
+K* k_without_first_n_arg(K* k, int left);
 void k_remove_arg_head(K* k);
 void k_set_arg(K* k, int i, K* v);
 void k_add_front_arg(K* k, K* v);
 
-K* k_insert_elems(K* k, int pos, int overwriteCount, int count, ...);
-K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int count, va_list elems);
+K* k_insert_elems(K* k, int pos, int overwriteCount, int actualResultCount, int count, ...);
+K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCount, int count, va_list elems);
 void k_set_label(K* k, KLabel* label);
 K* k_get_arg(const K* k, int i);
 int k_num_args(const K* k);
@@ -50,6 +50,7 @@ void k_make_permanent(K* k);
 
 double garbage_get_capacity();
 
+void k_dispose(K* k);
 void Dec(K* k);
 void Inc(K* k);
 

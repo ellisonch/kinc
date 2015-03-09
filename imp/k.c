@@ -199,6 +199,7 @@ void free_args(ListK* args) {
 
 void dispose_k_itself(K* k) {
 	assert(k != NULL);
+	assert(k->refs == 0);
 
 	if (garbage_k_next < MAX_GARBAGE_KEPT) {
 		if (printDebug) { printf("Saving k\n"); }
@@ -266,6 +267,12 @@ void dispose_k(K* k) {
 	
 	dispose_k_aux(k);
 }
+
+
+void k_dispose(K* k) {
+	dispose_k(k);
+}
+
 
 void Dec(K* k) {
 	assert(k != NULL);
@@ -481,11 +488,11 @@ K* updateTrimArgs(K* k, int left, int right) {
 }
 
 // returns a new k with args k[left] ... k[pos_end-1]
-K* k_remove_first_n_arg(K* k, int left) {
+K* k_without_first_n_arg(K* k, int left) {
 	assert(k != NULL);
 	assert(left >= 0);
 
-	k = _copy_if_necessary(k);
+	k = copy(k);
 
 	int old_length = k_num_args(k);
 
@@ -534,8 +541,6 @@ K* _k_insert_space_after(K* k, int pos, int count) {
 
 	k = _copy_if_necessary(k);
 
-
-
 	panic("not inserting space yet");
 }
 
@@ -553,52 +558,112 @@ void _k_grow_front_arg(K* k) {
 }
 
 
-K* k_insert_elems(K* k, int pos, int overwriteCount, int count, ...) {
+K* k_insert_elems(K* k, int pos, int overwriteCount, int actualResultCount, int varargCount, ...) {
 	va_list elems;
-	va_start(elems, count);
+	va_start(elems, varargCount);
 
-	k_insert_elems_vararg(k, pos, overwriteCount, count, elems);
+	k_insert_elems_vararg(k, pos, overwriteCount, actualResultCount, varargCount, elems);
 	va_end(elems);
 	return k;
 }
 
-K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int count, va_list elems) {
+void _k_extend(K* k, int count) {
+	assert(k != NULL);
+	assert(k->refs == 1);
+
+	if (k->args.cap >= k->args.pos_end + count) {
+		k->args.pos_end += count;
+	} else {
+		printf("cap: %d, pos_end: %d, want to add: %d\n", k->args.cap, k->args.pos_end, count);
+		panic("Not handling true growth");
+	}
+}
+/*
+	a, (b, c) => (d, e, f), g, h
+
+	a, (b, c) => (d), g, h
+*/
+// FIXME: not deccing old stuff
+K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCount, int varargCount, va_list elems) {
 	assert(k != NULL);
 	assert(k_num_args(k) >= pos);
+	assert(pos >= 0);
+	assert(overwriteCount >= 0);
+	assert(varargCount >= 0);
+	assert(pos + overwriteCount <= k_num_args(k));
+	assert(k_num_args(k) >= overwriteCount);
 
-	// int len = k_num_args(k);
-	// int diffFront = pos
+	int old_count = k_num_args(k);
 
-	// if (overwriteCount > count) {
-	// 	panic("Not handling adding elements yet");
-	// }
-// need to write this
-// need to make sure i figure out how many spaces are to be overwritten as well as added
-
-	printf("inserting at pos=%d, owc=%d, count=%d\n", pos, overwriteCount, count);
-	// k = _k_insert_space_after(k, pos, count);
-	for (int i = 0; i < count; i++) {
-		ListOrNot isList = va_arg(elems, ListOrNot);
-		K* arg = va_arg(elems, K*);
-		assert(arg != NULL);
-		printf("inserting %s at pos=%d, owc=%d, count=%d\n", KToString(arg), pos, overwriteCount, count);
-
-		if (isList == E_LIST) {
-			panic("not handling lists yet");
-		}
-
-		if (overwriteCount > 0) {
-			k_set_arg(k, pos + i, arg);
-			overwriteCount--;
-		} else {
-			panic("Not handling adding elements yet");
-		}
- 		
-		Inc(arg);
+	int need_to_add = (pos + actualResultCount) - k_num_args(k);
+	if (need_to_add > 0) {
+		printf("adding %d\n", need_to_add);
+		_k_extend(k, need_to_add);
+		assert(k_num_args(k) == pos + actualResultCount);
 	}
 
-	if (overwriteCount > 0) {
+	// printf("old_count=%d\n", old_count);
+
+	int need_to_move = old_count - overwriteCount;
+	if (need_to_move > 0) {
+		printf("need to move: %d\n", need_to_move);
+		panic("not moving yet");
+	}
+
+	if (overwriteCount > actualResultCount) {
 		panic("Not handling removing elements yet");
+	}
+
+	// printf("need_to_add: %d\n", need_to_add);
+
+	// int startIndex = pos;
+	// int endIndex = pos + count;
+
+	printf("inserting at old_count=%d, pos=%d, owc=%d, ac=%d, varargCount=%d\n", old_count, pos, overwriteCount, actualResultCount, varargCount);
+	// k = _k_insert_space_after(k, pos, varargCount);
+	int numWrote = 0;
+	int target = pos;
+	for (int i = 0; i < varargCount; i++) {
+		//printf("vararging... ");
+		_Bool isList = va_arg(elems, ListOrNot) == E_LIST;
+		K* arg = va_arg(elems, K*);
+		// printf("done\n");
+		assert(arg != NULL);
+		// printf("arg: %s\n", KToString(arg));
+		// printf("inserting %s %s at pos=%d, i=%d, owc=%d, ac=%d, varargCount=%d in %s\n", isList? " the args of " : "", KToString(arg), pos, i, overwriteCount, actualResultCount, varargCount, KToString(k));
+		// printf("inserting %s %s at pos=%d, i=%d, owc=%d, ac=%d, varargCount=%d\n", isList? " the args of " : "", KToString(arg), pos, i, overwriteCount, actualResultCount, varargCount);
+
+		if (isList) {
+			for (int listArgi = 0; listArgi < k_num_args(arg); listArgi++) {
+				K* argi = k_get_arg(arg, listArgi);
+				// printf("inserting %s at %d\n", KToString(argi), target);
+				K* oldArg = NULL;
+				if (numWrote < overwriteCount) {
+					oldArg = k_get_arg(k, target);
+				}
+				_k_set_arg(k, target, argi);				
+				Inc(argi);
+				if (numWrote < overwriteCount) {
+					Dec(oldArg);
+				}
+				numWrote++;
+				target++;
+			}
+			// panic("not handling lists yet");
+		} else {
+			K* oldArg = NULL;
+			if (numWrote < overwriteCount) {
+				oldArg = k_get_arg(k, target);
+			}
+			_k_set_arg(k, target, arg);
+			Inc(arg);
+			if (numWrote < overwriteCount) {
+				Dec(oldArg);
+			}
+			numWrote++;
+			target++;
+		}
+		// printf("Inserted.\n");
 	}
 
 	return k;
@@ -610,14 +675,15 @@ void k_remove_arg_head(K* k) {
 	assert(k->refs == 1); // don't want this, but necessary for now
 
 	// a nice safe way of doing this
-	// K* newk = updateTrimArgs(k, 1, k_num_args(k));
-	// assert(newk == k); // not really true, but true for a while
+	K* newk = updateTrimArgs(k, 1, k_num_args(k));
+	assert(newk == k); // not really true, but true for a while
 
 	// faster, but specialized
 	// _k_remove_first_arg(k);
 
-	K* newk = k_remove_first_n_arg(k, 1);
-	assert(newk == k); // not really true, but true for a while
+	// K* newk = k_remove_first_n_arg(k, 1);
+	// Inc(newk);
+	// assert(newk == k); // not really true, but true for a while
 }
 
 void k_set_arg(K* k, int i, K* v) {

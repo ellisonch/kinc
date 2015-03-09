@@ -54,7 +54,7 @@ K* k_get_item(const ComputationCell* cell, int i) {
 char* kCellToString(const ComputationCell *kCell) {
 	char* s = malloc(10000);
 	strcpy(s, "k(\n");
-	for (int i = k_length(kCell) - 1; i >= 0; i--) {
+	for (int i = 0; i < k_length(kCell); i++) {
 		char* sk = KToString(k_get_item(kCell, i));
 		strcat(s, "  ~> ");
 		strcat(s, sk);
@@ -87,8 +87,8 @@ char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
 	return s;
 }
 
-K* computation_remove_first_n_arg(ComputationCell *kCell, int left) {
-	return k_remove_first_n_arg(kCell->holder, left);
+K* computation_without_first_n_arg(ComputationCell *kCell, int left) {
+	return k_without_first_n_arg(kCell->holder, left);
 }
 
 void computation_remove_head(ComputationCell *kCell) {
@@ -115,11 +115,11 @@ void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
 	// kCell->elements[elem] = k;
 }
 
-void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCount, int count, ...) {
+void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCount, int actualResultCount, int varargCount, ...) {
 	va_list elems;
-	va_start(elems, count);
+	va_start(elems, varargCount);
 
-	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, overwriteCount, count, elems);
+	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, overwriteCount, actualResultCount, varargCount, elems);
 	va_end(elems);
 }
 

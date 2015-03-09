@@ -7,9 +7,13 @@ import "sort"
 
 type C struct {
 	Checks []string
+	Cleanup []string
 }
 func (c *C) String() string {
-	return strings.Join(c.Checks, "\n")
+	checks := strings.Join(c.Checks, "\n")
+	cleanup := strings.Join(c.Cleanup, "\n")
+
+	return fmt.Sprintf("\t// Computation\n%s\n\t// Cleanup:\n%s\n", checks, cleanup)
 }
 
 func checksToC(ch *CheckHelper) *C {
@@ -228,34 +232,27 @@ func compileReplacement(c *C, replacement Replacement) {
 		}
 
 		var repFunction string
-		var extraArg string
 		myloc := n.Loc.Parent()
 		r := compileRef(myloc)
 		offset := n.Loc.Suffix()
 
 		// top of a cell
 		if myloc.RefersToCell() {
-			// if len(n.Result) > 1 {
-				repFunction = "computation_insert_elems"
-				extraArg = fmt.Sprintf(", %d", len(n.Result))
-			// } else {
-			// 	repFunction = "computation_set_elem"
-			// }
+			repFunction = "computation_insert_elems"
 		} else {
-			// if len(n.Result) > 1 {
-				repFunction = "k_insert_elems"
-				extraArg = fmt.Sprintf(", %d", len(n.Result))
-			// } else {
-			// 	repFunction = "k_set_arg"
-			// }
+			repFunction = "k_insert_elems"
 		}
+
+		numVarargs := fmt.Sprintf("%d", len(n.Result))
 
 		// if len(n.Result) > 1 {
 		// 	panic("not handling rhs > 1 just yet")
 		// }
 
-		howMany := compileOffset(n.OverwriteCount)
+		howManyOverwrites := compileOffset(n.OverwriteCount)
 
+		actualLength := ""
+		actualLengthCount := 0
 		allHelpers := ""
 		allRHS := []string{}
 		for _, term := range n.Result {
@@ -264,16 +261,20 @@ func compileReplacement(c *C, replacement Replacement) {
 
 			var lst string
 			if isList {
+				actualLength += fmt.Sprintf(" + k_num_args(%s)", rhs)
 				lst = "E_LIST"
 			} else {
+				actualLengthCount++
 				lst = "E_NOT_LIST"	
 			}
 
 			allRHS = append(allRHS, fmt.Sprintf("%s, %s", lst, rhs))
 		}
+
+		actualLength = fmt.Sprintf("%d%s", actualLengthCount, actualLength)
 		
 		s := fmt.Sprintf(allHelpers)
-		s += fmt.Sprintf("\t%s(%s, %s, %s%s, %s);", repFunction, r, offset.String(), howMany, extraArg, strings.Join(allRHS, ", "))
+		s += fmt.Sprintf("\t%s(%s, %s, %s, %s, %s, %s);", repFunction, r, offset.String(), howManyOverwrites, actualLength, numVarargs, strings.Join(allRHS, ", "))
 		c.Checks = append(c.Checks, s)
 	case *LabelChange:
 		if len(n.Loc.Ref) == 0 {
@@ -303,11 +304,13 @@ func compileBinding(c *C, binding Binding) {
 		r := compileRef(parent)
 
 		suffix := binding.Loc.Suffix()
+		varname := binding.Variable.CompiledName()
 		if parent.RefersToCell() {
-			s = fmt.Sprintf("\tK* %s = computation_remove_first_n_arg(%s, %s);", binding.Variable.CompiledName(), r, suffix.String())
+			s = fmt.Sprintf("\tK* %s = computation_without_first_n_arg(%s, %s);", varname, r, suffix.String())
 		} else {
-			s = fmt.Sprintf("\tK* %s = k_remove_first_n_arg(%s, %s);", binding.Variable.CompiledName(), r, suffix.String())
+			s = fmt.Sprintf("\tK* %s = k_without_first_n_arg(%s, %s);", varname, r, suffix.String())
 		}
+		c.Cleanup = append(c.Cleanup, fmt.Sprintf("\tk_dispose(%s);", varname))
 	} else {
 		r := compileRef(binding.Loc)
 		s = fmt.Sprintf("\tK* %s = %s;", binding.Variable.CompiledName(), r)

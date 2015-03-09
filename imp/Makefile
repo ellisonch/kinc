@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-static -std=c11 -Wall -m64 -O3 -DprintRefCounts=0 -DprintDebug=0
+CFLAGS=-static -std=c11 -Wall -m64 -O3
+RELEASE_FLAGS=-DprintRefCounts=1 -DprintDebug=1
+TEST_FLAGS=-DprintRefCounts=1 -DprintDebug=1
 
 FILES = imp_bench.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
 LIBS = -L./aparser -laterm
@@ -33,7 +35,7 @@ libkinc-safe.a: ${NEWFILES:.c=.o}
 
 lang.exe: Makefile $(NEWDEPENDS) lang.c
 	echo making lang.exe
-	$(CC) $(CFLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
+	$(CC) $(CFLAGS) $(TEST_FLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
 	echo made lang.exe
 
 lang.c: ../testlang/testlang.kinc kinc
