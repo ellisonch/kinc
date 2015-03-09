@@ -29,9 +29,17 @@ syntax
 // rule <k> z((a() => b())) </k>
 // rule <k> z((a() => (b(), c()))) </k>
 
-rule <k> (test2(a(), b(), T:listk) => (a(), T)) </k>
-rule <k> (test3(a(), b(), c(), d(), e(), f()) => test3()) </k>
-rule <k> (test4(((a(), T:listk) => b()))) </k>
+
+
+
+// rule <k> (test2(a(), b(), T:listk) => (a(), T)) </k>
+// rule <k> (test3(a(), b(), c(), d(), e(), f()) => test3()) </k>
+// rule <k> (test4(((a(), T:listk) => b()))) </k>
+rule <k> test5(a(), b(), ((c(), d()) => (g(), h())), e(), f()) </k>
+// rule <k> (test6() => a()), (test7() => b()) </k>
+rule <k> test9(), ((test8(), L:listk) => a()) </k>
+
+
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>
 

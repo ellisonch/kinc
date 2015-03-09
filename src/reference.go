@@ -8,19 +8,37 @@ type Offset interface {
 	LessThan(Offset) bool
 	// AddOne()
 	Copy() Offset
+	Subtract(i int)
 }
 type KnownOffset struct {
 	Offset int
 }
 type LengthOffset struct {
 	Loc Reference
+	Minus int
 }
 
 func (this *KnownOffset) String() string {
 	return fmt.Sprintf("%d", this.Offset)
 }
 func (this *LengthOffset) String() string {
-	return fmt.Sprintf("len_at(%s)", this.Loc.String())
+	return fmt.Sprintf("len_at(%s)-%d", this.Loc.String(), this.Minus)
+}
+
+func (this *KnownOffset) Subtract(i int) {
+	this.Offset -= i
+}
+func (this *LengthOffset) Subtract(i int) {
+	this.Minus += i
+}
+
+func NewKnownOffset(offset int) *KnownOffset {
+	ret := &KnownOffset{Offset: offset}
+	return ret
+}
+func NewLengthOffset(ref Reference) *LengthOffset {
+	ret := &LengthOffset{Loc: ref, Minus: 0}
+	return ret
 }
 
 // func (this *KnownOffset) AddOne() {
@@ -31,10 +49,10 @@ func (this *LengthOffset) String() string {
 // }
 
 func (this *KnownOffset) Copy() Offset {
-	return &KnownOffset{this.Offset}
+	return NewKnownOffset(this.Offset)
 }
 func (this *LengthOffset) Copy() Offset {
-	return &LengthOffset{this.Loc}
+	return &LengthOffset{Loc: this.Loc, Minus: this.Minus}
 }
 
 func (o1 KnownOffset) LessThan(o2 Offset) bool {
@@ -126,8 +144,8 @@ type Reference struct {
 	Ref []RefPart
 }
 
-func (r *Reference) RefersToCellContents() bool {
-	if len(r.Ref) == 2 {
+func (r *Reference) RefersToCell() bool {
+	if len(r.Ref) == 1 {
 		return true
 	} else {
 		return false

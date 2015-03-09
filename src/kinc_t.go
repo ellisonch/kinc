@@ -197,7 +197,8 @@ type TermListItem interface{
 	kTermListItem()
 	// BuildKChecks(*CheckHelper, Reference, Offset) bool
 	// BuildCheckTermListItem(*CheckHelper, Reference, Offset, Offset) TLChild
-	collectItemInfo(*CheckHelper, Reference, Offset) bool
+	collectItemInfo(*CheckHelper, Reference, int) (bool, int)
+	// GetFullLHS() []TermListItem
 }
 
 type TermList struct {

@@ -529,16 +529,18 @@ K* _copy_if_necessary(K* k) {
 	return k;
 }
 
-K* _k_insert_space(K* k, int pos, int count) {
+K* _k_insert_space_after(K* k, int pos, int count) {
 	assert(k != NULL);
 
 	k = _copy_if_necessary(k);
+
+
 
 	panic("not inserting space yet");
 }
 
 
-K* _k_grow_front_arg(K* k) {
+void _k_grow_front_arg(K* k) {
 	assert(k != NULL);
 	assert(k->refs == 1); // don't want this, but necessary for now
 
@@ -551,30 +553,55 @@ K* _k_grow_front_arg(K* k) {
 }
 
 
-K* k_insert_elems(K* k, int pos, int count, ...) {
+K* k_insert_elems(K* k, int pos, int overwriteCount, int count, ...) {
 	va_list elems;
 	va_start(elems, count);
 
-	k_insert_elems_vararg(k, pos, count, elems);
+	k_insert_elems_vararg(k, pos, overwriteCount, count, elems);
 	va_end(elems);
+	return k;
 }
 
-K* k_insert_elems_vararg(K* k, int pos, int count, va_list elems) {
+K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int count, va_list elems) {
 	assert(k != NULL);
 	assert(k_num_args(k) >= pos);
 
+	// int len = k_num_args(k);
+	// int diffFront = pos
+
+	// if (overwriteCount > count) {
+	// 	panic("Not handling adding elements yet");
+	// }
 // need to write this
 // need to make sure i figure out how many spaces are to be overwritten as well as added
 
-	k = _k_insert_space(k, pos, count);
+	printf("inserting at pos=%d, owc=%d, count=%d\n", pos, overwriteCount, count);
+	// k = _k_insert_space_after(k, pos, count);
 	for (int i = 0; i < count; i++) {
+		ListOrNot isList = va_arg(elems, ListOrNot);
 		K* arg = va_arg(elems, K*);
 		assert(arg != NULL);
- 		_k_set_arg(k, pos + i, arg);
+		printf("inserting %s at pos=%d, owc=%d, count=%d\n", KToString(arg), pos, overwriteCount, count);
 
+		if (isList == E_LIST) {
+			panic("not handling lists yet");
+		}
+
+		if (overwriteCount > 0) {
+			k_set_arg(k, pos + i, arg);
+			overwriteCount--;
+		} else {
+			panic("Not handling adding elements yet");
+		}
+ 		
 		Inc(arg);
 	}
-	// va_end(ap);
+
+	if (overwriteCount > 0) {
+		panic("Not handling removing elements yet");
+	}
+
+	return k;
 }
 
 void k_remove_arg_head(K* k) {

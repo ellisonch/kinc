@@ -87,6 +87,10 @@ char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
 	return s;
 }
 
+K* computation_remove_first_n_arg(ComputationCell *kCell, int left) {
+	return k_remove_first_n_arg(kCell->holder, left);
+}
+
 void computation_remove_head(ComputationCell *kCell) {
 	assert(kCell != NULL);
 
@@ -111,11 +115,11 @@ void computation_set_elem(ComputationCell *kCell, int pos, K* k) {
 	// kCell->elements[elem] = k;
 }
 
-void computation_insert_elems(ComputationCell *kCell, int pos, int count, ...) {
+void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCount, int count, ...) {
 	va_list elems;
 	va_start(elems, count);
 
-	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, count, elems);
+	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, overwriteCount, count, elems);
 	va_end(elems);
 }
 

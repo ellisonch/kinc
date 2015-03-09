@@ -6,6 +6,11 @@
 #include "settings.h"
 
 typedef enum {
+	E_NOT_LIST,
+	E_LIST,
+} ListOrNot;
+
+typedef enum {
 	e_symbol,
 	e_string,
 	e_i64,

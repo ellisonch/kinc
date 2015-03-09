@@ -90,7 +90,7 @@ func (n ComputationCell) BuildBagChecks(ch *CheckHelper) {
 	ch.ref.addCellEntry(n.Name)
 	// ch.ref.Ref = append(ch.ref.Ref, &RefPartCell{n.Name})
 	// n.Computation.BuildTopKChecks(ch)
-	n.Computation.BuildKChecksTermListHelper(ch, ch.ref)
+	n.Computation.BuildKChecksTermListHelper(ch, ch.ref, true, 0)
 	// fmt.Printf("Building checks for comp cell %s\n", n)
 }
 func (n MapCell) BuildBagChecks(ch *CheckHelper) {
@@ -249,7 +249,7 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) b
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool {
 	ref.addPositionOffsetEntry(offset)
 	n.Label.BuildKChecks(ch, ref)
-	n.Body.BuildKChecksTermListHelper(ch, ref)
+	n.Body.BuildKChecksTermListHelper(ch, ref, true, 0)
 	return false
 }
 func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool {
@@ -381,15 +381,28 @@ a, b, (c => d)
 
 */
 
-func (n *TermListKItem) collectItemInfo(ch *CheckHelper, ref Reference, offset Offset) bool {
+func (n *TermListKItem) collectItemInfo(ch *CheckHelper, ref Reference, offset int) (bool, int) {
 	// fmt.Printf("collectItemInfo TermListKItem: %s\n", n.String())
-	return n.Item.BuildKChecks(ch, ref, offset)
+	return n.Item.BuildKChecks(ch, ref, NewKnownOffset(offset)), 1
 }
 
-func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset Offset) bool {
-	// fmt.Printf("collectItemInfo TermListRewrite: %s\n", n.String())
+func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset int) (bool, int) {
+	// fmt.Printf("collectItemInfo TermListRewrite: %s; at %s, offset %d\n", n.String(), ref.String(), offset)
 
-	hasList, offsetCount := n.LHS.BuildKChecksTermListHelper(ch, ref)
+	// fakeRef := ref.Parent()
+	// var s1 *KnownOffset
+	// var s2 *KnownOffset
+	// var ok bool
+	// if s1, ok = ref.Suffix().(*KnownOffset); !ok {
+	// 	panic("only handling knownsuffix")
+	// }
+	// if s2, ok = offset.(*KnownOffset); !ok {
+	// 	panic("only handling knownsuffix")
+	// }
+	// fakeRef.addPositionEntry(s1.Offset + s2.Offset)
+	hasList, offsetCount := n.LHS.BuildKChecksTermListHelper(ch, ref, false, offset)
+
+	// need to subtract off offset
 
 	rhs := []K{}
 	// rhs := n.RHS.BuildRHS
@@ -411,8 +424,9 @@ func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset
 		}
 	}
 
+	offsetCount.Subtract(offset)
 
-	ref.addPositionOffsetEntry(offset)
+	ref.addPositionEntry(offset)
 	rep := &TermChange{Loc: ref, OverwriteCount: offsetCount, Result: rhs} // FIXME hardcoded based on above check
 	// fmt.Printf(rep.String())
 	ch.AddReplacement(rep)
@@ -427,14 +441,48 @@ func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset
 	// 	panic("BuildKChecks() no idea what's going on")
 	// }
 
-	return hasList
+	var count int
+	if hasList {
+		count = 0
+	} else {
+		if ko, ok := offsetCount.(*KnownOffset); ok {
+			count = ko.Offset
+		} else {
+			panic("Only handling known counts when don't have a list")
+		}
+	}
+
+	return hasList, count
 }
 
-func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) (bool, Offset) {
-	lasti := len(n.Children) - 1
+// func GetFullLHS(n *TermList) []TermListItem {
+// 	children := []TermListItem{}
+// 	for _, c := range n.Children {
+// 		cc := c.GetFullLHS()
+// 		children = append(children, cc...)
+// 	}
+// 	return children
+// }
+
+// func (n *TermListKItem) GetFullLHS() []TermListItem {
+// 	return []TermListItem{n}
+// }
+// func (n *TermListRewrite) GetFullLHS() []TermListItem {
+// 	return GetFullLHS(n.LHS)
+// }
+
+func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference, topLevel bool, offset int) (bool, Offset) {
+	// fullLHS := GetFullLHS(n)
+	fullLHS := n.Children
+
+	// fmt.Printf("Started with %d at %s\n", offset, n.String())
+	lasti := len(fullLHS) - 1
 	hasList := false
-	for i, c := range n.Children {
-		isList := c.collectItemInfo(ch, ref, &KnownOffset{i})
+	currentCount := offset
+	for i, c := range fullLHS {
+		isList, extraCount := c.collectItemInfo(ch, ref, currentCount)
+		// fmt.Printf("Saw %d\n", extraCount)
+		currentCount += extraCount
 		if isList {
 			hasList = true
 		}
@@ -443,19 +491,22 @@ func (n *TermList) BuildKChecksTermListHelper(ch *CheckHelper, ref Reference) (b
 		}
 	}
 
-	numArgs := len(n.Children)
-	if hasList {
-		numArgs--
+	numArgs := currentCount
+	// if hasList {
+	// 	numArgs--
+	// }
+	if (topLevel) {
+		checkArgs := NewCheckNumArgs(NewKnownOffset(numArgs), ref, !hasList)		
+		ch.AddCheck(checkArgs)
 	}
-	checkArgs := NewCheckNumArgs(&KnownOffset{numArgs}, ref, !hasList)		
-	ch.AddCheck(checkArgs)
 
 	var offsetCount Offset
 	if !hasList {
-		offsetCount = &KnownOffset{numArgs}
+		offsetCount = NewKnownOffset(numArgs)
 	} else {
-		offsetCount = &LengthOffset{ref}
+		offsetCount = NewLengthOffset(ref)
 	}
+	// fmt.Printf("%s should be pulled off"
 
 	return hasList, offsetCount
 }
