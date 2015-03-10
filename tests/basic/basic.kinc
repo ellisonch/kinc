@@ -18,6 +18,14 @@ rule <k> list7(z(), ((a(), b()) => (c(), d())), e(), f()) </k>
 rule <k> list8(z(), ((a()) => (c(), d())), e(), f()) </k>
 rule <k> list9(z(), ((a(), b()) => (c())), e(), f()) </k>
 
+rule <k> list10(((a(), T:listk) => (T, T))) </k>
+
+rule <k> list11((a() => (b(), e())), (c() => d())) </k>
+
+
+// doesn't compile due to nonleftlinear
+// rule <k> (nll(X, X) => X) </k>
+
 rule <k> (crazy(a(), b(), c(), d(), e()) => a()) </k>
 
 rule <k> (containsList1(X:listk) => containsList2(X)) </k>
