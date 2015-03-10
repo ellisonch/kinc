@@ -5,22 +5,22 @@ syntax
 	s : int
 	zero : int
 
-rule <k> (test1(a(), T:listk) => T) </k>
-rule <k> (test2(a(), b(), T:listk) => (a(), T)) </k>
+rule <k> test1(a(), T:listk) => T </k>
+rule <k> test2(a(), b(), T:listk) => a(), T </k>
 
-rule <k> list1(((a(), b()) => (c(), d()))) </k>
-rule <k> list2(((a()) => (c(), d()))) </k>
-rule <k> list3(((a(), b()) => (c()))) </k>
-rule <k> list4(((a(), b()) => (c(), d())), e(), f()) </k>
-rule <k> list5(((a()) => (c(), d())), e(), f()) </k>
-rule <k> list6(((a(), b()) => (c())), e(), f()) </k>
-rule <k> list7(z(), ((a(), b()) => (c(), d())), e(), f()) </k>
-rule <k> list8(z(), ((a()) => (c(), d())), e(), f()) </k>
-rule <k> list9(z(), ((a(), b()) => (c())), e(), f()) </k>
+rule <k> list1(a(), b() => c(), d()) </k>
+rule <k> list2((a()) => (c(), d())) </k>
+rule <k> list3((a(), b()) => (c())) </k>
+rule <k> list4((a(), b() => c(), d()), e(), f()) </k>
+rule <k> list5((a() => c(), d()), e(), f()) </k>
+rule <k> list6((a(), b() => c()), e(), f()) </k>
+rule <k> list7(z(), (a(), b() => c(), d()), e(), f()) </k>
+rule <k> list8(z(), (a() => c(), d()), e(), f()) </k>
+rule <k> list9(z(), (a(), b() => c()), e(), f()) </k>
 
-rule <k> list10(((a(), T:listk) => (T, T))) </k>
+rule <k> list10(a(), T:listk => T, T) </k>
 
-rule <k> list11((a() => (b(), e())), (c() => d())) </k>
+rule <k> list11((a() => b(), e()), (c() => d())) </k>
 
 
 // doesn't compile due to nonleftlinear

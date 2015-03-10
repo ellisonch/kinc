@@ -76,6 +76,7 @@ at ATerm
 
 %left TOK_KRA
 %left TOK_ARROW
+%left ','
 
 
 %%
@@ -222,16 +223,21 @@ term_list
 		{ $$ = &TermList{[]TermListItem{}} }
 	| term_list_item
 		{ $$ = &TermList{[]TermListItem{$1}} }
-	| term_list ',' term_list_item
+	| term_list ',' term_list
 		{
-			$1.Children = append($1.Children, $3)
+			$1.Children = append($1.Children, $3.Children...)
 			$$ = $1
 		}
-	| '(' term_list ',' term_list_item ')'
-		{ 
-			$2.Children = append($2.Children, $4)
+	| '(' term_list ',' term_list ')'
+		{
+			$2.Children = append($2.Children, $4.Children...)
 			$$ = $2
 		}
+	/*| '(' term_list ',' term_list_item ')'
+		{
+			$2.Children = append($2.Children, $4)
+			$$ = $2
+		}*/
 	/*| term
 		{ $$ = &TermList{[]TermListItem{&TermListKItem{$1}}} }
 	| '(' term_list TOK_ARROW term_list ')'
@@ -257,8 +263,9 @@ paren_term_list
 term_list_item
 	: term
 		{ $$ = &TermListKItem{$1} }
+	| term_list TOK_ARROW term_list
+		{ $$ = &TermListRewrite{LHS: $1, RHS: $3} }
 	| '(' term_list TOK_ARROW term_list ')'
-		// { $$ = $2 }
 		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
 
 /*
