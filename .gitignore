@@ -17,3 +17,5 @@
 gen_antlr/
 gen_java/
 /related/
+/tests/basic.c
+/imp/lang.c
