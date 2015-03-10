@@ -74,7 +74,7 @@ type InjectLabel struct {
 type Label interface {
 	Node
 	labelNode()
-	BuildKChecks(*CheckHelper, Reference)
+	BuildLabelChecks(*CheckHelper, Reference)
 	IsBuiltin() bool
 }
 
@@ -91,10 +91,14 @@ func (l *InjectLabel) IsBuiltin() bool {
 func (l *RewriteLabel) IsBuiltin() bool {
 	return l.LHS.IsBuiltin() || l.RHS.IsBuiltin()
 }
+func (l *Variable) IsBuiltin() bool {
+	return false
+}
 
 func (*InjectLabel) labelNode() {}
 func (*RewriteLabel) labelNode() {}
 func (*NameLabel) labelNode() {}
+func (*Variable) labelNode() {}
 
 type Cell interface {
 	Node

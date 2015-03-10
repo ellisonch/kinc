@@ -5,8 +5,10 @@ syntax
 	s : int
 	zero : int
 
+rule <k> fakesymbol() => q(), label01() </k>
+
 rule <k> test1(a(), T:listk) => T </k>
-rule <k> test2(a(), b(), T:listk) => a(), T </k>
+rule <k> test2(a(), b(), T:listk) => a() ~> T </k>
 
 rule <k> list1(a(), b() => c(), d()) </k>
 rule <k> list2((a()) => (c(), d())) </k>
@@ -22,6 +24,11 @@ rule <k> list10(a(), T:listk => T, T) </k>
 
 rule <k> list11((a() => b(), e()), (c() => d())) </k>
 
+// rule <k> label01((q => z)(X:listk)) </k> // broken
+
+rule <k> (label02 => z)(X:listk) </k>
+// rule <k> label03() ~> (a() => b()) ~> (LV => q)() </k>
+// ~> (a => LV)()
 
 // doesn't compile due to nonleftlinear
 // rule <k> (nll(X, X) => X) </k>
@@ -33,7 +40,6 @@ rule <k> (containsList1(X:listk) => containsList2(X)) </k>
 rule <k> foo((plus(s(N), M:int) => plus(N, s(M)))) </k>
 rule <k> foo((plus(zero(), N) => N)) </k>
 
-rule <k> (q => w)(X:listk) </k>
 
 rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
 rule <k> (plus(zero(), N) => N) </k>

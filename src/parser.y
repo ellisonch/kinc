@@ -55,7 +55,7 @@ at ATerm
 %type <term_list> term_list
 %type <term_list_item> term_list_item
 // %type <kraless_term_list> kraless_term_list
-%type <variable> term_variable bag_variable map_variable
+%type <variable> term_variable bag_variable map_variable label_variable
 %type <cell_attributes> cell_attributes
 %type <bag> bag
 %type <bag_item> bag_item
@@ -74,9 +74,8 @@ at ATerm
 %token <real> TOK_REAL
 %token <val> TOK_ERR
 
-%left TOK_KRA
 %left TOK_ARROW
-%left ','
+%left ',' TOK_KRA
 
 
 %%
@@ -206,9 +205,17 @@ map_variable
 	| TOK_UC_NAME ':' TOK_LC_NAME
 		{ $$ = &Variable{Name: $1, Sort: $3} }	
 
+label_variable
+	: TOK_UC_NAME
+		{ $$ = &Variable{Name: $1, Sort: "label", Default: true} }
+	// | TOK_UC_NAME ':' TOK_LC_NAME
+	//	{ $$ = &Variable{Name: $1, Sort: $3} }		
+
 label
 	: TOK_LC_NAME
 		{ $$ = &NameLabel{Name: $1} }
+	// | label_variable
+	// 	{ $$ = $1 }
 	| TOK_LC_NAME TOK_LBRACE integer TOK_RBRACE
 		{ $$ = &InjectLabel{Name: $1, Type: E_inject_integer, Int: $3} }
 	| '(' label TOK_ARROW label ')'
@@ -229,6 +236,16 @@ term_list
 			$$ = $1
 		}
 	| '(' term_list ',' term_list ')'
+		{
+			$2.Children = append($2.Children, $4.Children...)
+			$$ = $2
+		}
+	| term_list TOK_KRA term_list
+		{
+			$1.Children = append($1.Children, $3.Children...)
+			$$ = $1
+		}
+	| '(' term_list TOK_KRA term_list ')'
 		{
 			$2.Children = append($2.Children, $4.Children...)
 			$$ = $2

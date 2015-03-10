@@ -248,7 +248,7 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) b
 }
 func (n *Appl) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool {
 	ref.addPositionOffsetEntry(offset)
-	n.Label.BuildKChecks(ch, ref)
+	n.Label.BuildLabelChecks(ch, ref)
 	n.Body.BuildKChecksTermListHelper(ch, ref, true, 0)
 	return false
 }
@@ -262,22 +262,43 @@ func (n *Paren) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) bool
 // 	panic("TermListKItem.BuildKChecks(): Shouldn't get here")
 // }
 //---------------------------------------------------------------
-func (n *NameLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+func (n *NameLabel) BuildLabelChecks(ch *CheckHelper, ref Reference) {
 	checkLabel := &CheckLabel{Loc: ref, Label: n}
 	// fmt.Printf("adding NameLabel %s", checkLabel.String())
 	ch.AddCheck(checkLabel)
 }
-func (n *InjectLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+func (n *InjectLabel) BuildLabelChecks(ch *CheckHelper, ref Reference) {
 	panic("Don't handle BuildKChecks InjectLabel yet")
 }
-func (n *RewriteLabel) BuildKChecks(ch *CheckHelper, ref Reference) {
+func (n *RewriteLabel) BuildLabelChecks(ch *CheckHelper, ref Reference) {
 	checkLabel := &CheckLabel{Loc: ref, Label: n.LHS}
 	// fmt.Printf("adding RewriteLabel %s", checkLabel.String())
 	ch.AddCheck(checkLabel)
 	rep := &LabelChange{Loc: ref, Result: n.RHS}
 	ch.AddReplacement(rep)
 }
-
+func (n *Variable) BuildLabelChecks(ch *CheckHelper, ref Reference) {
+	panic("Not handling label variables")
+	// ref.addPositionOffsetEntry(offset)
+	// // fmt.Printf("bind %s to %s\n", n.String(), ref.String())
+	// if n.ActualSort == "listk" {
+	// 	binding := Binding{Loc: ref, Variable: n, EndList: true} // assumes list is at end
+	// 	ch.AddBinding(binding)
+	// 	return true
+	// } else if n.ActualSort != "k" {
+	// 	if subs, ok := _subsortMap[n.ActualSort]; ok {
+	// 		ck := &CheckSort{Loc: ref, Allowable: subs}
+	// 		ch.AddCheck(ck)
+	// 	} else {
+	// 		ck := &CheckSort{Loc: ref, Allowable: []string{n.ActualSort}}
+	// 		ch.AddCheck(ck)
+	// 	}
+	// }
+	// binding := Binding{Loc: ref, Variable: n}
+	// ch.AddBinding(binding)
+	// // panic("Don't handle BuildKChecks Variable yet")
+	// return false
+}
 //---------------------------------------------------------------
 
 // // returns true if was a list
