@@ -389,7 +389,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 	}
 }
 
-K* k_get_arg(const K* k, int i) {
+K* _k_get_arg(const K* k, int i) {
 	assert(k != NULL);
 	assert(i >= 0);
 	if (k_num_args(k) <= i) {
@@ -400,6 +400,20 @@ K* k_get_arg(const K* k, int i) {
 
 	// K* item = k->args.a[i];
 	K* item = k->args.a[k->args.pos_first + i];
+
+	return item;
+}
+
+K* k_get_arg(const K* k, int i) {
+	assert(k != NULL);
+	assert(i >= 0);
+	if (k_num_args(k) <= i) {
+		printf("Trying to get %dth argument of %s\n", i, KToString(k));
+	}
+	assert(k_num_args(k) > i);
+	assert(k->args.pos_first + i < k->args.cap);
+
+	K* item = _k_get_arg(k, i);
 
 	assert(item != NULL);
 	assert(item->refs > 0);
@@ -567,6 +581,30 @@ K* k_insert_elems(K* k, int pos, int overwriteCount, int actualResultCount, int 
 	return k;
 }
 
+// for k[start] to k[start + count-1], moves each to k[start + shift] ... k[count - 1 + shift] respectively
+// FIXME: this is horrible
+void _shift_args(K* k, int start, int count, int shift) {
+	assert(k != NULL);
+	assert(start >= 0);
+	assert(count >= 0);
+
+	K** temp = malloc(sizeof(K*) * k_num_args(k));
+
+	// printf("Shifting; start=%d, count=%d, shift=%d\n", start, count, shift);
+	for (int i = 0; i < count; i++) {
+		temp[i] = k_get_arg(k, start + i);
+	}
+	for (int i = 0; i < count; i++) {
+		_k_set_arg(k, start + i + shift, temp[i]);
+	}
+
+	// assert(start - shift >= 0);
+	// assert(
+	// memmove(&(k->args.a[k->args.pos_first + start]), &(k->args.a[k->args.pos_first + start + shift]), count * sizeof(K*));
+
+	free(temp);
+}
+
 void _k_extend(K* k, int count) {
 	assert(k != NULL);
 	assert(k->refs == 1);
@@ -582,6 +620,10 @@ void _k_extend(K* k, int count) {
 	a, (b, c) => (d, e, f), g, h
 
 	a, (b, c) => (d), g, h
+
+	((a, b, c) => d), e, f
+
+	a, (. => (b, c)), d
 */
 // FIXME: not deccing old stuff
 K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCount, int varargCount, va_list elems) {
@@ -593,33 +635,78 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	assert(pos + overwriteCount <= k_num_args(k));
 	assert(k_num_args(k) >= overwriteCount);
 
-	int old_count = k_num_args(k);
+	// FIXME: this is super gross.  copying to make sure elements get deleted if not being used in result
+	K* fakeCopy = copy(k);
 
-	int need_to_add = (pos + actualResultCount) - k_num_args(k);
-	if (need_to_add > 0) {
-		printf("adding %d\n", need_to_add);
-		_k_extend(k, need_to_add);
-		assert(k_num_args(k) == pos + actualResultCount);
+	int old_count = k_num_args(k);
+	// printf("Old Length is %d\n", old_count);
+
+	int number_added = actualResultCount - overwriteCount;
+	// printf("Number added: %d\n", number_added);
+
+	// int need_to_add = (pos + actualResultCount) - old_count;
+	if (number_added > 0) {
+		// printf("adding %d\n", number_added);
+		_k_extend(k, number_added);
+		assert(k_num_args(k) == old_count + number_added);
 	}
 
 	// printf("old_count=%d\n", old_count);
 
-	int need_to_move = old_count - overwriteCount;
-	if (need_to_move > 0) {
-		printf("need to move: %d\n", need_to_move);
-		panic("not moving yet");
+
+	// if (overwriteCount > actualResultCount) {
+	int lastGoodArg = pos + overwriteCount;
+	// printf("last good arg is %d\n", lastGoodArg);
+	for (int i = pos; i < lastGoodArg; i++) {
+		// printf("getting %d... ", i);
+		K* arg = k_get_arg(k, i);
+		// printf("Deccing %s\n", KToString(arg));
+		Dec(arg);
+		_k_set_arg(k, i, NULL);
+	}	
+	int shift = actualResultCount - overwriteCount;
+	// printf("Shifting by %d\n", shift);
+	_shift_args(k, lastGoodArg, old_count - lastGoodArg, shift);
+
+	// int need_to_remove = (
+	// if (old_count > lastGoodArg ) {
+	// 	k->args.pos_end -= lastGoodArg - pos;
+	// }
+
+	if (number_added < 0) {
+		// printf("removing %d\n", -number_added);
+		_k_extend(k, number_added);
+		assert(k_num_args(k) == old_count + number_added);
 	}
 
-	if (overwriteCount > actualResultCount) {
-		panic("Not handling removing elements yet");
-	}
+	// printf("New Length is %d\n", k_num_args(k));
+
+	// 	memmove(dest, &k->args.a[
+		// panic("Not handling removing elements yet");
+	// }
+
+	// if (overwriteCount > actualResultCount) {, 
+	// for (int srci = lastGoodArg; srci < old_count; srci++) {
+	// 	int desti = srci + shift;
+	// 	// memmove(k->args.pos_first
+
+	// }
+	// // 	memmove(dest, &k->args.a[
+	// 	// panic("Not handling removing elements yet");
+	// // }
+
+	// int need_to_move = old_count - overwriteCount;
+	// if (need_to_move > 0) {
+	// 	printf("need to move: %d\n", need_to_move);
+	// 	panic("not moving yet");
+	// }
 
 	// printf("need_to_add: %d\n", need_to_add);
 
 	// int startIndex = pos;
 	// int endIndex = pos + count;
 
-	printf("inserting at old_count=%d, pos=%d, owc=%d, ac=%d, varargCount=%d\n", old_count, pos, overwriteCount, actualResultCount, varargCount);
+	// printf("inserting at old_count=%d, pos=%d, owc=%d, ac=%d, varargCount=%d\n", old_count, pos, overwriteCount, actualResultCount, varargCount);
 	// k = _k_insert_space_after(k, pos, varargCount);
 	int numWrote = 0;
 	int target = pos;
@@ -635,36 +722,50 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 
 		if (isList) {
 			for (int listArgi = 0; listArgi < k_num_args(arg); listArgi++) {
+				// printf("Getting arg %d\n", listArgi);
 				K* argi = k_get_arg(arg, listArgi);
 				// printf("inserting %s at %d\n", KToString(argi), target);
-				K* oldArg = NULL;
-				if (numWrote < overwriteCount) {
-					oldArg = k_get_arg(k, target);
-				}
+				// K* oldArg = NULL;
+				// if (numWrote < overwriteCount) {
+				// 	oldArg = k_get_arg(k, target);
+				// }
 				_k_set_arg(k, target, argi);				
 				Inc(argi);
-				if (numWrote < overwriteCount) {
-					Dec(oldArg);
-				}
+				// if (numWrote < overwriteCount) {
+				// 	Dec(oldArg);
+				// }
 				numWrote++;
 				target++;
 			}
 			// panic("not handling lists yet");
 		} else {
-			K* oldArg = NULL;
-			if (numWrote < overwriteCount) {
-				oldArg = k_get_arg(k, target);
-			}
+			// K* oldArg = NULL;
+			// if (numWrote < overwriteCount) {
+			// 	oldArg = k_get_arg(k, target);
+			// }
 			_k_set_arg(k, target, arg);
 			Inc(arg);
-			if (numWrote < overwriteCount) {
-				Dec(oldArg);
-			}
+			// if (numWrote < overwriteCount) {
+			// 	Dec(oldArg);
+			// }
 			numWrote++;
 			target++;
 		}
 		// printf("Inserted.\n");
 	}
+
+	// printf("printing k args...\n");
+	// for (int i = 0; i < k_num_args(k); i++) {
+	// 	printf("getting %d\n", i);
+	// 	K* arg = _k_get_arg(k, i);
+	// 	if (arg == NULL) {
+	// 		printf("crap, null\n");
+	// 	} else {
+	// 		printf("%s\n", KToString(arg));
+	// 	}
+	// }
+	k_dispose(fakeCopy);
+	// printf("done\n");
 
 	return k;
 }
