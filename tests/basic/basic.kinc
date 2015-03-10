@@ -27,7 +27,9 @@ rule <k> list11((a() => b(), e()), (c() => d())) </k>
 // rule <k> label01((q => z)(X:listk)) </k> // broken
 
 rule <k> (label02 => z)(X:listk) </k>
-// rule <k> label03() ~> (a() => b()) ~> (LV => q)() </k>
+rule <k> label03() ~> (a() => b()) ~> ('LV => q)() </k>
+rule <k> label04() ~> (a() => 'LV()) ~> ('LV => q)() </k>
+
 // ~> (a => LV)()
 
 // doesn't compile due to nonleftlinear

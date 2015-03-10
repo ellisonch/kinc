@@ -67,7 +67,7 @@ at ATerm
 // these apparently encode precedence, so be careful
 %token <str> TOK_ERROR TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
 %token <str> TOK_MAPS_TO_PRE TOK_CONFIGURATION TOK_RULE TOK_SYNTAX
-%token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO TOK_LBRACE TOK_RBRACE
+%token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO TOK_LBRACE TOK_RBRACE TOK_APOSTROPHE
 %token <str> TOK_DOT_K TOK_DOT_MAP TOK_DOT_BAG
 %token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN TOK_BANG_COLON
 %token <i64> TOK_INTEGER 
@@ -206,16 +206,16 @@ map_variable
 		{ $$ = &Variable{Name: $1, Sort: $3} }	
 
 label_variable
-	: TOK_UC_NAME
-		{ $$ = &Variable{Name: $1, Sort: "label", Default: true} }
-	// | TOK_UC_NAME ':' TOK_LC_NAME
-	//	{ $$ = &Variable{Name: $1, Sort: $3} }		
+	: TOK_APOSTROPHE TOK_UC_NAME
+		{ $$ = &Variable{Name: $2, Sort: "label", Default: true} }
+	| TOK_APOSTROPHE TOK_UC_NAME ':' TOK_LC_NAME
+		{ $$ = &Variable{Name: $2, Sort: $4} }		
 
 label
 	: TOK_LC_NAME
 		{ $$ = &NameLabel{Name: $1} }
-	// | label_variable
-	// 	{ $$ = $1 }
+	| label_variable
+		{ $$ = $1 }
 	| TOK_LC_NAME TOK_LBRACE integer TOK_RBRACE
 		{ $$ = &InjectLabel{Name: $1, Type: E_inject_integer, Int: $3} }
 	| '(' label TOK_ARROW label ')'

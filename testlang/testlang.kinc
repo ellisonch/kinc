@@ -41,6 +41,7 @@ rule <k> test9(), ((test8(), L:listk) => a()) </k>
 // rule <k> test10(((a(), b(), c()) => d())) </k>
 // rule <k> test11(((a(), e(), f(), g()) => (b(), c(), d())), h(), i()) </k>
 
+rule <k> label03() ~> (a() => b()) ~> ('LV => q)() </k>
 
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>

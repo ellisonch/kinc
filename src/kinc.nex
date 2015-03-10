@@ -17,6 +17,7 @@
 	return TOK_CELL_BEGIN_K
 }
 
+/'/ { return TOK_APOSTROPHE }
 /,/ { return ',' }
 /\(/ { return '(' }
 /\)/ { return ')' }

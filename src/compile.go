@@ -361,17 +361,25 @@ func compileCheck(c *C, check Check) {
 			}
 
 		case *CheckLabel:
-			l, ok := n.Label.(*NameLabel)
-			if !ok {
-				panic("Expected NameLabel")
-			}
-			r := compileRef(n.Loc)
-			s := fmt.Sprintf("\n\t// checking %s", n.String())
-			s += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
-			sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
-			s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }", r, sym)
-			c.Checks = append(c.Checks, s)
+			switch l := n.Label.(type) {
+			case *NameLabel:
+				r := compileRef(n.Loc)
+				s := fmt.Sprintf("\n\t// checking %s", n.String())
+				s += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
+				sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
+				s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }", r, sym)
+				c.Checks = append(c.Checks, s)
+			// FIXME: i don't like that this is in checklabel and isn't a binding
+			case *Variable:
+				r := compileRef(n.Loc)
+				varname := l.CompiledName()
+				s := fmt.Sprintf("\n\t// variable checking %s", n.String())
+				s += fmt.Sprintf("\tKLabel* %s = %s->label;", varname, r)
 
+				c.Checks = append(c.Checks, s)
+			default:
+				panic("compileCheck not handling case")
+			}
 
 		case *CheckSort:
 			r := compileRef(n.Loc)
@@ -463,6 +471,8 @@ func compileLabel(l Label) string {
 		}
 	case *InjectLabel:
 		panic("Not handling RHS inject label")
+	case *Variable:
+		return l.CompiledName()
 	default: panic(fmt.Sprintf("Not handling compileLabel label %s", l))
 	}
 }
