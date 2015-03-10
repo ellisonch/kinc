@@ -25,6 +25,7 @@
 /\{/ { return TOK_LBRACE }
 /\}/ { return TOK_RBRACE }
 
+/!:/ { return TOK_BANG_COLON }
 /:/ { return ':' }
 /</ { return '<' }
 /"/ { return '"' }

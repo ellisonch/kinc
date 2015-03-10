@@ -179,6 +179,8 @@ type Variable struct {
 	Sort string
 	Default bool
 
+	ReverseSort bool
+
 	ActualSort string
 }
 

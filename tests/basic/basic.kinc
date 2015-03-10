@@ -6,7 +6,7 @@ syntax
 	zero : int
 
 rule <k> (test1(a(), T:listk) => T) </k>
-rule <k> (test2(a(), b(), T:listk) => a(), T) </k>
+rule <k> (test2(a(), b(), T:listk) => (a(), T)) </k>
 
 rule <k> list1(((a(), b()) => (c(), d()))) </k>
 rule <k> list2(((a()) => (c(), d()))) </k>
