@@ -40,6 +40,8 @@ rule <k> test5(a(), b(), ((c(), d()) => (g(), h())), e(), f()) </k>
 rule <k> test9(), ((test8(), L:listk) => a()) </k>
 rule <k> (empty(T:listk) => T) </k>
 
+rule <k> (test10(a(), b(), T:listk) => (b())) </k>
+
 
 
 // rule <k> plus(N, plus(A, B)) => (plus(A, B) ~> plus_hole2(N)) </k>

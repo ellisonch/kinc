@@ -383,7 +383,13 @@ a, b, (c => d)
 
 func (n *TermListKItem) collectItemInfo(ch *CheckHelper, ref Reference, offset int) (bool, int) {
 	// fmt.Printf("collectItemInfo TermListKItem: %s\n", n.String())
-	return n.Item.BuildKChecks(ch, ref, NewKnownOffset(offset)), 1
+
+	isList := n.Item.BuildKChecks(ch, ref, NewKnownOffset(offset))
+	if isList {
+		return true, 0
+	} else {
+		return false, 1
+	}
 }
 
 func (n *TermListRewrite) collectItemInfo(ch *CheckHelper, ref Reference, offset int) (bool, int) {
