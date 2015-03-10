@@ -1,0 +1,105 @@
+
+sum to 200000
+
+$ time krun ../lesson_1/tests/sum.imp
+/d/prog/k/k-distribution/target/release/k/bin/../lib/k: line 3: ulimit: stack size: cannot modify limit: Invalid argument
+<T>
+    <k>
+        .K
+    </k>
+    <state>
+        n |-> 0
+        sum |-> 20000100000
+    </state>
+</T>
+
+real    9m54.559s
+user    0m0.090s
+sys     0m0.196s
+
+
+at least 560 megs of ram
+
+$ time python /d/users/celliso2/Dropbox/prog/kinc/imp/programs/prog1.py
+20000100000
+
+real    0m0.099s
+user    0m0.000s
+sys     0m0.015s
+
+
+collatz to 2000
+
+$ time krun ../lesson_1/tests/collatz.imp
+/d/prog/k/k-distribution/target/release/k/bin/../lib/k: line 3: ulimit: stack size: cannot modify limit: Invalid argument
+<T>
+    <k>
+        .K
+    </k>
+    <state>
+        m |-> 2
+        n |-> 1
+        q |-> 1
+        r |-> 3
+        s |-> 134099
+    </state>
+</T>
+
+real    13m51.420s
+user    0m0.090s
+sys     0m0.272s
+
+
+
+at least 460 megs of ram
+
+
+$ time python /d/users/celliso2/Dropbox/prog/kinc/imp/programs/prog2.py
+134099
+
+real    0m0.106s
+user    0m0.000s
+sys     0m0.015s
+
+
+prime to 4000
+
+
+$ time krun ../lesson_1/tests/primes.imp
+/d/prog/k/k-distribution/target/release/k/bin/../lib/k: line 3: ulimit: stack size: cannot modify limit: Invalid argument
+<T>
+    <k>
+        .K
+    </k>
+    <state>
+        i |-> 2
+        m |-> 4000
+        n |-> 4001
+        q |-> 0
+        r |-> 1
+        s |-> 550
+        t |-> 0
+        x |-> 0
+        y |-> 8000
+        z |-> 4000
+    </state>
+</T>
+
+real    20m51.990s
+user    0m0.030s
+sys     0m0.242s
+
+
+$ time python /d/users/celliso2/Dropbox/prog/kinc/imp/programs/prog3.py
+550
+
+real    0m0.139s
+user    0m0.000s
+sys     0m0.000s
+
+
+total k time: 9m54.559s + 13m51.420s + 20m51.990s = 594 + 831 + 1251 = 2676s
+total p time: 0m0.099s + 0m0.106s + 0m0.139s = 0.344s
+
+
+

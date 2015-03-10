@@ -1,6 +1,6 @@
 # var i, m, n, q, r, s, t, x, y, z ;
 s = 0
-m = 20000
+m = 4000
 n = 2
 while (n <= m):
 	i = 2
