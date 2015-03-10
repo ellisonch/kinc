@@ -6,9 +6,11 @@ syntax
 	zero : int
 
 rule <k> (test1(a(), T:listk) => T) </k>
-// rule <k> (test2(a(), b(), T:listk) => a(), T) </k>
-rule <k> (test2(a()) => test2(b())) </k> // just a fake rule to add the symbol
-// rule <k> test3((a() => (b(), c())), d()) </k>
+rule <k> (test2(a(), b(), T:listk) => a(), T) </k>
+
+rule <k> list1(((a(), b()) => (c(), d()))) </k>
+rule <k> list2(((a()) => (c(), d()))) </k>
+rule <k> list3(((a(), b()) => (c()))) </k>
 
 rule <k> (crazy(a(), b(), c(), d(), e()) => a()) </k>
 
@@ -27,3 +29,5 @@ rule <k> (var(H, T:listk) => var(T)) </k>
 rule <k> (holder(a()) => holder(a(), b())) </k>
 
 rule <k> z((a() => b())) </k>
+
+rule <k> (empty(T:listk) => T) </k>
