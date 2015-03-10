@@ -10,11 +10,11 @@
 
 // when printing k terms, print the ref counts as well
 #ifndef printRefCounts
-	#define printRefCounts 1
+	#define printRefCounts 0
 #endif
 
 #ifndef printDebug
-	#define printDebug 1
+	#define printDebug 0
 #endif
 
 // slow checks dealing with refcounting

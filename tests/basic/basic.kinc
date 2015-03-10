@@ -5,6 +5,13 @@ syntax
 	s : int
 	zero : int
 
+rule <k> (test1(a(), T:listk) => T) </k>
+rule <k> (test2(a(), b(), T:listk) => a(), T) </k>
+
+rule <k> list1(((a(), b()) => (c(), d()))) </k>
+rule <k> list2(((a()) => (c(), d()))) </k>
+rule <k> list3(((a(), b()) => (c()))) </k>
+
 rule <k> (crazy(a(), b(), c(), d(), e()) => a()) </k>
 
 rule <k> (containsList1(X:listk) => containsList2(X)) </k>
@@ -18,9 +25,9 @@ rule <k> (plus(s(N), M:int) => plus(N, s(M))) </k>
 rule <k> (plus(zero(), N) => N) </k>
 
 rule <k> (var(H, T:listk) => var(T)) </k>
-// rule <k> var(H, (T:listk => .listk) => var(T) </k>
 
 rule <k> (holder(a()) => holder(a(), b())) </k>
 
 rule <k> z((a() => b())) </k>
-// rule <k> z((a() => (b(), c()))) </k>
+
+rule <k> (empty(T:listk) => T) </k>

@@ -7,9 +7,13 @@ import "sort"
 
 type C struct {
 	Checks []string
+	Cleanup []string
 }
 func (c *C) String() string {
-	return strings.Join(c.Checks, "\n")
+	checks := strings.Join(c.Checks, "\n")
+	cleanup := strings.Join(c.Cleanup, "\n")
+
+	return fmt.Sprintf("\t// Computation\n%s\n\t// Cleanup:\n%s\n", checks, cleanup)
 }
 
 func checksToC(ch *CheckHelper) *C {
@@ -224,25 +228,54 @@ func compileReplacement(c *C, replacement Replacement) {
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
 		} else if len(n.Loc.Ref) == 1 {
-			panic("Trying to change a cell?")
-		} else if len(n.Loc.Ref) == 2 {
-			myloc := n.Loc.Parent()
-			r := compileRef(myloc)
-			offset := n.Loc.Suffix()
-			helpers, rhs := compileTerm(n.Result)
-			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tcomputation_set_elem(%s, %d, %s);", r, offset, rhs)
-			c.Checks = append(c.Checks, s)
-		} else {
-			myloc := n.Loc.Parent()
-			r := compileRef(myloc)
-			offset := n.Loc.Suffix()
-			helpers, rhs := compileTerm(n.Result)
-			s := fmt.Sprintf(helpers)
-			s += fmt.Sprintf("\tk_set_arg(%s, %d, %s);", r, offset, rhs)
-			c.Checks = append(c.Checks, s)
-			// panic(fmt.Sprintf("Trying to change a term?  %v", replacement))
+			panic(fmt.Sprintf("Trying to change a cell? %s", replacement.String()))
 		}
+
+		var repFunction string
+		myloc := n.Loc.Parent()
+		r := compileRef(myloc)
+		offset := n.Loc.Suffix()
+
+		// top of a cell
+		if myloc.RefersToCell() {
+			repFunction = "computation_insert_elems"
+		} else {
+			repFunction = "k_insert_elems"
+		}
+
+		numVarargs := fmt.Sprintf("%d", len(n.Result))
+
+		// if len(n.Result) > 1 {
+		// 	panic("not handling rhs > 1 just yet")
+		// }
+
+		howManyOverwrites := compileOffset(n.OverwriteCount)
+
+		actualLength := ""
+		actualLengthCount := 0
+		allHelpers := ""
+		allRHS := []string{}
+		for _, term := range n.Result {
+			helpers, rhs, isList := compileTerm(term)	
+			allHelpers += helpers
+
+			var lst string
+			if isList {
+				actualLength += fmt.Sprintf(" + k_num_args(%s)", rhs)
+				lst = "E_LIST"
+			} else {
+				actualLengthCount++
+				lst = "E_NOT_LIST"	
+			}
+
+			allRHS = append(allRHS, fmt.Sprintf("%s, %s", lst, rhs))
+		}
+
+		actualLength = fmt.Sprintf("%d%s", actualLengthCount, actualLength)
+		
+		s := fmt.Sprintf(allHelpers)
+		s += fmt.Sprintf("\t%s(%s, %s, %s, %s, %s, %s);", repFunction, r, offset.String(), howManyOverwrites, actualLength, numVarargs, strings.Join(allRHS, ", "))
+		c.Checks = append(c.Checks, s)
 	case *LabelChange:
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
@@ -267,10 +300,17 @@ func compileBinding(c *C, binding Binding) {
 	if binding.EndList {
 		// fmt.Printf("Don't handle binding for endlist: %s\n", binding.String())
 		// panic("")
-		r := compileRef(binding.Loc.Parent())
+		parent := binding.Loc.Parent()
+		r := compileRef(parent)
 
 		suffix := binding.Loc.Suffix()
-		s = fmt.Sprintf("\tK* %s = k_remove_first_n_arg(%s, %d);", binding.Variable.CompiledName(), r, suffix)
+		varname := binding.Variable.CompiledName()
+		if parent.RefersToCell() {
+			s = fmt.Sprintf("\tK* %s = computation_without_first_n_arg(%s, %s);", varname, r, suffix.String())
+		} else {
+			s = fmt.Sprintf("\tK* %s = k_without_first_n_arg(%s, %s);", varname, r, suffix.String())
+		}
+		c.Cleanup = append(c.Cleanup, fmt.Sprintf("\tk_dispose(%s);", varname))
 	} else {
 		r := compileRef(binding.Loc)
 		s = fmt.Sprintf("\tK* %s = %s;", binding.Variable.CompiledName(), r)
@@ -352,6 +392,20 @@ func compileCheck(c *C, check Check) {
 	}
 }
 
+func compileOffset(o Offset) string {
+	switch o := o.(type) {
+	case *KnownOffset:
+		return fmt.Sprintf("%d", o.Offset)
+	case *LengthOffset:
+		if o.Loc.RefersToCell() {
+			return fmt.Sprintf("(k_length(%s)-%d)", compileRef(o.Loc), o.Minus)
+		} else {
+			return fmt.Sprintf("(k_num_args(%s)-%d)", compileRef(o.Loc), o.Minus)
+		}
+	default: panic("Don't handle whatever other case in compileOffset()")
+	}
+}
+
 func compileRef(r Reference) string {
 	if len(r.Ref) == 0 {
 		panic("Empty ref")
@@ -394,7 +448,7 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 			} else {
 				fun = "k_get_arg"
 			}
-			return fmt.Sprintf("%s(%s, %d)", fun, root, n.Offset)
+			return fmt.Sprintf("%s(%s, %s)", fun, root, n.Offset.String())
 		default: panic(fmt.Sprintf("Don't handle compileRefHead case %s", n))
 	}
 }
@@ -414,8 +468,9 @@ func compileLabel(l Label) string {
 }
 
 
-func compileTerm(n Node) (aux string, result string) {
-	a, r, _ := compileTermAux(n, "")
+func compileTerm(n Node) (aux string, result string, isList bool) {
+	a, r, l := compileTermAux(n, "")
+	isList = l
 	aux = strings.Join(a, "\n")
 	if len(a) > 0 {
 		aux += "\n"

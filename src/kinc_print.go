@@ -111,6 +111,9 @@ func (a *Appl) String() string {
 }
 
 func (a *TermList) String() string {
+	// if len(a.Children) == 0 {
+	// 	return ".listk"
+	// }
 	children := []string{}
 	for _, arg := range a.Children {
 		children = append(children, arg.String())
