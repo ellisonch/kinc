@@ -277,16 +277,17 @@ func compileReplacement(c *C, replacement Replacement) {
 		s += fmt.Sprintf("\t%s(%s, %s, %s, %s, %s, %s);", repFunction, r, offset.String(), howManyOverwrites, actualLength, numVarargs, strings.Join(allRHS, ", "))
 		c.Checks = append(c.Checks, s)
 	case *LabelChange:
+		// panic("label change!")
 		if len(n.Loc.Ref) == 0 {
 			panic("Empty loc?")
 		} else if len(n.Loc.Ref) == 1 {
 			panic("Trying to change a cell?")
-		} else if len(n.Loc.Ref) == 2 {
+		} else {
 			r := compileRef(n.Loc)
 			rhs := compileLabel(n.Result)
 			s := fmt.Sprintf("\tk_set_label(%s, %s);", r, rhs)
 			c.Checks = append(c.Checks, s)
-		} 
+		}
 	case *MapAdd:
 		panic("Don't handle mappadd")
 	default:

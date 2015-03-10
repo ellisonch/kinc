@@ -24,8 +24,7 @@ rule <k> list10(a(), T:listk => T, T) </k>
 
 rule <k> list11((a() => b(), e()), (c() => d())) </k>
 
-// rule <k> label01((q => z)(X:listk)) </k> // broken
-
+rule <k> label01((q => z)(X:listk)) </k>
 rule <k> (label02 => z)(X:listk) </k>
 rule <k> label03() ~> (a() => b()) ~> ('LV => q)() </k>
 rule <k> label04() ~> (a() => 'LV()) ~> ('LV => q)() </k>
