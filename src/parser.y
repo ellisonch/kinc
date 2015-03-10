@@ -52,7 +52,7 @@ at ATerm
 %type <rule> rule
 %type <term> term
 %type <label> label
-%type <term_list> term_list true_term_list paren_term_list
+%type <term_list> term_list
 %type <term_list_item> term_list_item
 // %type <kraless_term_list> kraless_term_list
 %type <variable> term_variable bag_variable map_variable
@@ -67,18 +67,16 @@ at ATerm
 // these apparently encode precedence, so be careful
 %token <str> TOK_ERROR TOK_UC_NAME TOK_LC_NAME TOK_STRING TOK_CELL_BEGIN_K TOK_CELL_BEGIN_BAG TOK_CELL_BEGIN_MAP
 %token <str> TOK_MAPS_TO_PRE TOK_CONFIGURATION TOK_RULE TOK_SYNTAX
-%token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO TOK_LBRACE TOK_RBRACE TOK_BANG_COLON
+%token <str> TOK_ARROW TOK_KRA TOK_MAPS_TO TOK_LBRACE TOK_RBRACE
 %token <str> TOK_DOT_K TOK_DOT_MAP TOK_DOT_BAG
-%token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN
+%token <str> TOK_CELL_RIGHT_OPEN TOK_CELL_RIGHT_CLOSED TOK_CELL_LEFT_OPEN TOK_WHEN TOK_BANG_COLON
 %token <i64> TOK_INTEGER 
 %token <real> TOK_REAL
 %token <val> TOK_ERR
 
-%left PREC_HIGH
 %left TOK_KRA
-%left ','
 %left TOK_ARROW
-%left PREC_LOW
+
 
 %%
 final
@@ -224,19 +222,25 @@ term_list
 		{ $$ = &TermList{[]TermListItem{}} }
 	| term_list_item
 		{ $$ = &TermList{[]TermListItem{$1}} }
-	| true_term_list
-	/*| term_list_item ',' term_list
+	| term_list ',' term_list_item
 		{
-			lst := []TermListItem{$1}
-			$3.Children = append(lst, $3.Children...)
-			$$ = $3
-		}*/
-
-	/*| '(' term_list ',' term_list_item ')'
+			$1.Children = append($1.Children, $3)
+			$$ = $1
+		}
+	| '(' term_list ',' term_list_item ')'
 		{ 
 			$2.Children = append($2.Children, $4)
 			$$ = $2
-		}*/
+		}
+	/*| term
+		{ $$ = &TermList{[]TermListItem{&TermListKItem{$1}}} }
+	| '(' term_list TOK_ARROW term_list ')'
+		// { $$ = $2 }
+		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
+	| term_list ',' term
+		{ $1.Children = append($1.Children, $3) }
+		*/
+/*
 true_term_list
 	: term_list ',' term_list_item
 		{
@@ -245,48 +249,32 @@ true_term_list
 		}
 	| paren_term_list
 		{ $$ = $1 }
-	
+
 paren_term_list
 	: '(' term_list ',' term_list_item ')'
 		{
-			$2.Children = append($2.Children, $4)
-			$$ = $2
-		}
-
-/* 
-label(a, b, c => d, e, f)
-<k> a ~> b ~> c => d ~> e ~> f </k>
-
-label((a, b, c) => (d, e, f))
-<k> (a ~> b ~> c) => (d ~> e ~> f) </k>
-
-label(a, b, (c => d), e, f)
-<k> a ~> b ~> (c => d) ~> e ~> f </k>
-
-label(a, b, (c => d, e, f))
-<k> a ~> b ~> (c => d ~> e ~> f) </k>
-
 */
-
 term_list_item
 	: term
 		{ $$ = &TermListKItem{$1} }
-	| term TOK_ARROW term_list
-		{ $$ = &TermListRewrite{LHS: &TermList{[]TermListItem{&TermListKItem{$1}}}, RHS: $3} }
-	| paren_term_list TOK_ARROW term_list
-		{ $$ = &TermListRewrite{LHS: $1, RHS: $3} }
-	| '(' term TOK_ARROW term_list ')'
-		{ $$ = &TermListRewrite{LHS: &TermList{[]TermListItem{&TermListKItem{$2}}}, RHS: $4} }
-	| '(' paren_term_list TOK_ARROW term_list ')'
-		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
-	/*| term TOK_ARROW '(' true_term_list ')'
-		{ $$ = &TermListRewrite{LHS: &TermList{[]TermListItem{&TermListKItem{$1}}}, RHS: $4} }
-	| '(' true_term_list ')' TOK_ARROW '(' true_term_list ')'
-		{ $$ = &TermListRewrite{LHS: $2, RHS: $6} }*/
-	/*
 	| '(' term_list TOK_ARROW term_list ')'
+		// { $$ = $2 }
 		{ $$ = &TermListRewrite{LHS: $2, RHS: $4} }
-	*/
+
+/*
+kraless_term_list
+	: // empty
+		{ $$ = &TermListList{[]K{}} }
+	| term
+		{ $$ = &TermListList{[]K{$1}} }
+	| kraless_term_list ',' term
+		{
+			// tll := $1
+			// tll.Elements = append(tll.Elements, $3)
+			// $$ = tll
+			$$ = $1
+		}
+*/
 
 bag
 	: bag_item
