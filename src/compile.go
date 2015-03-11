@@ -13,7 +13,12 @@ func (c *C) String() string {
 	checks := strings.Join(c.Checks, "\n")
 	cleanup := strings.Join(c.Cleanup, "\n")
 
-	return fmt.Sprintf("\t// Computation\n%s\n\t// Cleanup:\n%s\n", checks, cleanup)
+	s := ""
+	s += fmt.Sprintf("\t// Computation:\n%s\n", checks)
+	if len(cleanup) > 0 {
+		s += fmt.Sprintf("\t// Cleanup:\n%s\n", cleanup)
+	}
+	return s
 }
 
 func checksToC(ch *CheckHelper) *C {
@@ -72,7 +77,7 @@ int rule%d(Configuration* config) {
 `, r.String(), i, i, c, i)
 }
 
-var _subsortMap map[string][]string
+var _subsortMap map[string][]Label
 
 func (l *Language) Compile() string {
 	symbolMap := l.CompleteLabelSymbols()
@@ -390,7 +395,7 @@ func compileCheck(c *C, check Check) {
 
 			cases := []string{}
 			for _, s := range n.Allowable {
-				this := fmt.Sprintf("(%s->label->symbol_val != symbol_%s)", r, safeForC(s))
+				this := fmt.Sprintf("(%s->label->symbol_val != %s)", r, compileSymbolName(s))
 				cases = append(cases, this)
 			}
 
@@ -471,16 +476,24 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 func compileLabel(l Label) string {
 	switch l := l.(type) {
 	case *NameLabel:
-		if strings.HasPrefix(l.Name, "#") {
-			return fmt.Sprintf("%s()", compileBuiltinLabel(l.Name))
-		} else {
-			return fmt.Sprintf("SymbolLabel(symbol_%s)", safeForC(l.Name))
-		}
+		return fmt.Sprintf("SymbolLabel(%s)", compileSymbolName(l))
 	case *InjectLabel:
 		panic("Not handling RHS inject label")
 	case *Variable:
 		return l.CompiledName()
 	default: panic(fmt.Sprintf("Not handling compileLabel label %s", l))
+	}
+}
+
+func compileSymbolName(l Label) string {
+	switch l := l.(type) {
+	case *NameLabel:
+		if strings.HasPrefix(l.Name, "#") {
+			return fmt.Sprintf("%s()", compileBuiltinLabel(l.Name))
+		} else {
+			return fmt.Sprintf("symbol_%s", safeForC(l.Name))
+		}
+	default: panic(fmt.Sprintf("Not handling compileSymbolName label %s", l))
 	}
 }
 
@@ -539,10 +552,27 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
 		if n.Label.IsBuiltin() {
-			if len(n.Body.Children) > 0 {
-				panic("not handling builtins with args yet")
+			if len(n.Body.Children) == 0 {
+				// panic("not handling builtins with args yet")
+				result = mylabel
+			} else {
+				var builtinFunction string
+				switch n.Label.String() {
+					case "#not": builtinFunction = "k_builtin_bool_not"
+					default: panic(fmt.Sprintf("Not yet handling %s builtin", n.Label))
+				}
+				children := []string{}
+				for _, arg := range n.Body.Children {
+					childAux, child, isList := compileTerm(arg)
+					if isList {
+						panic("Not handling lists that are arguments to builtins")
+					}
+					aux = append(aux, childAux)
+					children = append(children, child)
+				}
+				result = fmt.Sprintf("%s(%s)", builtinFunction, strings.Join(children, ", "))
 			}
-			result = mylabel
+			
 		} else if len(n.Body.Children) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
 		} else {
@@ -593,5 +623,5 @@ func (v *Variable) CompiledName() string {
 
 func compileBuiltinLabel(s string) string {
 	s = strings.TrimPrefix(s, "#")
-	return fmt.Sprintf("k_builtin_%s", s)
+	return fmt.Sprintf("k_builtin_%s_symbol", s)
 }

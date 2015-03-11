@@ -21,6 +21,11 @@ K* k_builtin_int_one();
 K* new_builtin_int(int64_t i);
 K* new_builtin_string(char* i);
 
+K* k_builtin_int_plus(K* v1, K* v2);
+K* k_builtin_bool_not(K* v1);
+
+int k_builtin_bool_symbol();
+
 void k_init_builtins();
 
 #endif

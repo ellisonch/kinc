@@ -51,7 +51,7 @@ func (ck *CheckLabel) GetLoc() Reference {
 // }
 type CheckSort struct {
 	Loc Reference
-	Allowable []string
+	Allowable []Label
 	Reversed bool
 }
 func (ck *CheckSort) GetLoc() Reference {

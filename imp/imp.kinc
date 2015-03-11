@@ -5,11 +5,11 @@ configuration
 // </t>
 
 syntax
-	int : result
-	bool : result
+	#int : result
+	#bool : result
 
-rule 
-	<k> and(K!:result, Any) => K ~> and(hole(), Any) ~> K </k>
+// rule 
+// 	<k> and(K!:result, Any) => K ~> and(hole(), Any) ~> K </k>
 // 
 // rule 
 // 	<k> X:id => I ~> K </k> 
@@ -21,9 +21,9 @@ rule
 // 
 // rule <k> plus(I1:int, I2:int) => #plusInt(I1, I2) ~> K </k>
 // rule <k> lte(I1:int, I2:int) => #lteInt(I1, I2) ~> K </k>
-// rule <k> not(B:bool) => #not(B) ~> K </k>
-// rule <k> and(#true(), B:bool) => B ~> K </k>
-rule <k> and(#false(), Any) => #false() ~> K </k>
+rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
+// rule <k> and(#true(), B:#bool) => B ~> K </k>
+// rule <k> and(#false(), Any) => #false() ~> K </k>
 // 
 // rule <k> block() => .k ~> K </k>
 // rule <k> block(S) => S ~> K </k>

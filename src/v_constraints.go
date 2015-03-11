@@ -238,7 +238,7 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) b
 			ck := &CheckSort{Loc: ref, Allowable: subs, Reversed: n.ReverseSort}
 			ch.AddCheck(ck)
 		} else {
-			ck := &CheckSort{Loc: ref, Allowable: []string{n.ActualSort}, Reversed: n.ReverseSort}
+			ck := &CheckSort{Loc: ref, Allowable: []Label{&NameLabel{n.ActualSort}}, Reversed: n.ReverseSort}
 			ch.AddCheck(ck)
 		}
 	}

@@ -38,8 +38,11 @@ lang.exe: Makefile $(NEWDEPENDS) lang.c
 	$(CC) $(CFLAGS) $(TEST_FLAGS) -O0 $(NEWFILES) $(NEWLIBS) lang.c -o lang.exe
 	echo made lang.exe
 
-lang.c: ../testlang/testlang.kinc kinc
-	../src/kinc.exe ../testlang/testlang.kinc > lang.c
+# lang.c: ../testlang/testlang.kinc kinc
+#	../src/kinc.exe ../testlang/testlang.kinc > lang.c
+
+lang.c: ../imp/imp.kinc kinc
+	../src/kinc.exe ../imp/imp.kinc > lang.c
 
 kinc:
 	make -C ../src kinc.exe

@@ -89,6 +89,18 @@ K* k_builtin_int_one() {
 	return _one;
 }
 
+K* k_builtin_int_plus(K* v1, K* v2) {
+	panic("no implementation for plus");
+}
+
+K* k_builtin_bool_not(K* v1) {
+	panic("no implementation for not");
+}
+
+int k_builtin_bool_symbol() {
+	return symbol_bool;
+}
+
 
 K* new_builtin_int(int64_t i) {
 	// K* arg = k_new_empty(Int64Label(i));
