@@ -1,0 +1,13 @@
+configuration 
+// <t>
+	// <state type="map"> </state>
+	<k type="computation"> $PGM </k>
+// </t>
+
+syntax
+	#int : result
+	#bool : result
+
+rule <k> empty(T:listk) => T </k>
+
+rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
