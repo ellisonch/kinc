@@ -6,6 +6,9 @@ DEPS=$(VISITORS) kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go
 
 all: run
 
+imp: kinc.exe
+	./kinc.exe ../imp/imp.kinc
+
 run: kinc.exe
 	./kinc.exe
 

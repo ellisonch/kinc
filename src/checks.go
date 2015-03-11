@@ -52,6 +52,7 @@ func (ck *CheckLabel) GetLoc() Reference {
 type CheckSort struct {
 	Loc Reference
 	Allowable []string
+	Reversed bool
 }
 func (ck *CheckSort) GetLoc() Reference {
 	return ck.Loc
@@ -74,5 +75,9 @@ func (ch *CheckLabel) String() string {
 // 	}
 // }
 func (ch *CheckSort) String() string {
-	return fmt.Sprintf("CheckSort: %s must have the %v sort\n", ch.Loc.String(), ch.Allowable)
+	reversed := ""
+	if ch.Reversed {
+		reversed = " NOT"
+	}
+	return fmt.Sprintf("CheckSort: %s must%s have the %v sort\n", ch.Loc.String(), reversed, ch.Allowable)
 }

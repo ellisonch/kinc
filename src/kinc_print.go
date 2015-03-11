@@ -93,15 +93,19 @@ func (v *DotMap) String() string {
 // }
 
 func (v *Variable) String() string {
+	colon := ":"
+	if v.ReverseSort {
+		colon = "!:"
+	}
 	if (v.ActualSort != "") {
-		return fmt.Sprintf("%s:%s", v.Name, v.ActualSort)
+		return fmt.Sprintf("%s%s%s", v.Name, colon, v.ActualSort)
 	}
 
 	var sort string
 	if (v.Default) {
 		sort = ""
 	} else {
-		sort = fmt.Sprintf(":%s", v.Sort)
+		sort = fmt.Sprintf("%s%s", colon, v.Sort)
 	}
 	return fmt.Sprintf("%s%s", v.Name, sort)
 }

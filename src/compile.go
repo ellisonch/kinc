@@ -384,6 +384,7 @@ func compileCheck(c *C, check Check) {
 
 		case *CheckSort:
 			r := compileRef(n.Loc)
+			// FIXME: not sure if this is right
 			s1 := fmt.Sprintf("\n\t// checking %s", n.String())
 			s1 += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }", r)
 
@@ -393,7 +394,12 @@ func compileCheck(c *C, check Check) {
 				cases = append(cases, this)
 			}
 
-			s2 := fmt.Sprintf("\tif (%s) { return 1; }\n", strings.Join(cases, " && "))
+			reversed := ""
+			if n.Reversed {
+				reversed = "!"
+			}
+
+			s2 := fmt.Sprintf("\tif (%s(%s)) { return 1; }\n", reversed, strings.Join(cases, " && "))
 			c.Checks = append(c.Checks, s1)
 			c.Checks = append(c.Checks, s2)
 			

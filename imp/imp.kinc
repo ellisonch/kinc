@@ -1,16 +1,15 @@
 configuration 
-<t>
-	<state type="map"> </state>
+// <t>
+	// <state type="map"> </state>
 	<k type="computation"> </k>
-</t>
+// </t>
 
-// syntax
-// 	result ::= int
-// 	result ::= bool
-// 
-// rule 
-// 	<k> and(K, Any) => K ~> and(hole(), Any) ~> K </k>
-// 	when K !: result
+syntax
+	int : result
+	bool : result
+
+rule 
+	<k> and(K!:result, Any) => K ~> and(hole(), Any) ~> K </k>
 // 
 // rule 
 // 	<k> X:id => I ~> K </k> 

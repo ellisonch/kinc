@@ -15,6 +15,7 @@ func (l *Rule) CompleteVariableTypes() {
 	Walk(vis, l)
 
 	types := make(map[string]string)
+	reversed := make(map[string]bool)
 
 	// fmt.Printf("\n%v\n%v\n", vis.explicitVariables, vis.implicitVariables)
 
@@ -24,6 +25,7 @@ func (l *Rule) CompleteVariableTypes() {
 				log.Panicf("%s should have type %s in %s", variable, v, l)
 			}
 		}
+		reversed[variable.Name] = variable.ReverseSort
 		types[variable.Name] = variable.Sort
 	}
 	for _, variable := range vis.implicitVariables {
@@ -36,6 +38,7 @@ func (l *Rule) CompleteVariableTypes() {
 	// fmt.Printf("%v\n", types)
 	svis := new(setVariableTypes)
 	svis.types = types
+	svis.reversed = reversed
 	Walk(svis, l)
 }
 
@@ -69,6 +72,7 @@ func (vis *setVariableTypes) VisitPre(node Node) Visitor {
 	case *Variable:
 		if sort, ok := vis.types[n.Name]; ok {
 			n.ActualSort = sort
+			n.ReverseSort = vis.reversed[n.Name]
 			// fmt.Printf("%s\n", n.String())	
 		} else {
 			log.Panicf("%v doesn't contain %s", vis.types, n.Name)
@@ -81,6 +85,7 @@ func (vis *setVariableTypes) VisitPost(node Node) { }
 
 type setVariableTypes struct {
 	types map[string]string
+	reversed map[string]bool
 }
 
 

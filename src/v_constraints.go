@@ -103,6 +103,7 @@ func (n MapCell) BuildBagChecks(ch *CheckHelper) {
 }
 
 func (n *Variable) BuildTopMapItemChecks(ch *CheckHelper) {
+	panic("not handling maps")
 	// fmt.Printf("Building checks for map item %s\n", n)
 	// FIXME: should be binding and checking all this
 }
@@ -234,10 +235,10 @@ func (n *Variable) BuildKChecks(ch *CheckHelper, ref Reference, offset Offset) b
 		return true
 	} else if n.ActualSort != "k" {
 		if subs, ok := _subsortMap[n.ActualSort]; ok {
-			ck := &CheckSort{Loc: ref, Allowable: subs}
+			ck := &CheckSort{Loc: ref, Allowable: subs, Reversed: n.ReverseSort}
 			ch.AddCheck(ck)
 		} else {
-			ck := &CheckSort{Loc: ref, Allowable: []string{n.ActualSort}}
+			ck := &CheckSort{Loc: ref, Allowable: []string{n.ActualSort}, Reversed: n.ReverseSort}
 			ch.AddCheck(ck)
 		}
 	}

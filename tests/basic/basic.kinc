@@ -38,6 +38,11 @@ rule <k> (crazy(a(), b(), c(), d(), e()) => a()) </k>
 
 rule <k> (containsList1(X:listk) => containsList2(X)) </k>
 
+rule <k> sorts01(X:int) => a() </k>
+rule <k> sorts02(X:int) => a() </k>
+rule <k> sorts03(X!:int) => a() </k>
+rule <k> sorts04(X!:int) => a() </k>
+
 rule <k> foo((plus(s(N), M:int) => plus(N, s(M)))) </k>
 rule <k> foo((plus(zero(), N) => N)) </k>
 
