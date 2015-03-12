@@ -173,10 +173,12 @@ void k_language_init() { }
 
 func compileConfiguration(config *Configuration) []string {
 	cConfig := []string{}
-	cell := config.Cell
-	if len(cell.Children) > 0 {
-		panic("Don't handle nested config cells yet")
+	if len(config.Children) > 1 {
+		panic("Don't handle multiple cells yet")
 	}
+
+	cell := config.Children[0]
+	// cell := config.Cell
 	if t, ok := cell.Attributes.Table["type"]; ok {
 		if t == "computation" {
 			s := fmt.Sprintf("\tComputationCell* %s;", cell.Name)
@@ -195,10 +197,10 @@ func compileNewConfiguration(config *Configuration) []string {
 	cConfig = append(cConfig, "Configuration* new_configuration(K* pgm) {")
 	cConfig = append(cConfig, "\tConfiguration* config = malloc(sizeof(Configuration));")
 
-	cell := config.Cell
-	if len(cell.Children) > 0 {
-		panic("Don't handle nested config cells yet")
+	if len(config.Children) > 1 {
+		panic("Don't handle multiple config cells yet")
 	}
+	cell := config.Children[0]
 	// fmt.Printf(cell.String())
 	var pgm string
 	if t, ok := cell.Attributes.Table["type"]; ok {

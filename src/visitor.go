@@ -34,7 +34,9 @@ func Walk(v Visitor, node Node) {
 				Walk(v, c)
 			}
 		case *Configuration:
-			Walk(v, n.Cell)
+			for _, c := range n.Children {
+				Walk(v, c)
+			}
 
 		case *CCell:
 			for _, c := range n.Children {

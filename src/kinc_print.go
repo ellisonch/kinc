@@ -18,7 +18,11 @@ func (def *Language) String() string {
 }
 
 func (c Configuration) String() string {
-	return fmt.Sprintf("configuration %s", c.Cell.String())
+	children := ""
+	for _, cell := range c.Children {
+		children += "  " + cell.String()
+	}
+	return fmt.Sprintf("configuration %s\n", children)
 }
 
 func (n *Subsort) String() string {

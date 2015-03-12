@@ -28,7 +28,7 @@ type Subsort struct {
 }
 
 type Configuration struct {
-	Cell *CCell
+	Children []*CCell
 }
 
 type CCell struct {

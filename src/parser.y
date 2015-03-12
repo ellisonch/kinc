@@ -85,8 +85,8 @@ final
 	;
 
 configuration
-	: ccell
-		{ $$ = &Configuration{Cell: $1} }
+	: ccells
+		{ $$ = &Configuration{Children: $1} }
 
 ccell
 	: TOK_CELL_BEGIN_K cell_attributes '>' ccellBody TOK_CELL_RIGHT_CLOSED TOK_LC_NAME '>'
