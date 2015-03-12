@@ -1,8 +1,8 @@
 configuration 
-// <t>
-	// <state type="map"> </state>
+<t>
+	<state type="map"> </state>
 	<k type="computation"> $PGM </k>
-// </t>
+</t>
 
 syntax
 	#int : result
@@ -22,3 +22,7 @@ rule <k> (ifThenElse(#bool(#true()), S, Any) => S) ~> K:listk </k>
 rule <k> (ifThenElse(#bool(#false()), Any, S) => S) ~> K:listk </k>
 
 rule <k> (while(B, S) => ifThenElse(B, kra(S ~> while(B, S)), kra())) ~> K:listk </k>
+
+rule 
+	<k> (X:id => I) ~> K </k> 
+	// <state> (X |-> I) </state>
