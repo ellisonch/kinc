@@ -89,6 +89,10 @@ func (l *Language) Compile() string {
 	cSymbols := []string{}
 	symbols := kvps{}
 	for k, v := range symbolMap {
+		if strings.HasPrefix(k, "#") {
+			panic("Didn't expect builtin")
+		}
+		// FIXME symbol_ appears in multiple places :(
 		cSymbols = append(cSymbols, fmt.Sprintf("#define symbol_%s %d", safeForC(k), v))
 		symbols = append(symbols, kvp{k, v})
 	}
@@ -372,7 +376,7 @@ func compileCheck(c *C, check Check) {
 				r := compileRef(n.Loc)
 				s := fmt.Sprintf("\n\t// checking %s", n.String())
 				s += fmt.Sprintf("\tif (%s->label->type != e_symbol) { return 1; }\n", r)
-				sym := fmt.Sprintf("symbol_%s", safeForC(l.Name))
+				sym := compileSymbolName(l)
 				s += fmt.Sprintf("\tif (%s->label->symbol_val != %s) { return 1; }", r, sym)
 				c.Checks = append(c.Checks, s)
 			// FIXME: i don't like that this is in checklabel and isn't a binding
@@ -476,7 +480,8 @@ func compileRefPart(rp RefPart, root string, inCell bool) string {
 func compileLabel(l Label) string {
 	switch l := l.(type) {
 	case *NameLabel:
-		return fmt.Sprintf("SymbolLabel(%s)", compileSymbolName(l))
+		ret := fmt.Sprintf("SymbolLabel(%s)", compileSymbolName(l))
+		return ret
 	case *InjectLabel:
 		panic("Not handling RHS inject label")
 	case *Variable:
@@ -552,26 +557,25 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
 		if n.Label.IsBuiltin() {
-			if len(n.Body.Children) == 0 {
-				// panic("not handling builtins with args yet")
-				result = mylabel
-			} else {
-				var builtinFunction string
-				switch n.Label.String() {
-					case "#not": builtinFunction = "k_builtin_bool_not"
-					default: panic(fmt.Sprintf("Not yet handling %s builtin", n.Label))
-				}
-				children := []string{}
-				for _, arg := range n.Body.Children {
-					childAux, child, isList := compileTerm(arg)
-					if isList {
-						panic("Not handling lists that are arguments to builtins")
-					}
-					aux = append(aux, childAux)
-					children = append(children, child)
-				}
-				result = fmt.Sprintf("%s(%s)", builtinFunction, strings.Join(children, ", "))
+			var builtinFunction string
+			switch n.Label.String() {
+			case "#not": builtinFunction = "k_builtin_bool_not"
+			case "#false": builtinFunction = "k_builtin_false"
+			case "#true": builtinFunction = "k_builtin_true"
+			case "#plusInt": builtinFunction = "k_builtin_int_plus"
+			case "#lteInt": builtinFunction = "k_builtin_int_lte"
+			default: panic(fmt.Sprintf("Not yet handling %s builtin", n.Label))
 			}
+			children := []string{}
+			for _, arg := range n.Body.Children {
+				childAux, child, isList := compileTerm(arg)
+				if isList {
+					panic("Not handling lists that are arguments to builtins")
+				}
+				aux = append(aux, childAux)
+				children = append(children, child)
+			}
+			result = fmt.Sprintf("%s(%s)", builtinFunction, strings.Join(children, ", "))
 			
 		} else if len(n.Body.Children) == 0 {
 			result = fmt.Sprintf("k_new_empty(%s)", mylabel)
@@ -612,6 +616,8 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 		return compileTermAux(n.Item, namePrefix)
 		// panic(fmt.Sprintf("Should not be compiling a TermListKItem, but are: %s", n.String()))
 
+	// case *DotK:
+	// 	panic("Dotk")
 	default: panic(fmt.Sprintf("compileTermAux(): Do not handle case %s\n", n.String()))
 	}
 	return

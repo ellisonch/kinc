@@ -1,0 +1,4 @@
+block(
+	ifThenElse(#true(), and(#false(), #true()), and(#true(), #true()))
+	, #false()
+)

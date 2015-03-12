@@ -8,6 +8,17 @@ syntax
 	#int : result
 	#bool : result
 
-rule <k> empty(T:listk) => T </k>
+rule <k> (plus(I1:#int, I2:#int) => #plusInt(I1, I2)) ~> K:listk </k>
+rule <k> (lte(I1:#int, I2:#int) => #lteInt(I1, I2)) ~> K:listk </k>
 
 rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
+rule <k> (and(#bool(#true()), B:#bool) => B) ~> K:listk </k>
+rule <k> (and(#bool(#false()), Any) => #false()) ~> K:listk </k>
+
+rule <k> (block(S:listk) => S) ~> K:listk </k>
+rule <k> (kra() ~> K:listk) => K </k>
+
+rule <k> (ifThenElse(#bool(#true()), S, Any) => S) ~> K:listk </k>
+rule <k> (ifThenElse(#bool(#false()), Any, S) => S) ~> K:listk </k>
+
+rule <k> (while(B, S) => ifThenElse(B, kra(S ~> while(B, S)), kra())) ~> K:listk </k>

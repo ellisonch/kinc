@@ -22,8 +22,8 @@ syntax
 // rule <k> plus(I1:int, I2:int) => #plusInt(I1, I2) ~> K </k>
 // rule <k> lte(I1:int, I2:int) => #lteInt(I1, I2) ~> K </k>
 rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
-// rule <k> and(#true(), B:#bool) => B ~> K </k>
-// rule <k> and(#false(), Any) => #false() ~> K </k>
+rule <k> and(#true(), B:#bool) => B ~> K </k>
+rule <k> and(#false(), Any) => #false() ~> K </k>
 // 
 // rule <k> block() => .k ~> K </k>
 // rule <k> block(S) => S ~> K </k>

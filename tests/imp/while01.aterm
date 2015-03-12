@@ -1,0 +1,4 @@
+block(
+	while(#false(), block(#true(), #false()))
+	, #false()
+)

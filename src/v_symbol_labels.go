@@ -32,7 +32,9 @@ func (vis *SymbolLabels) VisitPre(node Node) Visitor {
 	switch n := node.(type) {
 	case *NameLabel:
 		name := n.Name
+		// fmt.Printf("Looking at %s\n", name)
 		if strings.HasPrefix(name, "#") {
+			// fmt.Printf("Builtin\n")
 			return vis
 		}
 		if _, ok := vis.lookup[name]; ok {

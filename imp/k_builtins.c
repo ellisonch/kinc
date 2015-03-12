@@ -90,7 +90,43 @@ K* k_builtin_int_one() {
 }
 
 K* k_builtin_int_plus(K* v1, K* v2) {
-	panic("no implementation for plus");
+	assert(v1 != NULL);
+	assert(v2 != NULL);
+	assert(is_int(v1));
+	assert(is_int(v2));
+
+	K* ki1 = k_get_arg(v1, 0);
+	K* ki2 = k_get_arg(v2, 0);
+
+	assert(ki1->label->type == e_i64);
+	assert(ki2->label->type == e_i64);
+
+	int64_t i1 = ki1->label->i64_val;
+	int64_t i2 = ki2->label->i64_val;	
+
+	// FIXME: does nothing about overflow
+	return new_builtin_int(i1 + i2);
+}
+K* k_builtin_int_lte(K* v1, K* v2) {
+	assert(v1 != NULL);
+	assert(v2 != NULL);
+	assert(is_int(v1));
+	assert(is_int(v2));
+
+	K* ki1 = k_get_arg(v1, 0);
+	K* ki2 = k_get_arg(v2, 0);
+
+	assert(ki1->label->type == e_i64);
+	assert(ki2->label->type == e_i64);
+
+	int64_t i1 = ki1->label->i64_val;
+	int64_t i2 = ki2->label->i64_val;	
+
+	if (i1 <= i2) {
+		return k_builtin_true();
+	} else {
+		return k_builtin_false();
+	}
 }
 
 K* k_builtin_bool_not(K* v1) {
@@ -108,8 +144,18 @@ K* k_builtin_bool_not(K* v1) {
 	// panic("no implementation for not");
 }
 
+int k_builtin_int_symbol() {
+	return symbol_int;
+}
+
 int k_builtin_bool_symbol() {
 	return symbol_bool;
+}
+int k_builtin_true_symbol() {
+	return symbol_true;
+}
+int k_builtin_false_symbol() {
+	return symbol_false;
 }
 
 

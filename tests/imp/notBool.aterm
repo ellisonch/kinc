@@ -1,1 +1,1 @@
-empty(not(#true()), #false())
+block(not(#true()), #false())
