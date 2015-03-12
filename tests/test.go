@@ -19,7 +19,14 @@ func runTest(testName string, fileName string, expected []byte) (passed bool) {
 	cmd.Stderr = &errBytes
 	err := cmd.Run()
 	if err != nil {
-		panic(fmt.Sprintf("Error running command (%s %s): %s\n%s\n", program, fullpath, err, errBytes.String()))
+		s := fmt.Sprintf("Error running command (%s %s):\n", program, fullpath)
+		s += "-------STDOUT--------\n"
+		s += fmt.Sprintf("%s\n", out.String())
+		s += "-------STDERR--------\n"
+		s += fmt.Sprintf("%s\n", errBytes.String())
+		s += "-------CMDERR--------\n"
+		s += fmt.Sprintf("%s\n", err)
+		panic(s)
 	}
 
 	expectedNoCR := bytes.Replace(expected, []byte{'\r'}, []byte{}, -1)

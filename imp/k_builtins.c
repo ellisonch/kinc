@@ -8,12 +8,12 @@
 char* symbol_names[SYMBOLS_MAX] = {
 	[SYMBOLS_MAX - 8] =
 	"_kra",
-	"String",
+	"#string",
 	"_hole",
-	"Bool",
-	"Int",
-	"True",
-	"False",
+	"#bool",
+	"#int",
+	"#true",
+	"#false",
 	"_fake",
 };
 
@@ -94,7 +94,18 @@ K* k_builtin_int_plus(K* v1, K* v2) {
 }
 
 K* k_builtin_bool_not(K* v1) {
-	panic("no implementation for not");
+	assert(v1 != NULL);
+	assert(is_bool(v1));
+	K* b = k_get_arg(v1, 0);
+	if (is_true(b)) {
+		return k_builtin_false();
+	} else if (is_false(b)) {
+		return k_builtin_true();
+	} else {
+		panic("Not a bool inside of a #bool() wrapper");
+	}
+	// printf("Trying to not on %s\n", KToString(v1));
+	// panic("no implementation for not");
 }
 
 int k_builtin_bool_symbol() {

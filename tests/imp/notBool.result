@@ -1,4 +1,4 @@
 k(
- ~> #true()
- ~> #false()
+  ~> #bool(#false())
+  ~> #bool(#false())
 )
