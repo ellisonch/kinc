@@ -169,15 +169,23 @@ func (r *Reference) Parent() Reference {
 	ret.Ref = r.Ref[:len(r.Ref)-1]
 	return ret
 }
-func (r *Reference) Suffix() Offset {
+func (r *Reference) Suffix() RefPart {
 	if (len(r.Ref) < 2) {
-		panic(fmt.Sprintf("Trying to get suffix of ref %s that's too small", r.String()))
+		panic(fmt.Sprintf("Trying to get SuffixOffset of ref %s that's too small", r.String()))
+	}
+	last := r.Ref[len(r.Ref)-1]
+	return last
+}
+
+func (r *Reference) SuffixOffset() Offset {
+	if (len(r.Ref) < 2) {
+		panic(fmt.Sprintf("Trying to get SuffixOffset of ref %s that's too small", r.String()))
 	}
 	last := r.Ref[len(r.Ref)-1]
 	if l, ok := last.(*RefPartPosition); ok {
 		return l.Offset
 	} else {
-		panic(fmt.Sprintf("Trying to get suffix of %s that isn't a RefPartPosition", r.String()))
+		panic(fmt.Sprintf("Trying to get SuffixOffset of %s that isn't a RefPartPosition", r.String()))
 	}
 }
 func (r *Reference) LastPart() RefPart {

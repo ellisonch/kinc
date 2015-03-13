@@ -21,6 +21,10 @@ rule <k> (ifThenElse(#bool(#false()), Any, S) => S) ~> K:listk </k>
 
 rule <k> (while(B, S) => ifThenElse(B, kra(S ~> while(B, S)), kra())) ~> K:listk </k>
 
-// rule 
-	// <k> (X:id => I) ~> K </k> 
-	// <state> (X |-> I) </state>
+rule
+	<k> (id(X) => I) ~> K:listk </k> 
+	<state> S (X |-> I) </state>
+
+rule
+	<k> (assign(id(X), I:#int) => kra()) ~> K:listk </k>
+	<state> S .map => (X |-> I) </state>

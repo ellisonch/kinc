@@ -1,0 +1,1 @@
+block(assign(id("foo"), 5), id("foo"))

@@ -23,7 +23,7 @@ typedef struct {
 	// K *elements[];
 } MapCell;
 
-MapCell* newStateCell();
+MapCell* newMapCell();
 
 ComputationCell* newComputationCell();
 K* k_get_item(const ComputationCell* cell, int i);

@@ -33,3 +33,5 @@ init it
 
 
 need nicer way to rep config inside of c
+
+things are getting decremented before being used

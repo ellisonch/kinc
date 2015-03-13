@@ -608,7 +608,7 @@ void repl(Configuration* config) {
 
 Configuration* new_configuration(K* pgm) {
 	Configuration* config = malloc(sizeof(Configuration));
-	config->state = newStateCell();
+	config->state = newMapCell();
 	config->k = newComputationCell();
 
 	if (printDebug) { 

@@ -41,8 +41,8 @@ lang.exe: Makefile $(NEWDEPENDS) lang.c
 # lang.c: ../testlang/testlang.kinc kinc
 #	../src/kinc.exe ../testlang/testlang.kinc > lang.c
 
-lang.c: ../imp/imp.kinc kinc
-	../src/kinc.exe ../imp/imp.kinc > lang.c
+lang.c: ../tests/imp/imp.kinc kinc
+	../src/kinc.exe ../tests/imp/imp.kinc > lang.c
 
 kinc:
 	make -C ../src kinc.exe
@@ -74,7 +74,7 @@ run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 
 imp.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -g -flto $(FILES) $(LIBS) -o imp.exe
+	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(FILES) $(LIBS) -o imp.exe
 
 asm: Makefile $(DEPENDS)
 	$(CC) $(CFLAGS) -S -g $(FILES)

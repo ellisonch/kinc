@@ -86,11 +86,12 @@ func (n *Rule) BuildChecks() *CheckHelper {
 func (n ComputationCell) BuildBagChecks(ch *CheckHelper) {
 	// fmt.Printf("Building checks for comp cell %s\n", n)
 	// _ = n.Name
+	ref := ch.ref
 	// fmt.Printf("%s\n", n.String())
-	ch.ref.addCellEntry(n.Name)
+	ref.addCellEntry(n.Name)
 	// ch.ref.Ref = append(ch.ref.Ref, &RefPartCell{n.Name})
 	// n.Computation.BuildTopKChecks(ch)
-	n.Computation.BuildKChecksTermListHelper(ch, ch.ref, true, 0)
+	n.Computation.BuildKChecksTermListHelper(ch, ref, true, 0)
 	// fmt.Printf("Building checks for comp cell %s\n", n)
 }
 func (n MapCell) BuildBagChecks(ch *CheckHelper) {
@@ -103,12 +104,31 @@ func (n MapCell) BuildBagChecks(ch *CheckHelper) {
 }
 
 func (n *Variable) BuildTopMapItemChecks(ch *CheckHelper) {
-	panic("not handling maps")
+	// ignoring variables
+
+	// panic("not handling maps")
 	// fmt.Printf("Building checks for map item %s\n", n)
 	// FIXME: should be binding and checking all this
 }
 func (n *Mapping) BuildTopMapItemChecks(ch *CheckHelper) {
-	fmt.Printf("Building checks for map item %s\n", n)
+	ref := ch.ref
+
+	var lhs *Variable
+	var rhs *Variable
+	var ok bool
+	if lhs, ok = n.LHS.(*Variable); !ok {
+		panic("Only handling mappings with variables on LHS for now")
+	}
+	if rhs, ok = n.RHS.(*Variable); !ok {
+		panic("Only handling mappings with variables on RHS for now")
+	}
+
+	ref.addMapLookup(lhs)
+	binding := Binding{Loc: ref, Variable: rhs, EndList: true} // assumes list is at end
+	ch.AddBinding(binding)
+
+	// panic("Not handling mapping at the top of a map")
+	// fmt.Printf("Building checks for map item %s\n", n)
 }
 func (n *DotMap) BuildTopMapItemChecks(ch *CheckHelper) {
 	fmt.Printf("Building checks for map item %s\n", n)
@@ -137,6 +157,8 @@ func (n *RewriteMapItem) BuildTopMapItemChecks(ch *CheckHelper) {
 		}
 	case* RewriteMapItem: 
 		panic("Don't handle RewriteMapItem for GetReference")
+	default: 
+		panic("Not handling some map case")
 	}
 
 	

@@ -90,7 +90,7 @@ func (l *Language) Compile() string {
 	symbols := kvps{}
 	for k, v := range symbolMap {
 		if strings.HasPrefix(k, "#") {
-			panic("Didn't expect builtin")
+			panic("Compile(): Didn't expect builtin")
 		}
 		// FIXME symbol_ appears in multiple places :(
 		cSymbols = append(cSymbols, fmt.Sprintf("#define symbol_%s %d", safeForC(k), v))
@@ -246,7 +246,7 @@ func compileReplacement(c *C, replacement Replacement) {
 		var repFunction string
 		myloc := n.Loc.Parent()
 		r := compileRef(myloc)
-		offset := n.Loc.Suffix()
+		offset := n.Loc.SuffixOffset()
 
 		// top of a cell
 		if myloc.RefersToCell() {
@@ -268,7 +268,7 @@ func compileReplacement(c *C, replacement Replacement) {
 		allHelpers := ""
 		allRHS := []string{}
 		for _, term := range n.Result {
-			helpers, rhs, isList := compileTerm(term)	
+			helpers, rhs, isList := compileTerm(term)
 			allHelpers += helpers
 
 			var lst string
@@ -301,7 +301,28 @@ func compileReplacement(c *C, replacement Replacement) {
 			c.Checks = append(c.Checks, s)
 		}
 	case *MapAdd:
-		panic("Don't handle mappadd")
+		// panic("Don't handle mappadd")
+		// fmt.Printf("Mapadd at %s: %s", n.Loc.String(), n.Entry.String())
+		r := compileRef(n.Loc)
+		var lhs *Variable
+		var ok bool
+		if lhs, ok = n.Entry.LHS.(*Variable); !ok {
+			panic("Only handling variable on lhs of map add")
+		}
+		helpers, rhs, isList := compileTerm(n.Entry.RHS)
+		// allHelpers += helpers
+		if isList {
+			panic("Not yet handling lists in RHS of map entry")
+		}
+		
+		s := fmt.Sprintf(helpers)
+
+		// _ = r
+		// _ = lhs
+		// _ = rhs
+		s += fmt.Sprintf("\tupdateStore(%s, %s, %s);", r, lhs.CompiledName(), rhs)
+		c.Checks = append(c.Checks, s)
+
 	default:
 		panic(fmt.Sprintf("Not handling compileReplacement case %s\n", n)) 
 	}
@@ -315,15 +336,43 @@ func compileBinding(c *C, binding Binding) {
 		// panic("")
 		parent := binding.Loc.Parent()
 		r := compileRef(parent)
-
+		
+		// FIXME: pretty goofy
 		suffix := binding.Loc.Suffix()
-		varname := binding.Variable.CompiledName()
-		if parent.RefersToCell() {
-			s = fmt.Sprintf("\tK* %s = computation_without_first_n_arg(%s, %s);", varname, r, suffix.String())
-		} else {
-			s = fmt.Sprintf("\tK* %s = k_without_first_n_arg(%s, %s);", varname, r, suffix.String())
+		switch suffix := suffix.(type) {
+		case *RefPartMapLookup:
+			_ = suffix
+			targetName := binding.Variable.CompiledName()
+			if parent.RefersToCell() {
+				var key *Variable
+				var ok bool
+				if key, ok = suffix.Key.(*Variable); !ok {
+					panic("Only handling variable in mapping")
+				}
+				keyName := key.CompiledName()
+
+				// helpers, rhs, isList := compileTerm(suffix.Key)
+				// if isList {
+				// 	panic("Do not handle lists in map lookup")
+				// }
+				s = fmt.Sprintf("\tK* %s = state_get_item(%s, %s);", targetName, r, keyName)
+			} else {
+				panic("only handling map lookups whose parent is a map cell")
+			}
+		case *RefPartPosition:
+			suffixOffset := binding.Loc.SuffixOffset()
+			varname := binding.Variable.CompiledName()
+			if parent.RefersToCell() {
+				s = fmt.Sprintf("\tK* %s = computation_without_first_n_arg(%s, %s);", varname, r, suffixOffset.String())
+			} else {
+				s = fmt.Sprintf("\tK* %s = k_without_first_n_arg(%s, %s);", varname, r, suffixOffset.String())
+			}
+			c.Cleanup = append(c.Cleanup, fmt.Sprintf("\tk_dispose(%s);", varname))
+		default:
+			panic("Not handling case in compileBinding()")
 		}
-		c.Cleanup = append(c.Cleanup, fmt.Sprintf("\tk_dispose(%s);", varname))
+
+		
 	} else {
 		r := compileRef(binding.Loc)
 		s = fmt.Sprintf("\tK* %s = %s;", binding.Variable.CompiledName(), r)
@@ -437,7 +486,7 @@ func compileRef(r Reference) string {
 	if len(r.Ref) == 0 {
 		panic("Empty ref")
 	}
-
+	// fmt.Printf("Trying to compile %s\n", r.String())
 	head := r.Ref[0]
 
 	return compileRefHead(head, r.Ref[1:])

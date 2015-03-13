@@ -42,6 +42,20 @@ func (vis *SymbolLabels) VisitPre(node Node) Visitor {
 		}
 		vis.lookup[name] = vis.next
 		vis.next += 1
+	case *Variable:
+		name := n.Sort
+		if name == "" {
+			return vis
+		}
+		if strings.HasPrefix(name, "#") {
+			// fmt.Printf("Builtin\n")
+			return vis
+		}
+		if _, ok := vis.lookup[name]; ok {
+			break
+		}
+		vis.lookup[name] = vis.next
+		vis.next += 1
 	}
 	return vis
 }

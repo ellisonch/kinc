@@ -317,6 +317,14 @@ map
 		{ $$ = Map{$1} }
 	| map map_item
 		{ $$ = append($1, $2) }
+	
+	// for now, hard coding most important cases
+	/*
+	: map_variable
+		{ $$ = $1 }
+	| map_variable TOK_DOT_MAP TOK_ARROW '(' term TOK_MAPS_TO term ')'
+	 	{ $$ = &RewriteMapItem{LHS: $1, RHS: $3} }
+	 	*/
 
 map_item
 	: map_variable
