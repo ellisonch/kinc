@@ -12,7 +12,7 @@
 #include "test.h"
 
 typedef struct {
-	StateCell* state;
+	MapCell* state;
 	ComputationCell* k;
 } Configuration;
 

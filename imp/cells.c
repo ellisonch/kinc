@@ -27,14 +27,14 @@ ComputationCell* newComputationCell() {
 	return cell;
 }
 
-StateCell* newStateCell() {
+MapCell* newStateCell() {
 	// StateCell* cell = malloc(sizeof(StateCell) + MAX_STATE * sizeof(K*));	
 	// for (int i = 0; i < 26; i++) {
 	// 	cell->elements[i] = NULL;
 	// }
 	// cell->capacity = MAX_STATE;
 
-	StateCell* cell = malloc(sizeof(*cell));
+	MapCell* cell = malloc(sizeof(*cell));
 	cell->hash_table = NULL;
 
 	return cell;
@@ -70,7 +70,7 @@ char* kCellToString(const ComputationCell *kCell) {
 }
 
 // FIXME: leaks memory, sucks
-char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
+char* stateString(const ComputationCell *kCell, const MapCell* stateCell) {
 	// panic("FIXME: Not handling stateString() just yet");
 	char* s = malloc(20000);
 	strcpy(s, "state(\n");
@@ -142,7 +142,7 @@ void computation_add_front(ComputationCell *kCell, K* k) {
 	// kCell->next++;
 }
 
-void check(const ComputationCell *c, const StateCell* state) {
+void check(const ComputationCell *c, const MapCell* state) {
 	// panic("FIXME: Not handling check() yet!");
 	// ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
 	// allValues->cap = k_length(c) + 26;
@@ -226,7 +226,7 @@ void countentry_delete_all(countentry** counts) {
 // string_make_copy
 
 // TODO: unsafe
-void updateStore(StateCell* stateCell, K* keyK, K* value) {
+void updateStore(MapCell* stateCell, K* keyK, K* value) {
 	keyK = k_get_arg(keyK, 0); // get rid of String() wrapper
 	if (checkTypeSafety) {
 		if (keyK->label->type != e_string) {
@@ -272,7 +272,7 @@ void updateStore(StateCell* stateCell, K* keyK, K* value) {
 // }
 
 // TODO unsafe
-K* state_get_item(const StateCell* stateCell, const K* keyK) {
+K* state_get_item(const MapCell* stateCell, const K* keyK) {
 	keyK = k_get_arg(keyK, 0); // get rid of String() wrapper
 	if (checkTypeSafety) {
 		if (keyK->label->type != e_string) {
@@ -305,7 +305,7 @@ void computation_cleanup(ComputationCell *kCell) {
 }
 
 // TODO: assumes 26 vars
-void state_cleanup(StateCell *stateCell) {
+void state_cleanup(MapCell *stateCell) {
 	// panic("Not yet handling state_cleanup!()");
 	map_hash_entry *needle;
 	map_hash_entry *tmp;
