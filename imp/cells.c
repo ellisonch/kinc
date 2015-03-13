@@ -83,8 +83,9 @@ char* mapToString(const MapCell* stateCell) {
 		free(sk);
 	}
 	// length += snprintf(s + length, 20000 - length, "%s)", s);
-	if (length < 20000) {
-		s[length] = ')';
+	if (length < 19999) {
+		s[length++] = ')';
+		s[length++] = '\0';
 	}
 	return s;
 }

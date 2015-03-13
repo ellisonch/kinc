@@ -14,10 +14,12 @@ func (c *C) String() string {
 	cleanup := strings.Join(c.Cleanup, "\n")
 
 	s := ""
+	s += fmt.Sprintf("\tK* oldK = config->k->holder;\n\tInc(oldK);")
 	s += fmt.Sprintf("\t// Computation:\n%s\n", checks)
 	if len(cleanup) > 0 {
 		s += fmt.Sprintf("\t// Cleanup:\n%s\n", cleanup)
 	}
+	s += fmt.Sprintf("\tDec(oldK);")
 	return s
 }
 

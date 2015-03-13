@@ -7,6 +7,7 @@
 #define MAX_GARBAGE_KEPT 10000
 #define MAX_GARBAGE_ARG_LEN 64
 #define SYMBOLS_MAX 1024
+#define MAX_OUTSTANDING_K 5000
 
 // when printing k terms, print the ref counts as well
 #ifndef printRefCounts

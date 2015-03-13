@@ -54,6 +54,9 @@ void Inc(K* k) {
 
 K* mallocK() {
 	count_malloc_k++;
+	if (count_malloc_k > MAX_OUTSTANDING_K) {
+		panic("Refuse to allocate more than %d outstanding Ks", MAX_OUTSTANDING_K);
+	}
 	return malloc(sizeof(K));
 }
 
@@ -286,6 +289,10 @@ void Dec(K* k) {
 }
 
 K* copy(const K* oldK) {
+	assert(oldK != NULL);
+	if (printDebug) {
+		printf("going to do copy() on %s\n", KToString(oldK));
+	}
 	K* k = k_new_from_array(oldK->label, k_num_args(oldK), &oldK->args.a[oldK->args.pos_first]);
 	if (printDebug) {
 		char* sold = KToString(oldK);
@@ -585,7 +592,7 @@ K* k_insert_elems(K* k, int pos, int overwriteCount, int actualResultCount, int 
 	va_list elems;
 	va_start(elems, varargCount);
 
-	k_insert_elems_vararg(k, pos, overwriteCount, actualResultCount, varargCount, elems);
+	k = k_insert_elems_vararg(k, pos, overwriteCount, actualResultCount, varargCount, elems);
 	va_end(elems);
 	return k;
 }
@@ -614,9 +621,14 @@ void _shift_args(K* k, int start, int count, int shift) {
 	free(temp);
 }
 
-void _k_extend(K* k, int count) {
+K* _k_extend(K* k, int count) {
 	assert(k != NULL);
-	assert(k->refs == 1);
+	// assert(k->refs == 1);
+
+	k = _copy_if_necessary(k);
+	if (printDebug) {
+		printf("after copy in _k_extend()\n");
+	}
 
 	if (k->args.cap >= k->args.pos_end + count) {
 		k->args.pos_end += count;
@@ -624,6 +636,8 @@ void _k_extend(K* k, int count) {
 		printf("cap: %d, pos_end: %d, want to add: %d\n", k->args.cap, k->args.pos_end, count);
 		panic("Not handling true growth");
 	}
+
+	return k;
 }
 /*
 	a, (b, c) => (d, e, f), g, h
@@ -653,10 +667,22 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	int number_added = actualResultCount - overwriteCount;
 	// printf("Number added: %d\n", number_added);
 
+	// if we need to kill args, go ahead and preemptively copy
+	if (number_added < 0) {
+		k = copy(k);
+	}
+
+	if (printDebug) {
+		printf("k_insert_elems_vararg() at old_count=%d, pos=%d, owc=%d, ac=%d, varargCount=%d\n", old_count, pos, overwriteCount, actualResultCount, varargCount);
+	}
+
 	// int need_to_add = (pos + actualResultCount) - old_count;
 	if (number_added > 0) {
 		// printf("adding %d\n", number_added);
-		_k_extend(k, number_added);
+		if (printDebug) {
+			printf("Going to do extend to grow some args\n");
+		}
+		k = _k_extend(k, number_added);
 		assert(k_num_args(k) == old_count + number_added);
 	}
 
@@ -684,7 +710,10 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 
 	if (number_added < 0) {
 		// printf("removing %d\n", -number_added);
-		_k_extend(k, number_added);
+		if (printDebug) {
+			printf("Going to do extend to squash some args\n");
+		}
+		k = _k_extend(k, number_added);
 		assert(k_num_args(k) == old_count + number_added);
 	}
 
