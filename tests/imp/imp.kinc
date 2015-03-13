@@ -1,5 +1,5 @@
 configuration 
-	// <state type="map"> </state>
+	<state type="map"> </state>
 	<k type="computation"> $PGM </k>
 
 syntax

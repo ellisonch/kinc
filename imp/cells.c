@@ -28,11 +28,15 @@ ComputationCell* newComputationCell() {
 }
 
 StateCell* newStateCell() {
-	StateCell* cell = malloc(sizeof(StateCell) + MAX_STATE * sizeof(K*));	
-	for (int i = 0; i < 26; i++) {
-		cell->elements[i] = NULL;
-	}
-	cell->capacity = MAX_STATE;
+	// StateCell* cell = malloc(sizeof(StateCell) + MAX_STATE * sizeof(K*));	
+	// for (int i = 0; i < 26; i++) {
+	// 	cell->elements[i] = NULL;
+	// }
+	// cell->capacity = MAX_STATE;
+
+	StateCell* cell = malloc(sizeof(*cell));
+	cell->hash_table = NULL;
+
 	return cell;
 }
 
@@ -67,22 +71,22 @@ char* kCellToString(const ComputationCell *kCell) {
 
 // FIXME: leaks memory, sucks
 char* stateString(const ComputationCell *kCell, const StateCell* stateCell) {
+	// panic("FIXME: Not handling stateString() just yet");
 	char* s = malloc(20000);
-	strcpy(s, "state(\n"); 
-	for (int i = 0; i < 26; i++) {
-		if (stateCell->elements[i] != NULL) {
-			char var[] = "  x -> ";
- 			var[2] = i + 'a';
- 			char* sk = KToString(stateCell->elements[i]);
-			strcat(s, var);
-			strcat(s, sk);
-			strcat(s, "\n");
-			free(sk);
-		}
+	strcpy(s, "state(\n");
+
+	map_hash_entry *needle;
+	map_hash_entry *tmp;
+
+	int length = 0;
+	HASH_ITER(hh, stateCell->hash_table, needle, tmp) {
+		char* sk = KToString(needle->value);
+		length += snprintf(s + length, 20000 - length, "  %s -> %s\n", needle->key, sk);
+		free(sk);
 	}
+
 	char* sk = kCellToString(kCell);
-	strcat(s, ")\n");
-	strcat(s, sk);
+	length += snprintf(s + length, 20000 - length, ")\n%s", sk);
 	free(sk);
 	return s;
 }
@@ -139,20 +143,20 @@ void computation_add_front(ComputationCell *kCell, K* k) {
 }
 
 void check(const ComputationCell *c, const StateCell* state) {
+	// panic("FIXME: Not handling check() yet!");
 	// ListK* allValues = mallocArgs(); // FIXME: this doesn't feel right here
 	// allValues->cap = k_length(c) + 26;
+
 	int len = k_length(c);
-	const K** a = malloc(sizeof(K*) * (len + 26)); // FIXME unsafe
+	const K** a = malloc(sizeof(K*) * (len + HASH_CNT(hh, state->hash_table)));
 	for (int i = 0; i < k_length(c); i++) {
 		a[i] = k_get_item(c, i);
 	}
-	// memcpy(allValues, c, sizeof(K*) * next);
-	for (int i = 0; i < MAX_STATE; i++) {
-		K* val = state->elements[i];
-		if (val == NULL) {
-			continue;
-		}
-		a[len++] = val;
+
+	map_hash_entry *needle;
+	map_hash_entry *tmp;
+	HASH_ITER(hh, state->hash_table, needle, tmp) {
+		a[len++] = needle->value;
 	}
 
 	countentry** cm = counts(len, a);
@@ -219,7 +223,7 @@ void countentry_delete_all(countentry** counts) {
 	}
 }
 
-
+// string_make_copy
 
 // TODO: unsafe
 void updateStore(StateCell* stateCell, K* keyK, K* value) {
@@ -229,29 +233,62 @@ void updateStore(StateCell* stateCell, K* keyK, K* value) {
 			panic("Expected key to be string label, but really %s", KToString(keyK));
 		}
 	}
-	int key = keyK->label->string_val[0] - 'a';
-	K* oldK = stateCell->elements[key];
-	stateCell->elements[key] = value;
-	Inc(value);
-	if (oldK != NULL) {
+	// int key = keyK->label->string_val[0] - 'a';
+	char* key = keyK->label->string_val;
+	map_hash_entry* needle;
+	HASH_FIND_STR(stateCell->hash_table, key, needle);
+
+	// HASH_FIND_INT(*counts, &k, find);
+	if (needle == NULL) {
+		map_hash_entry *new = malloc(sizeof(*new));
+	 	new->key = string_make_copy(key);
+	 	new->value = value;
+	 	HASH_ADD_KEYPTR(hh, stateCell->hash_table, new->key, strlen(new->key), new);
+	 	Inc(value);	 	
+
+	 // 	for (int i = 0; i < k_num_args(k); i++) {
+		// 	K* arg = k_get_arg(k, i);
+		// 	counts_aux(arg, counts);
+		// }
+	} else {
+		K* oldK = needle->value;
+		needle->value = value;
+		Inc(value);
 		Dec(oldK);
 	}
+
+
+
+	// K* oldK = stateCell->elements[key];
+	// stateCell->elements[key] = value;
+	// Inc(value);
+	// if (oldK != NULL) {
+	// 	Dec(oldK);
+	// }
 }
 
-K* state_get_item_from_name(const StateCell* stateCell, int i) {
-	return stateCell->elements[i - 'a'];
-}
+// K* state_get_item_from_name(const StateCell* stateCell, int i) {
+// 	return stateCell->elements[i - 'a'];
+// }
 
 // TODO unsafe
-K* state_get_item(const StateCell* stateCell, const K* i) {
-	K* keyK = k_get_arg(i, 0);
+K* state_get_item(const StateCell* stateCell, const K* keyK) {
+	keyK = k_get_arg(keyK, 0); // get rid of String() wrapper
 	if (checkTypeSafety) {
 		if (keyK->label->type != e_string) {
 			panic("Expected key to be string label, but really %s", KToString(keyK));
 		}
 	}
-	int variable = keyK->label->string_val[0] - 'a';
-	return stateCell->elements[variable];
+	// int key = keyK->label->string_val[0] - 'a';
+	char* key = keyK->label->string_val;
+	map_hash_entry* needle;
+	HASH_FIND_STR(stateCell->hash_table, key, needle);
+
+	if (needle == NULL) {
+		panic("Trying to lookup %s, but no such key was found in map", key);
+	} else {
+		return needle->value;
+	}
 }
 
 K* get_result(const ComputationCell *kCell) {
@@ -269,11 +306,23 @@ void computation_cleanup(ComputationCell *kCell) {
 
 // TODO: assumes 26 vars
 void state_cleanup(StateCell *stateCell) {
-	for (int i = 0; i < 26; i++) {
-		K* oldK = stateCell->elements[i];
-		stateCell->elements[i] = NULL;
-		if (oldK != NULL) {
-			Dec(oldK);
-		}
+	// panic("Not yet handling state_cleanup!()");
+	map_hash_entry *needle;
+	map_hash_entry *tmp;
+	HASH_ITER(hh, stateCell->hash_table, needle, tmp) {
+		HASH_DEL(stateCell->hash_table, needle);
+		K* oldK = needle->value;
+		needle->value = NULL;
+		free(needle->key);
+		Dec(oldK);
+		free(needle);
 	}
+
+	// for (int i = 0; i < 26; i++) {
+	// 	K* oldK = stateCell->elements[i];
+	// 	stateCell->elements[i] = NULL;
+	// 	if (oldK != NULL) {
+	// 		Dec(oldK);
+	// 	}
+	// }
 }

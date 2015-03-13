@@ -11,8 +11,16 @@ typedef struct {
 } ComputationCell;
 
 typedef struct {
-	int capacity;
-	K *elements[];
+	char* key; // should be const, but we have to free it
+	K* value;
+	UT_hash_handle hh;
+} map_hash_entry;
+
+
+typedef struct {
+	map_hash_entry* hash_table;
+	// int capacity;
+	// K *elements[];
 } StateCell;
 
 StateCell* newStateCell();
