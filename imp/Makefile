@@ -65,7 +65,7 @@ bench: imp.exe
 	time ./imp.exe --bench
 
 bench-fast: imp-fast.exe
-	time ./imp-fast.exe --bench	
+	time ./imp-fast.exe --bench
 
 test: imp.exe
 	time ./imp.exe --test
@@ -81,7 +81,7 @@ run: imp.exe
 
 imp.exe: Makefile $(DEPENDS) imp_bench.c
 	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(FILES) imp_bench.c $(LIBS) -o imp.exe
-imp-new.exe: Makefile $(DEPENDS) imp-new.c
+imp-new.exe: Makefile $(NEWDEPENDS) imp-new.c
 	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(NEWFILES) imp-new.c $(LIBS) -o imp-new.exe
 
 asm: Makefile $(DEPENDS) imp_bench.c
@@ -92,6 +92,9 @@ imp-O1.exe: Makefile $(DEPENDS) imp_bench.c
 
 imp-fast.exe: Makefile $(DEPENDS) imp_bench.c
 	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) imp_bench.c $(LIBS) -o imp-fast.exe
+
+imp-fast-new.exe: Makefile $(NEWDEPENDS) imp-new.c
+	$(CC) $(CFLAGS) -DNDEBUG -flto $(NEWFILES) imp-new.c $(LIBS) -o imp-fast-new.exe
 
 imp-profile.exe: Makefile $(DEPENDS) imp_bench.c
 	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) imp_bench.c $(LIBS) -o imp-profile.exe	

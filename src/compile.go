@@ -14,7 +14,6 @@ func (c *C) String() string {
 	cleanup := strings.Join(c.Cleanup, "\n")
 
 	s := ""
-	s += fmt.Sprintf("\tK* oldK = config->k->holder;\n\tInc(oldK);")
 	s += fmt.Sprintf("\t// Computation:\n%s\n", checks)
 	if len(cleanup) > 0 {
 		s += fmt.Sprintf("\t// Cleanup:\n%s\n", cleanup)
@@ -31,6 +30,9 @@ func checksToC(ch *CheckHelper) *C {
 	for _, check := range ch.checks {
 		compileCheck(res, check)
 	}
+
+	s := fmt.Sprintf("\tK* oldK = config->k->holder;\n\tInc(oldK);\n")
+	res.Checks = append(res.Checks, s)
 
 	for _, binding := range ch.bindings {
 		compileBinding(res, binding)
@@ -74,6 +76,7 @@ int rule%d(Configuration* config) {
 	if (printDebug) { printf("Attempting to apply rule%d\n"); }
 %s
 	if (printDebug) { printf("Applied rule%d, kcell is\n%%s\n", kCellToString(config->k)); }
+	// check(config->k, config->state);
 	return 0;
 }
 `, r.String(), i, i, c, i)

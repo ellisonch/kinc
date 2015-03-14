@@ -464,6 +464,7 @@ void _k_set_arg(K* k, int i, K* v) {
 // updates an arg from a k to another k
 // sometimes a copy needs to be made, and this function does not Dec() the old k, so make sure you do
 // need to copy about 30% of time
+// deprecated
 K* k_replace_arg(K* k, int arg, K* ov, K* nv) {
 	assert(k != NULL);
 	assert(ov != NULL);
@@ -522,6 +523,9 @@ K* k_without_first_n_arg(K* k, int left) {
 	assert(k != NULL);
 	assert(left >= 0);
 
+	if (printDebug) {
+		printf("Forcing copy in k_without_first_n_arg()\n");
+	}
 	k = copy(k);
 
 	int old_length = k_num_args(k);
@@ -659,7 +663,7 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	assert(k_num_args(k) >= overwriteCount);
 
 	// FIXME: this is super gross.  copying to make sure elements get deleted if not being used in result
-	K* fakeCopy = copy(k);
+	// K* fakeCopy = copy(k);
 
 	int old_count = k_num_args(k);
 	// printf("Old Length is %d\n", old_count);
@@ -802,12 +806,13 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	// 		printf("%s\n", KToString(arg));
 	// 	}
 	// }
-	k_dispose(fakeCopy);
+	// k_dispose(fakeCopy);
 	// printf("done\n");
 
 	return k;
 }
 
+// deprecated
 void k_remove_arg_head(K* k) {
 	assert(k != NULL);
 	assert(k_num_args(k) > 0);
