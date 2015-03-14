@@ -13,14 +13,14 @@ while not(n <= 0) do (
 
 program 
 	: statements int_expression
-		{ System.out.println("Program(" + $statements.s + ", " + $int_expression.s + ")"); }
+		{ System.out.println("program(" + $statements.s + ", " + $int_expression.s + ")"); }
 ;
 statements returns [String s] locals [String temp = ""]
 	: 
-		{ $s = "Skip()"; }
+		{ $s = "skip()"; }
 	| a=statement (';' b=statement {$temp += "," + $b.s;})*
 		// { $s = "Statements([" + $a.s + $temp + "])"; }
-		{ $s = "Statements(" + $a.s + $temp + ")"; }
+		{ $s = "statements(" + $a.s + $temp + ")"; }
 	;
 statement returns [String s]
 	: assign
@@ -35,19 +35,19 @@ statement returns [String s]
 
 assign returns [String s]
 	: id '=' int_expression
-		{ $s = "Assign(" + $id.s + ", " + $int_expression.s + ")"; }
+		{ $s = "assign(" + $id.s + ", " + $int_expression.s + ")"; }
 	;
 var returns [String s]
 	: 'var' id_list
-		{ $s = "Var(" + $id_list.s + ")"; }
+		{ $s = "var(" + $id_list.s + ")"; }
 	;
 while_ returns [String s]
 	: 'while' bool_expression '{' statements '}'
-		{ $s = "While(" + $bool_expression.s + ", " + $statements.s + ")"; }
+		{ $s = "while(" + $bool_expression.s + ", " + $statements.s + ")"; }
 	;
 if_ returns [String s]
 	: 'if' a=bool_expression '{' b=statements '}' 'else' '{' c=statements '}'
-		{ $s = "If(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
+		{ $s = "if(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
 	;
 
 id_list returns [String s] locals [String temp = ""]
@@ -57,17 +57,17 @@ id_list returns [String s] locals [String temp = ""]
 
 int_expression returns [String s]
 	: '(' int_expression ')'
-		{ $s = "Paren(" + $int_expression.s + ")"; }
+		{ $s = "paren(" + $int_expression.s + ")"; }
 	| '-' a=int_expression
-		{ $s = "Neg(" + $a.s + ")"; }
+		{ $s = "neg(" + $a.s + ")"; }
 	| a=int_expression '+' b=int_expression
-		{ $s = "Plus(" + $a.s + ", " + $b.s + ")"; }
+		{ $s = "plus(" + $a.s + ", " + $b.s + ")"; }
 	| a=int_expression '-' b=int_expression
-		{ $s = "Minus(" + $a.s + ", " + $b.s + ")"; }
+		{ $s = "minus(" + $a.s + ", " + $b.s + ")"; }
 	| a=int_expression '*' b=int_expression
-		{ $s = "Times(" + $a.s + ", " + $b.s + ")"; }
+		{ $s = "times(" + $a.s + ", " + $b.s + ")"; }
 	| a=int_expression '/' b=int_expression
-		{ $s = "Div(" + $a.s + ", " + $b.s + ")"; }
+		{ $s = "div(" + $a.s + ", " + $b.s + ")"; }
 	| int_literal
 		{ $s = $int_literal.s; }
 	| hole_expression
@@ -77,28 +77,28 @@ int_expression returns [String s]
 	;
 bool_expression returns [String s]
 	: '(' b=bool_expression ')'
-		{ $s = "Paren(" + $b.s + ")"; }
+		{ $s = "paren(" + $b.s + ")"; }
 	| i1=int_expression '<=' i2=int_expression
-		{ $s = "LTE(" + $i1.s + ", " + $i2.s + ")"; }
+		{ $s = "lte(" + $i1.s + ", " + $i2.s + ")"; }
 	| b1=bool_expression '&&' b2=bool_expression
-		{ $s = "And(" + $b1.s + ", " + $b2.s + ")"; }
+		{ $s = "and(" + $b1.s + ", " + $b2.s + ")"; }
 	| 'not' b=bool_expression
-		{ $s = "Not(" + $b.s + ")"; }
+		{ $s = "not(" + $b.s + ")"; }
 	;
 
 hole_expression returns [String s]
 	: Hole_expression
-		{ $s = "#Hole(\"" + $Hole_expression.text + "\")"; }
+		{ $s = "#hole(\"" + $Hole_expression.text + "\")"; }
 	;
 
 int_literal returns [String s]
 	: Int_literal
-		{ $s = "#Int(" + $Int_literal.text + ")"; }
+		{ $s = "#int(" + $Int_literal.text + ")"; }
 	;
 
 id returns [String s]
 	: Id
-		{ $s = "Id(#String(\"" + $Id.text + "\"))"; }
+		{ $s = "id(#string(\"" + $Id.text + "\"))"; }
 	;
 
 Int_literal : [0-9]+ ;

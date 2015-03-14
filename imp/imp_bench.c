@@ -35,22 +35,22 @@ adopt_spec opt_specs[] = {
 };
 
 char* givenLabels[] = {
-	"Assign",
-	"Div",
-	"Id",
-	"If",
-	"LTE",
-	"Neg",
-	"Not",
-	"Plus",
-	"Program",
-	"Skip",
-	"Statements",
-	"Var",
-	"While",
-	"Paren",
-	"And",
-	"Minus",
+	"assign",
+	"div",
+	"id",
+	"if",
+	"lte",
+	"neg",
+	"not",
+	"plus",
+	"program",
+	"skip",
+	"statements",
+	"var",
+	"while",
+	"paren",
+	"and",
+	"minus",
 };
 
 #define symbol_Assign 0

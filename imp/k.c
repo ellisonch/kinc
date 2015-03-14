@@ -377,8 +377,8 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 		}
 		case AT_APPL: {
 			if (
-				strcmp(at.appl.name, "#Int") == 0 
-				|| strcmp(at.appl.name, "#String") == 0) 
+				strcmp(at.appl.name, "#int") == 0 
+				|| strcmp(at.appl.name, "#string") == 0) 
 			{
 				return aterm_to_k(*at.appl.args->item, lh, hole);
 			}
@@ -388,7 +388,7 @@ K* aterm_to_k(aterm at, label_helper lh, K* hole) {
 			if (strcmp(at.appl.name, "#true") == 0) {
 				return k_builtin_true();
 			}
-			if (strcmp(at.appl.name, "#Hole") == 0) {
+			if (strcmp(at.appl.name, "#hole") == 0) {
 				return hole;
 			}
 
