@@ -43,8 +43,9 @@ void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCoun
 void computation_add_front(ComputationCell *kCell, K* k);
 void computation_cleanup(ComputationCell *kCell);
 
-char* stateString(const ComputationCell *kCell, const MapCell* stateCell);
+char* mapToString(const MapCell* stateCell);
 char* kCellToString(const ComputationCell *kCell);
+char* stateString(const ComputationCell *kCell, const MapCell* stateCell);
 
 K* get_result(const ComputationCell *kCell);
 

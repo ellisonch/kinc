@@ -107,6 +107,7 @@ func (l *Language) Compile() string {
 
 	cConfig := compileConfiguration(l.Configuration)
 	cnConfig := compileNewConfiguration(l.Configuration)
+	getConfigString := compileConfigString(l.Configuration)
 
 	cRules := []string{}
 	for i, rule := range l.Rules {
@@ -144,7 +145,7 @@ func (l *Language) Compile() string {
 	ret += strings.Join(cnConfig, "\n")
 	ret += "\n"
 	// FIXME hardcoded
-	ret += fmt.Sprintf("char* get_state_string(Configuration* config) {\n\treturn kCellToString(config->k);\n}\n") 
+	ret += strings.Join(getConfigString, "\n")
 	ret += "\n"
 	ret += fmt.Sprintf("char* givenLabels[] = {\n\t%s\n};\n", strings.Join(orderedSymbolNames, ",\n\t"))
 	ret += strings.Join(cSymbols, "\n")
@@ -173,6 +174,57 @@ void k_language_init() { }
 	`
 }
 
+func compileConfigString(config *Configuration) []string {
+	configStr := []string{}
+	configStr = append(configStr, "char* get_state_string(Configuration* config) {")
+
+	resultNames := []string{}
+
+	for i, cell := range config.Children {
+		thisName := fmt.Sprintf("s_%d", i)
+		resultNames = append(resultNames, thisName)
+
+		if t, ok := cell.Attributes.Table["type"]; ok {
+			if t == "computation" {
+				s := fmt.Sprintf("\tchar* %s = kCellToString(config->%s);", thisName, cell.Name)
+				configStr = append(configStr, s)
+			} else if t == "map" {
+				s := fmt.Sprintf("\tchar* %s = mapToString(config->%s);", thisName, cell.Name)
+				configStr = append(configStr, s)
+			} else {
+				panic("Only handle computation and map cells!")
+			}
+		} else {
+			panic("Cell needs a type attribute")
+		}
+	}
+
+	lengthComponents := []string{}
+	for _, name := range resultNames {
+		lengthComponents = append(lengthComponents, fmt.Sprintf("strlen(%s) + 1", name))
+	}
+
+	s := fmt.Sprintf("\tint total_length = 1 + %s;", strings.Join(lengthComponents, " + "))
+	configStr = append(configStr, s)
+
+	s = fmt.Sprintf("\tchar* result = malloc(total_length);\n\tresult[0] = '\\0';")
+	configStr = append(configStr, s)
+
+	for _, name := range resultNames {
+		s := fmt.Sprintf("\tstrcat(result, %s);", name)
+		configStr = append(configStr, s)
+	}
+
+	for _, name := range resultNames {
+		s := fmt.Sprintf("\tfree(%s);", name)
+		configStr = append(configStr, s)
+	}
+
+	configStr = append(configStr, "\treturn result;")
+	configStr = append(configStr, "}")
+	return configStr
+}
+
 func compileConfiguration(config *Configuration) []string {
 	cConfig := []string{}
 
@@ -198,7 +250,6 @@ func compileNewConfiguration(config *Configuration) []string {
 	cConfig := []string{}
 	cConfig = append(cConfig, "Configuration* new_configuration(K* pgm) {")
 	cConfig = append(cConfig, "\tConfiguration* config = malloc(sizeof(Configuration));")
-
 
 	var pgm string
 	for _, cell := range config.Children {

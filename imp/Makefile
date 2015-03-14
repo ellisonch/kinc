@@ -3,7 +3,7 @@ CFLAGS=-static -std=c11 -Wall -m64 -O3
 RELEASE_FLAGS=-DprintRefCounts=1 -DprintDebug=1
 TEST_FLAGS=-DprintRefCounts=1 -DprintDebug=1
 
-FILES = imp_bench.c utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
+FILES = utils.c k.c cells.c k_labels.c k_builtins.c adopt.c test.c
 LIBS = -L./aparser -laterm
 DEPENDS = $(FILES) imp_bench.h k.h k_types.h utils.h settings.h cells.h k_labels.h k_builtins.h adopt.h lang.h test.h k_pub.h
 
@@ -44,6 +44,9 @@ lang.exe: Makefile $(NEWDEPENDS) lang.c
 lang.c: ../tests/imp/imp.kinc kinc
 	../src/kinc.exe ../tests/imp/imp.kinc > lang.c
 
+imp-new.c: ../tests/imp/imp.kinc kinc
+	../src/kinc.exe ../tests/imp/imp.kinc > imp-new.c
+
 kinc:
 	make -C ../src kinc.exe
 
@@ -67,29 +70,34 @@ bench-fast: imp-fast.exe
 test: imp.exe
 	time ./imp.exe --test
 
+test-new: imp-new.exe
+	time ./imp-new.exe --test
+
 mem: imp.exe
 	time ./imp.exe --mem
 
 run: imp.exe
 	time ./imp.exe --input 500000 programs/prog1.aterm
 
-imp.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(FILES) $(LIBS) -o imp.exe
+imp.exe: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(FILES) imp_bench.c $(LIBS) -o imp.exe
+imp-new.exe: Makefile $(DEPENDS) imp-new.c
+	$(CC) $(CFLAGS) -DprintRefCounts=1 -g -flto $(NEWFILES) imp-new.c $(LIBS) -o imp-new.exe
 
-asm: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -S -g $(FILES)
+asm: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -S -g $(FILES) imp_bench.c
 
-imp-O1.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -O1 -pg $(FILES) $(LIBS) -o imp-O1.exe
+imp-O1.exe: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -DNDEBUG -O1 -pg $(FILES) imp_bench.c $(LIBS) -o imp-O1.exe
 
-imp-fast.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) $(LIBS) -o imp-fast.exe
+imp-fast.exe: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -DNDEBUG -flto $(FILES) imp_bench.c $(LIBS) -o imp-fast.exe
 
-imp-profile.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) $(LIBS) -o imp-profile.exe	
+imp-profile.exe: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -DNDEBUG -flto -pg $(FILES) imp_bench.c $(LIBS) -o imp-profile.exe	
 
-imp-sleepy.exe: Makefile $(DEPENDS)
-	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) $(LIBS) -o imp-sleepy.exe	
+imp-sleepy.exe: Makefile $(DEPENDS) imp_bench.c
+	$(CC) $(CFLAGS) -g -fno-omit-frame-pointer -gdwarf-2 $(FILES) imp_bench.c $(LIBS) -o imp-sleepy.exe	
 
 imp-profile-O1.output: imp-O1.exe	
 	./imp-O1.exe --bench
