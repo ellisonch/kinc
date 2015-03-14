@@ -58,7 +58,7 @@
 	return TOK_UC_NAME
 }
 
-/[0-9]*/ { lval.i64,_ = strconv.ParseInt(string(yylex.Text()), 10, 64); return TOK_INTEGER } 
+/[0-9]+/ { lval.i64,_ = strconv.ParseInt(string(yylex.Text()), 10, 64); return TOK_INTEGER } 
 
 /\/\/[^\n]*/    { /* eat up one-line comments */ } 
 

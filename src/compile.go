@@ -537,7 +537,16 @@ func compileLabel(l Label) string {
 		ret := fmt.Sprintf("SymbolLabel(%s)", compileSymbolName(l))
 		return ret
 	case *InjectLabel:
-		panic("Not handling RHS inject label")
+		if l.Name != "#int" {
+			panic("Only handle #int injection")
+		}
+		if l.Type != E_inject_integer {
+			panic("only handle integer injection")
+		}
+
+		// panic("Not handling RHS inject label")
+		// ret := fmt.Sprintf("new_builtin_int(%d)", l.Int)
+		return "k_builtin_int_symbol()"
 	case *Variable:
 		return l.CompiledName()
 	default: panic(fmt.Sprintf("Not handling compileLabel label %s", l))
@@ -610,6 +619,17 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 
 		// array += fmt.Sprintf("\t%s[%d] = %s;\n", arrayName, i, argName)
 
+		if l, ok := n.Label.(*InjectLabel); ok {
+			if l.Name != "#int" {
+				panic("Only handling injection of #int s")
+			}
+			if l.Type != E_inject_integer {
+				panic("Only handling injection of ints")
+			}
+			result = fmt.Sprintf("new_builtin_int(%d)", l.Int)
+			break
+		}
+
 		if n.Label.IsBuiltin() {
 			var builtinFunction string
 			switch n.Label.String() {
@@ -617,6 +637,9 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 			case "#false": builtinFunction = "k_builtin_false"
 			case "#true": builtinFunction = "k_builtin_true"
 			case "#plusInt": builtinFunction = "k_builtin_int_plus"
+			case "#timesInt": builtinFunction = "k_builtin_int_times"
+			case "#divInt": builtinFunction = "k_builtin_int_div"
+			case "#negInt": builtinFunction = "k_builtin_int_neg"
 			case "#lteInt": builtinFunction = "k_builtin_int_lte"
 			default: panic(fmt.Sprintf("Not yet handling %s builtin", n.Label))
 			}

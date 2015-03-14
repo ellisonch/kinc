@@ -6,14 +6,27 @@ syntax
 	#int : result
 	#bool : result
 
+rule <k> (program(S:listk) => S) ~> K:listk </k>
+
+rule 
+	<k> (var(id(X), Vs:listk) => var(Vs)) ~> K:listk </k>
+	<state> S .map => (X |-> #int{0}()) </state>
+
+rule <k> (var() ~> K:listk) => K </k>
+
 rule <k> (plus(I1:#int, I2:#int) => #plusInt(I1, I2)) ~> K:listk </k>
+rule <k> (times(I1:#int, I2:#int) => #timesInt(I1, I2)) ~> K:listk </k>
+rule <k> (div(I1:#int, I2:#int) => #divInt(I1, I2)) ~> K:listk </k>
 rule <k> (lte(I1:#int, I2:#int) => #lteInt(I1, I2)) ~> K:listk </k>
+rule <k> (neg(I:#int) => #negInt(I)) ~> K:listk </k>
 
 rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
 rule <k> (and(#bool(#true()), B:#bool) => B) ~> K:listk </k>
 rule <k> (and(#bool(#false()), Any) => #false()) ~> K:listk </k>
 
+rule <k> (statements(S:listk) => S) ~> K:listk </k>
 rule <k> (block(S:listk) => S) ~> K:listk </k>
+rule <k> (paren(S) => S) ~> K:listk </k>
 rule <k> (kra() ~> K:listk) => K </k>
 
 rule <k> (ifThenElse(#bool(#true()), S, Any) => S) ~> K:listk </k>
