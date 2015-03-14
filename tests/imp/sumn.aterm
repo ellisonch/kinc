@@ -1,0 +1,1 @@
+program(statements(var(id(#string("n")),id(#string("s")),id(#string("r"))),assign(id(#string("n")), #int(10)),assign(id(#string("s")), #int(0)),while(not(paren(lte(id(#string("n")), #int(0)))), statements(assign(id(#string("s")), plus(id(#string("s")), id(#string("n")))),assign(id(#string("n")), plus(id(#string("n")), neg(#int(1))))))), id(#string("s")))
