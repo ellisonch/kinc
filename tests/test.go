@@ -32,7 +32,8 @@ func runTest(testName string, fileName string, expected []byte) (passed bool) {
 	expectedNoCR := bytes.Replace(expected, []byte{'\r'}, []byte{}, -1)
 	actualNoCR := bytes.Replace(out.Bytes(), []byte{'\r'}, []byte{}, -1)
 
-	if bytes.Compare(actualNoCR, expectedNoCR) != 0 {
+	// if bytes.Compare(actualNoCR, expectedNoCR) != 0 {
+	if !bytes.Contains(actualNoCR, expectedNoCR) {
 		fmt.Fprintf(os.Stderr, "Suite \"%s\", Test \"%s\"\nExpected:\n%s\nSaw:\n%s\n", testName, fileName, expected, out.Bytes())
 		return false
 	} else {

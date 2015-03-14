@@ -47,7 +47,7 @@ while_ returns [String s]
 	;
 if_ returns [String s]
 	: 'if' a=bool_expression '{' b=statements '}' 'else' '{' c=statements '}'
-		{ $s = "if(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
+		{ $s = "ifThenElse(" + $a.s + ", " + $b.s + ", " + $c.s + ")"; }
 	;
 
 id_list returns [String s] locals [String temp = ""]

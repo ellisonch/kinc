@@ -22,6 +22,7 @@ K* new_builtin_int(int64_t i);
 K* new_builtin_string(char* i);
 
 K* k_builtin_int_plus(K* v1, K* v2);
+K* k_builtin_int_minus(K* v1, K* v2);
 K* k_builtin_int_times(K* v1, K* v2);
 K* k_builtin_int_div(K* v1, K* v2);
 K* k_builtin_int_neg(K* v1);

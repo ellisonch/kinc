@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
 	adopt_parser parser;
 	adopt_opt opt;
 	// const char *value;
-	int upto = 5;
+	int64_t upto = 5;
 	const char *path = NULL;
 	// int test = 0;
 	// int bench = 0;
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			if (strcmp(opt.spec->name, "input") == 0) {
-				upto = atoi(opt.value);
+				upto = atoll(opt.value);
 			}
 			// if (strcmp(opt.spec->name, "test") == 0) {
 			//     test = 1;

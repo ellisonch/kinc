@@ -663,7 +663,7 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	assert(k_num_args(k) >= overwriteCount);
 
 	// FIXME: this is super gross.  copying to make sure elements get deleted if not being used in result
-	// K* fakeCopy = copy(k);
+	K* fakeCopy = copy(k);
 
 	int old_count = k_num_args(k);
 	// printf("Old Length is %d\n", old_count);
@@ -806,7 +806,7 @@ K* k_insert_elems_vararg(K* k, int pos, int overwriteCount, int actualResultCoun
 	// 		printf("%s\n", KToString(arg));
 	// 	}
 	// }
-	// k_dispose(fakeCopy);
+	k_dispose(fakeCopy);
 	// printf("done\n");
 
 	return k;

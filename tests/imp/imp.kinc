@@ -8,19 +8,35 @@ syntax
 
 rule <k> (ifThenElse(B!:#bool, S1, S2) => B ~> ifThenElseFreeze(S1, S2)) ~> K:listk </k>
 rule <k> (B:#bool ~> ifThenElseFreeze(S1, S2) => ifThenElse(B, S1, S2)) ~> K:listk </k>
+
 rule <k> (not(B!:#bool) => B ~> notFreeze()) ~> K:listk </k>
 rule <k> (B:#bool ~> notFreeze() => not(B)) ~> K:listk </k>
+
 rule <k> (lte(I1!:#int, I2) => I1 ~> lteFreeze1(I2)) ~> K:listk </k>
 rule <k> (I1:#int ~> lteFreeze1(I2) => lte(I1, I2)) ~> K:listk </k>
 rule <k> (lte(I1, I2!:#int) => I2 ~> lteFreeze2(I1)) ~> K:listk </k>
 rule <k> (I2:#int ~> lteFreeze2(I1) => lte(I1, I2)) ~> K:listk </k>
+
 rule <k> (assign(X, V!:#int) => V ~> assignFreeze(X)) ~> K:listk </k>
 rule <k> (V:#int ~> assignFreeze(X) => assign(X, V)) ~> K:listk </k>
+
 rule <k> (plus(I1!:#int, I2) => I1 ~> plusFreeze1(I2)) ~> K:listk </k>
 rule <k> (I1:#int ~> plusFreeze1(I2) => plus(I1, I2)) ~> K:listk </k>
 rule <k> (plus(I1, I2!:#int) => I2 ~> plusFreeze2(I1)) ~> K:listk </k>
 rule <k> (I2:#int ~> plusFreeze2(I1) => plus(I1, I2)) ~> K:listk </k>
 
+rule <k> (minus(I1!:#int, I2) => I1 ~> minusFreeze1(I2)) ~> K:listk </k>
+rule <k> (I1:#int ~> minusFreeze1(I2) => minus(I1, I2)) ~> K:listk </k>
+rule <k> (minus(I1, I2!:#int) => I2 ~> minusFreeze2(I1)) ~> K:listk </k>
+rule <k> (I2:#int ~> minusFreeze2(I1) => minus(I1, I2)) ~> K:listk </k>
+
+rule <k> (div(I1!:#int, I2) => I1 ~> divFreeze1(I2)) ~> K:listk </k>
+rule <k> (I1:#int ~> divFreeze1(I2) => div(I1, I2)) ~> K:listk </k>
+rule <k> (div(I1, I2!:#int) => I2 ~> divFreeze2(I1)) ~> K:listk </k>
+rule <k> (I2:#int ~> divFreeze2(I1) => div(I1, I2)) ~> K:listk </k>
+
+rule <k> (and(B1!:#bool, B2) => B1 ~> andFreeze1(B2)) ~> K:listk </k>
+rule <k> (B1:#bool ~> andFreeze1(B2) => and(B1, B2)) ~> K:listk </k>
 
 
 rule <k> (program(S:listk) => S) ~> K:listk </k>
@@ -32,13 +48,14 @@ rule
 rule <k> (var() ~> K:listk) => K </k>
 
 rule <k> (plus(I1:#int, I2:#int) => #plusInt(I1, I2)) ~> K:listk </k>
+rule <k> (minus(I1:#int, I2:#int) => #minusInt(I1, I2)) ~> K:listk </k>
 rule <k> (times(I1:#int, I2:#int) => #timesInt(I1, I2)) ~> K:listk </k>
 rule <k> (div(I1:#int, I2:#int) => #divInt(I1, I2)) ~> K:listk </k>
 rule <k> (lte(I1:#int, I2:#int) => #lteInt(I1, I2)) ~> K:listk </k>
 rule <k> (neg(I:#int) => #negInt(I)) ~> K:listk </k>
 
 rule <k> (not(B:#bool) => #not(B)) ~> K:listk </k>
-rule <k> (and(#bool(#true()), B:#bool) => B) ~> K:listk </k>
+rule <k> (and(#bool(#true()), B) => B) ~> K:listk </k>
 rule <k> (and(#bool(#false()), Any) => #false()) ~> K:listk </k>
 
 rule <k> (statements(S:listk) => S) ~> K:listk </k>
@@ -46,6 +63,7 @@ rule <k> (block(S:listk) => S) ~> K:listk </k>
 rule <k> (paren(S) => S) ~> K:listk </k>
 rule <k> (kra() ~> K:listk) => K </k>
 rule <k> (kra(S:listk) => S) ~> K:listk </k>
+rule <k> (skip() ~> K:listk) => K </k>
 
 rule <k> (ifThenElse(#bool(#true()), S, Any) => S) ~> K:listk </k>
 rule <k> (ifThenElse(#bool(#false()), Any, S) => S) ~> K:listk </k>

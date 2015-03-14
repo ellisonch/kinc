@@ -107,6 +107,24 @@ K* k_builtin_int_plus(K* v1, K* v2) {
 	// FIXME: does nothing about overflow
 	return new_builtin_int(i1 + i2);
 }
+K* k_builtin_int_minus(K* v1, K* v2) {
+	assert(v1 != NULL);
+	assert(v2 != NULL);
+	assert(is_int(v1));
+	assert(is_int(v2));
+
+	K* ki1 = k_get_arg(v1, 0);
+	K* ki2 = k_get_arg(v2, 0);
+
+	assert(ki1->label->type == e_i64);
+	assert(ki2->label->type == e_i64);
+
+	int64_t i1 = ki1->label->i64_val;
+	int64_t i2 = ki2->label->i64_val;	
+
+	// FIXME: does nothing about overflow
+	return new_builtin_int(i1 - i2);
+}
 K* k_builtin_int_times(K* v1, K* v2) {
 	assert(v1 != NULL);
 	assert(v2 != NULL);

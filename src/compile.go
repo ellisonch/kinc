@@ -691,6 +691,7 @@ func compileTermAux(n Node, namePrefix string) (aux []string, result string, isL
 			case "#false": builtinFunction = "k_builtin_false"
 			case "#true": builtinFunction = "k_builtin_true"
 			case "#plusInt": builtinFunction = "k_builtin_int_plus"
+			case "#minusInt": builtinFunction = "k_builtin_int_minus"
 			case "#timesInt": builtinFunction = "k_builtin_int_times"
 			case "#divInt": builtinFunction = "k_builtin_int_div"
 			case "#negInt": builtinFunction = "k_builtin_int_neg"
