@@ -6,6 +6,8 @@ syntax
 	#int : result
 	#bool : result
 
+rule <k> (ifThenElse(B!:#bool, S1, S2) => B ~> ifThenElseFreeze(S1, S2)) ~> K:listk </k>
+
 rule <k> (program(S:listk) => S) ~> K:listk </k>
 
 rule 

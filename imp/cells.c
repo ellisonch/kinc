@@ -135,7 +135,15 @@ void computation_insert_elems(ComputationCell *kCell, int pos, int overwriteCoun
 	va_list elems;
 	va_start(elems, varargCount);
 
-	kCell->holder = k_insert_elems_vararg(kCell->holder, pos, overwriteCount, actualResultCount, varargCount, elems);
+	K* oldHolder = kCell->holder;
+	K* newHolder = k_insert_elems_vararg(kCell->holder, pos, overwriteCount, actualResultCount, varargCount, elems);
+	if (newHolder != oldHolder) {
+		assert(newHolder->refs == 0);
+		kCell->holder =	newHolder;
+		Inc(newHolder);
+		Dec(oldHolder);
+	}
+	
 	va_end(elems);
 }
 
