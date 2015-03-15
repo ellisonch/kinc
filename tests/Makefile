@@ -19,7 +19,7 @@ libaterm.a: force
 	make -C ../imp/aparser
 	cp ../imp/aparser/libaterm.a .
 
-test: basic.test imp.test
+test: basic.test imp.test fun.test
 #$(addsuffix .test, $(TESTS))
 # echo hi
 

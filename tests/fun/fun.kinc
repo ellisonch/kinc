@@ -1,0 +1,6 @@
+configuration
+	<k type="computation"> $PGM </k>
+	<env type="map"> </env>
+	<store type="map"> </store>
+
+rule <k> (times(I1:#int, I2:#int) => #timesInt(I1, I2)) ~> K:listk </k>
