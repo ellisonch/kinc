@@ -11,7 +11,7 @@
 #include "settings.h"
 #include "utils.h"
 #include "uthash.h"
-#include "aparser/aterm.h"
+#include "aterm.h"
 
 extern void k_language_init(); // FIXME
 
