@@ -5,6 +5,7 @@ import "os"
 import "strings"
 import "errors"
 import "io"
+import "flag"
 
 func ParseReader(r io.Reader) (*Language, error) {
 	l := NewLexer(r)
@@ -30,40 +31,38 @@ func ParseFile(fname string) (*Language, error) {
 	return ParseReader(f)
 }
 
-func safeForC(s string) string {
-	// s = strings.Replace(s, "#", "_pound_", -1)
-	return s
-}
+
 
 func main() {
-	// fmt.Printf(prog)
-	// l := NewLexer(strings.NewReader(prog))
-	// KincInit()
-	// ret := yyParse(l)
-	// Final.String()
-
-	argsWithoutProg := os.Args[1:]
-	// file := "../peano/peano.kinc"
-	file := "../testlang/testlang.kinc"
-	
-	if len(argsWithoutProg) == 1 {
-		file = argsWithoutProg[0]
-	} else if len(argsWithoutProg) > 1 {
-		panic("too many args")
+	// wordPtr := flag.String("word", "foo", "a string")
+	// numbPtr := flag.Int("numb", 42, "an int")
+	// boolPtr := flag.Bool("fork", false, "a bool")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: kinc [options] language.kinc\n\n")
+		flag.PrintDefaults()
 	}
 
-	// lang, err := ParseFile("../imp/imp.kinc")
-	lang, err := ParseFile(file)
-	// lang, err := ParseString(prog)
+	flag.Parse()
+
+	trailingArgs := flag.Args()
+	
+	var kincFile string
+
+	if len(trailingArgs) == 1 {
+		kincFile = trailingArgs[0]
+	} else {
+		flag.Usage()
+		fmt.Fprintf(os.Stderr, "You must mention exactly one .kinc file at the end of the arguments\n")
+		os.Exit(1)
+	}
+
+	lang, err := ParseFile(kincFile)
 	if err != nil {
 		fmt.Printf("Couldn't parse language: %s\n", err)
 		os.Exit(1)
 	}
 
 	c := lang.Compile()
-
-	// s := lang.PrettyPrint()
-	// s := lang.String()
 	fmt.Printf("%s\n", c)
 
 	os.Exit(0)

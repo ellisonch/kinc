@@ -5,6 +5,12 @@ import "strings"
 import "log"
 import "sort"
 
+// derp
+func safeForC(s string) string {
+	// s = strings.Replace(s, "#", "_pound_", -1)
+	return s
+}
+
 type C struct {
 	Checks []string
 	Cleanup []string

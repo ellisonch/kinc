@@ -1,4 +1,9 @@
-all: atermparser.exe
+DIST = ../../dist/
+
+all: libaterm.a
+
+dist: libaterm.a
+	mkdir -p $(DIST) && cp ./libaterm.a $(DIST)
 
 parser.tab.c parser.tab.h: parser.y
 	bison -d parser.y
@@ -12,5 +17,5 @@ parser.tab.o lex.yy.o aterm.o: lex.yy.c parser.tab.c aterm.c aterm.h
 libaterm.a: parser.tab.o lex.yy.o aterm.o
 	ar rcs libaterm.a parser.tab.o lex.yy.o aterm.o
 
-atermparser.exe: libaterm.a atermtest.c
-	gcc -static atermtest.c -L. -laterm -o atermparser.exe
+# atermparser.exe: libaterm.a atermtest.c
+# 	gcc -static atermtest.c -L. -laterm -o atermparser.exe
