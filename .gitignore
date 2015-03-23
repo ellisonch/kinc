@@ -23,3 +23,7 @@ gen_java/
 /tests/kinc
 /tests/runtest
 /imp/lang.c
+/src/runtime/kinclink-debug
+/src/runtime/kinclink-fast
+/src/runtime/kinclink-pgprofile
+/src/runtime/kinclink-safe
