@@ -1,6 +1,6 @@
 .DELETE_ON_ERROR:
 
-DIST = ../../dist/
+DIST = ../../dist
 
 VISITORS = v_variable_types.go v_symbol_labels.go v_constraints.go v_subsorts.go
 DEPS = $(VISITORS) kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.go pretty_print.go checks.go replacements.go bindings.go reference.go compile.go
@@ -8,7 +8,7 @@ DEPS = $(VISITORS) kinc_t.go parser.go kinc.nn.go visitor.go kinc_print.go kinc.
 all: kinc
 
 dist: kinc
-	mkdir -p $(DIST) && cp ./kinc $(DIST)
+	mkdir -p $(DIST)/bin && cp ./kinc $(DIST)/bin
 
 kinc: $(DEPS)
 	go build -o kinc $(DEPS)

@@ -1,9 +1,10 @@
-DIST = ../../dist/
+DIST = ../../dist
 
 all: libaterm.a
 
 dist: libaterm.a
-	mkdir -p $(DIST) && cp ./libaterm.a $(DIST)
+	mkdir -p $(DIST)/lib && cp ./libaterm.a $(DIST)/lib	
+	cp $(wildcard *.h) $(DIST)/include
 
 parser.tab.c parser.tab.h: parser.y
 	bison -d parser.y

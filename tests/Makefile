@@ -7,17 +7,20 @@ run: test
 
 # tools: kinc.exe libkinc-safe.a libaterm.a
 
-libkinc-safe.a: force
-	make -C ../src/runtime libkinc-safe.a
-	cp ../src/runtime/libkinc-safe.a .
+libkinc: force
+#	make -C ../src/runtime libkinc-safe.a
+#	cp ../src/runtime/libkinc-safe.a .
+	make -C ../src/runtime dist
 
-kinc.exe: force
-	make -C ../src/compiler kinc
-	cp ../src/compiler/kinc .
+kinc: force
+#	make -C ../src/compiler kinc
+#	cp ../src/compiler/kinc .
+	make -C ../src/compiler dist
 
-libaterm.a: force
-	make -C ../src/aterm-c
-	cp ../src/aterm-c/libaterm.a .
+libaterm: force
+#	make -C ../src/aterm-c
+#	cp ../src/aterm-c/libaterm.a .
+	make -C ../src/aterm-c dist
 
 test: basic.test imp.test fun.test
 #$(addsuffix .test, $(TESTS))
@@ -30,7 +33,8 @@ runtest: test.go
 	- ./test.exe $*
 
 %.exe: %.c libkinc-safe.a libaterm.a
-	@gcc -static -std=c11 -Wall -Wno-unused-variable -m64 -O3 $< -L. -lkinc-safe -laterm -DprintDebug=0 -I../src/runtime -o $@
+#	@gcc -static -std=c11 -Wall -Wno-unused-variable -m64 -O3 $< -L. -lkinc-safe -laterm -DprintDebug=0 -I../src/runtime -o $@
+	kinclink-safe $< -o $@
 
 %.c: kinc.exe
 	@./kinc $*/$*.kinc > $*.c
