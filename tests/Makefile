@@ -36,7 +36,8 @@ runtest: test.go
 #	@gcc -static -std=c11 -Wall -Wno-unused-variable -m64 -O3 $< -L. -lkinc-safe -laterm -DprintDebug=0 -I../src/runtime -o $@
 	kinclink-safe $< -o $@
 
-%.c: kinc.exe
+%.c: kinc 
+# %/%.kinc # can't use stem twice :/
 	@./kinc $*/$*.kinc > $*.c
 
 

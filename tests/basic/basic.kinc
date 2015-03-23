@@ -5,7 +5,7 @@ syntax
 	s : int
 	zero : int
 
-rule <k> fakesymbol() => q(), label01() </k>
+rule <k> fakesymbol() => q(), label01(), y(), w() </k>
 
 rule <k> test1(a(), T:listk) => T </k>
 rule <k> test2(a(), b(), T:listk) => a() ~> T </k>
@@ -23,6 +23,8 @@ rule <k> list9(z(), (a(), b() => c()), e(), f()) </k>
 rule <k> list10(a(), T:listk => T, T) </k>
 
 rule <k> list11((a() => b(), e()), (c() => d())) </k>
+
+rule <k> list12() ~> L:listk => b(), L, c(L), L, d(), L, L </k>
 
 rule <k> label01((q => z)(X:listk)) </k>
 rule <k> (label02 => z)(X:listk) </k>
