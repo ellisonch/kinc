@@ -100,6 +100,7 @@ sys     0m0.000s
 
 total k time: 9m54.559s + 13m51.420s + 20m51.990s = 594 + 831 + 1251 = 2676s
 total p time: 0m0.099s + 0m0.106s + 0m0.139s = 0.344s
-
+total k w pm: 1m6.427s + 1m34.639s = 66 + 94 = 160
+total p time: 0m0.099s + 0m0.106s = 0.205s
 
 
