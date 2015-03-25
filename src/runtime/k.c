@@ -94,7 +94,7 @@ K* _k_fresh(KLabel* label, int len) {
 	assert(newK != NULL);
 	assert(k_num_args(newK) >= len);
 
-	newK->label = label;
+	k_set_label(newK, label);
 	newK->refs = 0;
 	newK->permanent = 0;
 	return newK;
@@ -444,6 +444,8 @@ int k_num_args(const K* k) {
 }
 
 void k_set_label(K* k, KLabel* l) {
+	assert(k != NULL);
+	assert(l != NULL);
 	// KLabel* oldl = k->label;
 	k->label = l;
 	// FIXME: not recovering memory from old label

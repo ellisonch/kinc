@@ -107,7 +107,7 @@ KLabel* Int64Label(int64_t i64) {
 }
 
 // TODO: leaks memory and is unsafe
-char* LabelToString(KLabel* label) {
+char* LabelToString(const KLabel* label) {
 	if (label->type == e_string) {
 		return string_make_copy(label->string_val);
 	} else if (label->type == e_i64) {

@@ -22,7 +22,7 @@ FILES = $(wildcard ./*.c)
 
 # gdb --args ./imp.exe --test
 
-all: debug safe fast
+all: dist
 
 prepareDist:
 	rm -rf $(DIST)
