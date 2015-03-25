@@ -13,6 +13,7 @@
 *.stats
 *.csv
 /dist
+/demo
 /src/compiler/parser.go
 /src/compiler/kinc
 /languages/imp/parser/aterm/parser.go

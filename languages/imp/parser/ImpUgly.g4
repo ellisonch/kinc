@@ -17,7 +17,7 @@ program
 ;
 statements returns [String s] locals [String temp = ""]
 	: 
-		{ $s = "skip()"; }
+		{ $s = "statements()"; }
 	| a=statement (';' b=statement {$temp += "," + $b.s;})*
 		// { $s = "Statements([" + $a.s + $temp + "])"; }
 		{ $s = "statements(" + $a.s + $temp + ")"; }
@@ -57,7 +57,8 @@ id_list returns [String s] locals [String temp = ""]
 
 int_expression returns [String s]
 	: '(' int_expression ')'
-		{ $s = "paren(" + $int_expression.s + ")"; }
+		// { $s = "paren(" + $int_expression.s + ")"; }
+		{ $s = $int_expression.s; }
 	| '-' a=int_expression
 		{ $s = "neg(" + $a.s + ")"; }
 	| a=int_expression '+' b=int_expression
@@ -77,7 +78,8 @@ int_expression returns [String s]
 	;
 bool_expression returns [String s]
 	: '(' b=bool_expression ')'
-		{ $s = "paren(" + $b.s + ")"; }
+		// { $s = "paren(" + $b.s + ")"; }
+		{ $s = $b.s; }
 	| i1=int_expression '<=' i2=int_expression
 		{ $s = "lte(" + $i1.s + ", " + $i2.s + ")"; }
 	| b1=bool_expression '&&' b2=bool_expression

@@ -148,18 +148,18 @@ void handleProgram(Configuration* config, K* top, int* change) {
 	}
 }
 // TODO: commonality
-void handleParen(Configuration* config, K* top, int* change) {
-	// K* top = k_get_item(config->k, 0);
+// void handleParen(Configuration* config, K* top, int* change) {
+// 	// K* top = k_get_item(config->k, 0);
 
-	if (k_num_args(top) == 1) {
-		if (printDebug) {
-			printf("Applying 'paren' rule\n");
-		}
-		*change = 1;
-		K* newTop = k_get_arg(top, 0);
-		computation_set_elem(config->k, 0, newTop);
-	}
-}
+// 	if (k_num_args(top) == 1) {
+// 		if (printDebug) {
+// 			printf("Applying 'paren' rule\n");
+// 		}
+// 		*change = 1;
+// 		K* newTop = k_get_arg(top, 0);
+// 		computation_set_elem(config->k, 0, newTop);
+// 	}
+// }
 
 void handleStatements(Configuration* config, K* top, int* change) {
 	// K* top = k_get_item(config->k, 0);
@@ -596,9 +596,9 @@ void repl(Configuration* config) {
 				case symbol_Program:
 					handleProgram(config, top, &change);
 					break;
-				case symbol_Paren:
-					handleParen(config, top, &change);
-					break;
+				// case symbol_Paren:
+				// 	handleParen(config, top, &change);
+				// 	break;
 				default: 
 					panic("unrecognized label");
 			}
@@ -698,11 +698,11 @@ int main(int argc, char* argv[]) {
 
 	while (adopt_parser_next(&opt, &parser)) {
 		if (opt.spec) {
-			printf("'%s' = ", opt.spec->name);
-			printf("'%s'\n", opt.value);
+			// printf("'%s' = ", opt.spec->name);
+			// printf("'%s'\n", opt.value);
 			if (strcmp(opt.spec->name, "file") == 0) {
 				path = opt.value;
-				printf("Will load program file '%s'\n", path);
+				// printf("Will load program file '%s'\n", path);
 			}
 			if (strcmp(opt.spec->name, "input") == 0) {
 				upto = atoll(opt.value);
@@ -725,20 +725,20 @@ int main(int argc, char* argv[]) {
 	
 	if (bench) {
 		run_bench();
-		dump_garbage_info();
+		// dump_garbage_info();
 	} else if (mem) {
 		run_mem();
-		dump_garbage_info();
+		// dump_garbage_info();
 	} else if (test) {
 		run_tests();
-		dump_garbage_info();
+		// dump_garbage_info();
 	} else {
 		uint64_t result = run(path, upto);
-		printf("Result: %" PRId64 "\n", result);
+		// printf("Result: %" PRId64 "\n", result);
 	
-		dump_garbage_info();
+		// dump_garbage_info();
 
-		printf("\nrewrites: %" PRIu64 "\n", rewrites);
+		// printf("\nrewrites: %" PRIu64 "\n", rewrites);
 	}
 
 	return 0;
