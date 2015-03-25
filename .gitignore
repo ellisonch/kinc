@@ -12,6 +12,8 @@
 *.out
 *.stats
 *.csv
+*.cmi
+*.cmx
 /dist
 /demo
 /src/compiler/parser.go
