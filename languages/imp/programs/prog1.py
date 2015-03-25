@@ -1,4 +1,6 @@
-n = 50000000
+import sys
+
+n = sys.argv[1]
 s = 0
 while (not(n <= 0)):
 	s = s + n
