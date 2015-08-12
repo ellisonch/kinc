@@ -1,1 +1,0 @@
-As a way to prototype the compiler, the language IMP is here "compiled" by hand.
