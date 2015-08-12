@@ -1,5 +1,0 @@
-var m, s ;
-m = 10 ;
-if (not(m <= 2)) {
-	s = 1
-} else {}
