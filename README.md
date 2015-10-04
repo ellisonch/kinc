@@ -16,7 +16,7 @@ The generated interpreter benchmarks at around 70x slower than a Python interpre
 ## Caveats
 * ```kinc``` is dramatically incomplete and unfinished
 * In its current state, it can compile only a simple imperative language called IMP
-* It's only been tested this on Cygwin on Windows
+* It's only been tested on Cygwin on Windows
 * The idea was scrapped in favor of a OCaml interpreter which is currently [being developed](https://github.com/kframework/k)
 * Probably ```kinc``` is only useful as example code
 
